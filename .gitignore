@@ -1,12 +1,18 @@
-*.class
+# Build products
+target/
+build/
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+# IntelliJ data
+*.iml
+.idea/
+.ipr
 
-# Package Files #
-*.jar
-*.war
-*.ear
+# Eclipse
+.classpath
+.project
+.settings/
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
+# Documentation build output
+/docs/_build
+
+.DS_Store
