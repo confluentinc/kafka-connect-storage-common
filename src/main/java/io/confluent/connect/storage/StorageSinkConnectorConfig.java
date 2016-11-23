@@ -19,48 +19,50 @@ import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigDef.Importance;
 import org.apache.kafka.common.config.ConfigDef.Type;
 import org.apache.kafka.common.config.ConfigDef.Width;
+import org.apache.kafka.common.config.ConfigException;
 
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.confluent.connect.storage.partitioner.DailyPartitioner;
+import io.confluent.connect.storage.partitioner.DefaultPartitioner;
+import io.confluent.connect.storage.partitioner.FieldPartitioner;
+import io.confluent.connect.storage.partitioner.HourlyPartitioner;
+import io.confluent.connect.storage.partitioner.Partitioner;
+import io.confluent.connect.storage.partitioner.TimeBasedPartitioner;
+
 public class StorageSinkConnectorConfig extends AbstractConfig {
 
-  // HDFS Group
+  // This config is deprecated and will be removed in future releases. Use store.url instead.
   public static final String HDFS_URL_CONFIG = "hdfs.url";
   private static final String HDFS_URL_DOC =
       "The HDFS connection URL. This configuration has the format of hdfs:://hostname:port and "
-      + "specifies the HDFS to export data to.";
+      + "specifies the HDFS to export data to. This property is deprecated and will be removed in future releases. "
+      + "Use ``store.url`` instead.";
   private static final String HDFS_URL_DISPLAY = "HDFS URL";
 
-  public static final String HADOOP_CONF_DIR_CONFIG = "hadoop.conf.dir";
-  private static final String HADOOP_CONF_DIR_DOC =
-      "The Hadoop configuration directory.";
-  public static final String HADOOP_CONF_DIR_DEFAULT = "";
-  private static final String HADOOP_CONF_DIR_DISPLAY = "Hadoop Configuration Directory";
-
-  public static final String HADOOP_HOME_CONFIG = "hadoop.home";
-  private static final String HADOOP_HOME_DOC =
-      "The Hadoop home directory.";
-  public static final String HADOOP_HOME_DEFAULT = "";
-  private static final String HADOOP_HOME_DISPLAY = "Hadoop home directory";
+  public static volatile String STORE_URL_CONFIG = "store.url";
+  protected static volatile String STORE_URL_DOC =
+      "Store's connection URL, if applicable.";
+  protected static volatile String STORE_URL_DISPLAY = "Store URL";
 
   public static final String TOPICS_DIR_CONFIG = "topics.dir";
   private static final String TOPICS_DIR_DOC =
-      "Top level HDFS directory to store the data ingested from Kafka.";
+      "Top level directory to store the data ingested from Kafka.";
   public static final String TOPICS_DIR_DEFAULT = "topics";
   private static final String TOPICS_DIR_DISPLAY = "Topics directory";
 
   public static final String LOGS_DIR_CONFIG = "logs.dir";
   private static final String LOGS_DIR_DOC =
-      "Top level HDFS directory to store the write ahead logs.";
+      "Top level directory to store the write ahead logs.";
   public static final String LOGS_DIR_DEFAULT = "logs";
   private static final String LOGS_DIR_DISPLAY = "Logs directory";
 
   public static final String FORMAT_CLASS_CONFIG = "format.class";
   private static final String FORMAT_CLASS_DOC =
-      "The format class to use when writing data to HDFS. ";
+      "The format class to use when writing data to the store. ";
   public static final String FORMAT_CLASS_DEFAULT = "io.confluent.connect.hdfs.avro.AvroFormat";
   private static final String FORMAT_CLASS_DISPLAY = "Format class";
 
@@ -94,41 +96,10 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
   private static final String HIVE_DATABASE_DEFAULT = "default";
   private static final String HIVE_DATABASE_DISPLAY = "Hive database";
 
-  // Security group
-  public static final String HDFS_AUTHENTICATION_KERBEROS_CONFIG = "hdfs.authentication.kerberos";
-  private static final String HDFS_AUTHENTICATION_KERBEROS_DOC =
-      "Configuration indicating whether HDFS is using Kerberos for authentication.";
-  private static final boolean HDFS_AUTHENTICATION_KERBEROS_DEFAULT = false;
-  private static final String HDFS_AUTHENTICATION_KERBEROS_DISPLAY = "HDFS Authentication Kerberos";
-
-  public static final String CONNECT_HDFS_PRINCIPAL_CONFIG = "connect.hdfs.principal";
-  private static final String CONNECT_HDFS_PRINCIPAL_DOC =
-      "The principal to use when HDFS is using Kerberos to for authentication.";
-  public static final String CONNECT_HDFS_PRINCIPAL_DEFAULT = "";
-  private static final String CONNECT_HDFS_PRINCIPAL_DISPLAY = "Connect Kerberos Principal";
-
-  public static final String CONNECT_HDFS_KEYTAB_CONFIG = "connect.hdfs.keytab";
-  private static final String CONNECT_HDFS_KEYTAB_DOC =
-      "The path to the keytab file for the HDFS connector principal. "
-      + "This keytab file should only be readable by the connector user.";
-  public static final String CONNECT_HDFS_KEYTAB_DEFAULT = "";
-  private static final String CONNECT_HDFS_KEYTAB_DISPLAY = "Connect Kerberos Keytab";
-
-  public static final String HDFS_NAMENODE_PRINCIPAL_CONFIG = "hdfs.namenode.principal";
-  private static final String HDFS_NAMENODE_PRINCIPAL_DOC = "The principal for HDFS Namenode.";
-  public static final String HDFS_NAMENODE_PRINCIPAL_DEFAULT = "";
-  private static final String HDFS_NAMENODE_PRINCIPAL_DISPLAY = "HDFS NameNode Kerberos Principal";
-
-  public static final String KERBEROS_TICKET_RENEW_PERIOD_MS_CONFIG = "kerberos.ticket.renew.period.ms";
-  private static final String KERBEROS_TICKET_RENEW_PERIOD_MS_DOC =
-      "The period in milliseconds to renew the Kerberos ticket.";
-  public static final long KERBEROS_TICKET_RENEW_PERIOD_MS_DEFAULT = 60000 * 60;
-  private static final String KERBEROS_TICKET_RENEW_PERIOD_MS_DISPLAY = "Kerberos Ticket Renew Period (ms)";
-
   // Connector group
   public static final String FLUSH_SIZE_CONFIG = "flush.size";
   private static final String FLUSH_SIZE_DOC =
-      "Number of records written to HDFS before invoking file commits.";
+      "Number of records written to store before invoking file commits.";
   private static final String FLUSH_SIZE_DISPLAY = "Flush Size";
 
   public static final String ROTATE_INTERVAL_MS_CONFIG = "rotate.interval.ms";
@@ -213,7 +184,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
 
   public static final String FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG = "filename.offset.zero.pad.width";
   private static final String FILENAME_OFFSET_ZERO_PAD_WIDTH_DOC =
-      "Width to zero pad offsets in HDFS filenames to if the offsets is too short in order to "
+      "Width to zero pad offsets in store's filenames if offsets are too short in order to "
       + "provide fixed width filenames that can be ordered by simple lexicographic sorting.";
   public static final int FILENAME_OFFSET_ZERO_PAD_WIDTH_DEFAULT = 10;
   private static final String FILENAME_OFFSET_ZERO_PAD_WIDTH_DISPLAY = "Filename Offset Zero Pad Width";
@@ -239,29 +210,30 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
   public static final String STORAGE_CLASS_DEFAULT = "io.confluent.connect.hdfs.storage.HdfsStorage";
   private static final String STORAGE_CLASS_DISPLAY = "Storage Class";
 
-  public static final String HDFS_GROUP = "HDFS";
+  public static final String STORE_GROUP = "Store";
   public static final String HIVE_GROUP = "Hive";
-  public static final String SECURITY_GROUP = "Security";
   public static final String SCHEMA_GROUP = "Schema";
   public static final String CONNECTOR_GROUP = "Connector";
   public static final String INTERNAL_GROUP = "Internal";
 
-  private static final ConfigDef.Recommender hiveIntegrationDependentsRecommender = new BooleanParentRecommender(HIVE_INTEGRATION_CONFIG);
-  private static final ConfigDef.Recommender hdfsAuthenticationKerberosDependentsRecommender = new BooleanParentRecommender(HDFS_AUTHENTICATION_KERBEROS_CONFIG);
-  private static final ConfigDef.Recommender partitionerClassDependentsRecommender = new PartitionerClassDependentsRecommender();
+  private static final ConfigDef.Recommender hiveIntegrationDependentsRecommender =
+      new BooleanParentRecommender(HIVE_INTEGRATION_CONFIG);
   private static final ConfigDef.Recommender schemaCompatibilityRecommender = new SchemaCompatibilityRecommender();
+  protected static final ConfigDef.Recommender partitionerClassDependentsRecommender =
+      new PartitionerClassDependentsRecommender();
 
   protected static ConfigDef config = new ConfigDef();
 
   static {
+    // Define Store's basic configuration group
+    config.define(STORE_URL_CONFIG, Type.STRING, Importance.HIGH, STORE_URL_DOC, STORE_GROUP, 1, Width.MEDIUM, STORE_URL_DISPLAY);
 
-    // Define HDFS configuration group
-    config.define(HDFS_URL_CONFIG, Type.STRING, Importance.HIGH, HDFS_URL_DOC, HDFS_GROUP, 1, Width.MEDIUM, HDFS_URL_DISPLAY)
-        .define(HADOOP_CONF_DIR_CONFIG, Type.STRING, HADOOP_CONF_DIR_DEFAULT, Importance.HIGH, HADOOP_CONF_DIR_DOC, HDFS_GROUP, 2, Width.MEDIUM, HADOOP_CONF_DIR_DISPLAY)
-        .define(HADOOP_HOME_CONFIG, Type.STRING, HADOOP_HOME_DEFAULT, Importance.HIGH, HADOOP_HOME_DOC, HDFS_GROUP, 3, Width.SHORT, HADOOP_HOME_DISPLAY)
-        .define(TOPICS_DIR_CONFIG, Type.STRING, TOPICS_DIR_DEFAULT, Importance.HIGH, TOPICS_DIR_DOC, HDFS_GROUP, 4, Width.SHORT, TOPICS_DIR_DISPLAY)
-        .define(LOGS_DIR_CONFIG, Type.STRING, LOGS_DIR_DEFAULT, Importance.HIGH, LOGS_DIR_DOC, HDFS_GROUP, 5, Width.SHORT, LOGS_DIR_DISPLAY)
-        .define(FORMAT_CLASS_CONFIG, Type.STRING, FORMAT_CLASS_DEFAULT, Importance.HIGH, FORMAT_CLASS_DOC, HDFS_GROUP, 6, Width.SHORT, FORMAT_CLASS_DISPLAY);
+    // HDFS_URL_CONFIG property is retained for backwarks compatibility with HDFS connector and will be removed in future versions.
+    config.define(HDFS_URL_CONFIG, Type.STRING, Importance.HIGH, HDFS_URL_DOC, STORE_GROUP, 1, Width.MEDIUM, HDFS_URL_DISPLAY);
+
+    config.define(TOPICS_DIR_CONFIG, Type.STRING, TOPICS_DIR_DEFAULT, Importance.HIGH, TOPICS_DIR_DOC, STORE_GROUP, 4, Width.SHORT, TOPICS_DIR_DISPLAY)
+        .define(LOGS_DIR_CONFIG, Type.STRING, LOGS_DIR_DEFAULT, Importance.HIGH, LOGS_DIR_DOC, STORE_GROUP, 5, Width.SHORT, LOGS_DIR_DISPLAY)
+        .define(FORMAT_CLASS_CONFIG, Type.STRING, FORMAT_CLASS_DEFAULT, Importance.HIGH, FORMAT_CLASS_DOC, STORE_GROUP, 6, Width.SHORT, FORMAT_CLASS_DISPLAY);
 
     // Define Hive configuration group
     config.define(HIVE_INTEGRATION_CONFIG, Type.BOOLEAN, HIVE_INTEGRATION_DEFAULT, Importance.HIGH, HIVE_INTEGRATION_DOC, HIVE_GROUP, 1, Width.SHORT, HIVE_INTEGRATION_DISPLAY,
@@ -271,19 +243,6 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
         .define(HIVE_CONF_DIR_CONFIG, Type.STRING, HIVE_CONF_DIR_DEFAULT, Importance.HIGH, HIVE_CONF_DIR_DOC, HIVE_GROUP, 3, Width.MEDIUM, HIVE_CONF_DIR_DISPLAY, hiveIntegrationDependentsRecommender)
         .define(HIVE_HOME_CONFIG, Type.STRING, HIVE_HOME_DEFAULT, Importance.HIGH, HIVE_HOME_DOC, HIVE_GROUP, 4, Width.MEDIUM, HIVE_HOME_DISPLAY, hiveIntegrationDependentsRecommender)
         .define(HIVE_DATABASE_CONFIG, Type.STRING, HIVE_DATABASE_DEFAULT, Importance.HIGH, HIVE_DATABASE_DOC, HIVE_GROUP, 5, Width.SHORT, HIVE_DATABASE_DISPLAY, hiveIntegrationDependentsRecommender);
-
-    // Define Security configuration group
-    config.define(HDFS_AUTHENTICATION_KERBEROS_CONFIG, Type.BOOLEAN, HDFS_AUTHENTICATION_KERBEROS_DEFAULT, Importance.HIGH, HDFS_AUTHENTICATION_KERBEROS_DOC,
-                  SECURITY_GROUP, 1, Width.SHORT, HDFS_AUTHENTICATION_KERBEROS_DISPLAY,
-                  Arrays.asList(CONNECT_HDFS_PRINCIPAL_CONFIG, CONNECT_HDFS_KEYTAB_CONFIG, HDFS_NAMENODE_PRINCIPAL_CONFIG, KERBEROS_TICKET_RENEW_PERIOD_MS_CONFIG))
-        .define(CONNECT_HDFS_PRINCIPAL_CONFIG, Type.STRING, CONNECT_HDFS_PRINCIPAL_DEFAULT, Importance.HIGH, CONNECT_HDFS_PRINCIPAL_DOC,
-                SECURITY_GROUP, 2, Width.MEDIUM, CONNECT_HDFS_PRINCIPAL_DISPLAY, hdfsAuthenticationKerberosDependentsRecommender)
-        .define(CONNECT_HDFS_KEYTAB_CONFIG, Type.STRING, CONNECT_HDFS_KEYTAB_DEFAULT, Importance.HIGH, CONNECT_HDFS_KEYTAB_DOC,
-                SECURITY_GROUP, 3, Width.MEDIUM, CONNECT_HDFS_KEYTAB_DISPLAY, hdfsAuthenticationKerberosDependentsRecommender)
-        .define(HDFS_NAMENODE_PRINCIPAL_CONFIG, Type.STRING, HDFS_NAMENODE_PRINCIPAL_DEFAULT, Importance.HIGH, HDFS_NAMENODE_PRINCIPAL_DOC,
-                SECURITY_GROUP, 4, Width.MEDIUM, HDFS_NAMENODE_PRINCIPAL_DISPLAY, hdfsAuthenticationKerberosDependentsRecommender)
-        .define(KERBEROS_TICKET_RENEW_PERIOD_MS_CONFIG, Type.LONG, KERBEROS_TICKET_RENEW_PERIOD_MS_DEFAULT, Importance.LOW, KERBEROS_TICKET_RENEW_PERIOD_MS_DOC,
-                SECURITY_GROUP, 5, Width.SHORT, KERBEROS_TICKET_RENEW_PERIOD_MS_DISPLAY, hdfsAuthenticationKerberosDependentsRecommender);
 
     // Define Schema configuration group
     config.define(SCHEMA_COMPATIBILITY_CONFIG, Type.STRING, SCHEMA_COMPATIBILITY_DEFAULT, Importance.HIGH, SCHEMA_COMPATIBILITY_DOC, SCHEMA_GROUP, 1, Width.SHORT,
@@ -364,7 +323,27 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
     @Override
     public boolean visible(String name, Map<String, Object> connectorConfigs) {
       String partitionerName = (String) connectorConfigs.get(PARTITIONER_CLASS_CONFIG);
-      return true;
+      try {
+        @SuppressWarnings("unchecked")
+        Class<? extends Partitioner> partitioner = (Class<? extends Partitioner>) Class.forName(partitionerName);
+        if (classNameEquals(partitionerName, DefaultPartitioner.class)) {
+          return false;
+        } else if (FieldPartitioner.class.isAssignableFrom(partitioner)) {
+          // subclass of FieldPartitioner
+          return name.equals(PARTITION_FIELD_NAME_CONFIG);
+        } else if (TimeBasedPartitioner.class.isAssignableFrom(partitioner)) {
+          // subclass of TimeBasedPartitioner
+          if (classNameEquals(partitionerName, DailyPartitioner.class) || classNameEquals(partitionerName, HourlyPartitioner.class)) {
+            return name.equals(LOCALE_CONFIG) || name.equals(TIMEZONE_CONFIG);
+          } else {
+            return name.equals(PARTITION_DURATION_MS_CONFIG) || name.equals(PATH_FORMAT_CONFIG) || name.equals(LOCALE_CONFIG) || name.equals(TIMEZONE_CONFIG);
+          }
+        } else {
+          throw new ConfigException("Not a valid partitioner class: " + partitionerName);
+        }
+      } catch (ClassNotFoundException e) {
+        throw new ConfigException("Partitioner class not found: " + partitionerName);
+      }
     }
   }
 

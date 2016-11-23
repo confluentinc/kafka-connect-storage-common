@@ -28,7 +28,7 @@ public abstract class HiveUtil {
   protected final HiveMetaStore hiveMetaStore;
 
   public HiveUtil(StorageSinkConnectorConfig connectorConfig, AvroData avroData, HiveMetaStore hiveMetaStore) {
-    this.url = connectorConfig.getString(StorageSinkConnectorConfig.HDFS_URL_CONFIG);
+    this.url = connectorConfig.getString(StorageSinkConnectorConfig.STORE_URL_CONFIG);
     this.topicsDir = connectorConfig.getString(StorageSinkConnectorConfig.TOPICS_DIR_CONFIG);
     this.avroData = avroData;
     this.hiveMetaStore = hiveMetaStore;
