@@ -14,15 +14,15 @@
 
 package io.confluent.connect.storage;
 
-import io.confluent.connect.avro.AvroData;
-import io.confluent.connect.storage.hive.HiveMetaStore;
-import io.confluent.connect.storage.hive.HiveUtil;
 import org.apache.kafka.common.config.AbstractConfig;
 
-public interface Format<T extends AbstractConfig, V, S extends HiveMetaStore> {
+import io.confluent.connect.storage.hive.HiveMetaStore;
+import io.confluent.connect.storage.hive.HiveUtil;
+
+public interface Format<T extends AbstractConfig, S, U extends HiveMetaStore> {
   RecordWriterProvider getRecordWriterProvider();
 
-  SchemaFileReader getSchemaFileReader(V avroData);
+  SchemaFileReader getSchemaFileReader(S data);
 
-  HiveUtil getHiveUtil(T config, V avroData, S hiveMetaStore);
+  HiveUtil getHiveUtil(T config, S data, U hiveMetaStore);
 }

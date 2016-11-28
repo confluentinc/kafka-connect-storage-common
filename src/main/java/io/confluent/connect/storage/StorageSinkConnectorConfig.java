@@ -228,7 +228,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
     // Define Store's basic configuration group
     config.define(STORE_URL_CONFIG, Type.STRING, Importance.HIGH, STORE_URL_DOC, STORE_GROUP, 1, Width.MEDIUM, STORE_URL_DISPLAY);
 
-    // HDFS_URL_CONFIG property is retained for backwarks compatibility with HDFS connector and will be removed in future versions.
+    // HDFS_URL_CONFIG property is retained for backwards compatibility with HDFS connector and will be removed in future versions.
     config.define(HDFS_URL_CONFIG, Type.STRING, Importance.HIGH, HDFS_URL_DOC, STORE_GROUP, 1, Width.MEDIUM, HDFS_URL_DISPLAY);
 
     config.define(TOPICS_DIR_CONFIG, Type.STRING, TOPICS_DIR_DEFAULT, Importance.HIGH, TOPICS_DIR_DOC, STORE_GROUP, 4, Width.SHORT, TOPICS_DIR_DISPLAY)

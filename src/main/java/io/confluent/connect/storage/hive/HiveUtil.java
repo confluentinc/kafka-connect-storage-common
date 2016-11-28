@@ -14,6 +14,7 @@
 
 package io.confluent.connect.storage.hive;
 
+import org.apache.kafka.common.config.ConfigException;
 import org.apache.kafka.connect.data.Schema;
 
 import io.confluent.connect.avro.AvroData;
@@ -28,7 +29,15 @@ public abstract class HiveUtil {
   protected final HiveMetaStore hiveMetaStore;
 
   public HiveUtil(StorageSinkConnectorConfig connectorConfig, AvroData avroData, HiveMetaStore hiveMetaStore) {
-    this.url = connectorConfig.getString(StorageSinkConnectorConfig.STORE_URL_CONFIG);
+    String urlKey;
+
+    try {
+      urlKey = connectorConfig.getString(StorageSinkConnectorConfig.STORE_URL_CONFIG);
+    } catch (ConfigException e) {
+      urlKey = connectorConfig.getString(StorageSinkConnectorConfig.HDFS_URL_CONFIG);
+    }
+
+    this.url = urlKey;
     this.topicsDir = connectorConfig.getString(StorageSinkConnectorConfig.TOPICS_DIR_CONFIG);
     this.avroData = avroData;
     this.hiveMetaStore = hiveMetaStore;
