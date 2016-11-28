@@ -46,6 +46,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
   public static volatile String STORE_URL_CONFIG = "store.url";
   protected static volatile String STORE_URL_DOC =
       "Store's connection URL, if applicable.";
+  public static final String STORE_URL_DEFAULT = null;
   protected static volatile String STORE_URL_DISPLAY = "Store URL";
 
   public static final String TOPICS_DIR_CONFIG = "topics.dir";
@@ -226,7 +227,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
 
   static {
     // Define Store's basic configuration group
-    config.define(STORE_URL_CONFIG, Type.STRING, Importance.HIGH, STORE_URL_DOC, STORE_GROUP, 1, Width.MEDIUM, STORE_URL_DISPLAY);
+    config.define(STORE_URL_CONFIG, Type.STRING, STORE_URL_DEFAULT, Importance.HIGH, STORE_URL_DOC, STORE_GROUP, 1, Width.MEDIUM, STORE_URL_DISPLAY);
 
     // HDFS_URL_CONFIG property is retained for backwards compatibility with HDFS connector and will be removed in future versions.
     config.define(HDFS_URL_CONFIG, Type.STRING, Importance.HIGH, HDFS_URL_DOC, STORE_GROUP, 1, Width.MEDIUM, HDFS_URL_DISPLAY);
