@@ -55,11 +55,9 @@
         <junit.version>4.12</junit.version>
         <hadoop.version>2.6.1</hadoop.version>
         <hive.version>1.2.1</hive.version>
-        <avro.version>1.7.7</avro.version>
         <parquet.version>1.7.0</parquet.version>
         <commons-io.version>2.4</commons-io.version>
         <joda.version>2.9.6</joda.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <confluent.maven.repo>http://packages.confluent.io/maven/</confluent.maven.repo>
     </properties>
 
@@ -88,21 +86,6 @@
             <version>${hadoop.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.hive</groupId>
-            <artifactId>hive-cli</artifactId>
-            <version>${hive.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hive</groupId>
-            <artifactId>hive-common</artifactId>
-            <version>${hive.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>avro-mapred</artifactId>
-            <version>${avro.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.parquet</groupId>
             <artifactId>parquet-column</artifactId>
             <version>${parquet.version}</version>
@@ -124,33 +107,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-minicluster</artifactId>
-            <version>${hadoop.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-minikdc</artifactId>
-            <version>${hadoop.version}</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <!-- exclude this from hadoop minikdc as the minikdc depends on
-                    the apacheds-jdbm1 bundle, which is not available in maven central-->
-                    <groupId>org.apache.directory.jdbm</groupId>
-                    <artifactId>apacheds-jdbm1</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <!-- add this to satisfy the dependency requirement of apacheds-jdbm1-->
-            <groupId>org.apache.directory.jdbm</groupId>
-            <artifactId>apacheds-jdbm1</artifactId>
-            <version>2.0.0-M2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
             <version>${joda.version}</version>
@@ -159,11 +115,6 @@
             <groupId>org.apache.hive.hcatalog</groupId>
             <artifactId>hive-hcatalog-core</artifactId>
             <version>${hive.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.parquet</groupId>
-            <artifactId>parquet-hadoop-bundle</artifactId>
-            <version>${parquet.version}</version>
         </dependency>
     </dependencies>
 
