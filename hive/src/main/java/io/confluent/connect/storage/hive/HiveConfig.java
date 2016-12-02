@@ -36,15 +36,13 @@ public class HiveConfig extends AbstractConfig {
       + "Use ``store.url`` instead.";
   public static final String HDFS_URL_DISPLAY = "HDFS URL";
 
-  public static volatile String STORE_URL_CONFIG = "store.url";
-  public static volatile String STORE_URL_DOC =
-      "Store's connection URL, if applicable.";
+  public static final String STORE_URL_CONFIG = "store.url";
+  public static final String STORE_URL_DOC = "Store's connection URL, if applicable.";
   public static final String STORE_URL_DEFAULT = null;
-  public static volatile String STORE_URL_DISPLAY = "Store URL";
+  public static final String STORE_URL_DISPLAY = "Store URL";
 
   public static final String TOPICS_DIR_CONFIG = "topics.dir";
-  public static final String TOPICS_DIR_DOC =
-      "Top level directory to store the data ingested from Kafka.";
+  public static final String TOPICS_DIR_DOC = "Top level directory to store the data ingested from Kafka.";
   public static final String TOPICS_DIR_DEFAULT = "topics";
   public static final String TOPICS_DIR_DISPLAY = "Topics directory";
 
@@ -89,10 +87,12 @@ public class HiveConfig extends AbstractConfig {
   public static final String HIVE_GROUP = PartitionerConfig.HIVE_GROUP;
   public static final String SCHEMA_GROUP = PartitionerConfig.SCHEMA_GROUP;
 
+  // CHECKSTYLE:OFF
   public static final ConfigDef.Recommender hiveIntegrationDependentsRecommender =
       new PartitionerConfig.BooleanParentRecommender(HIVE_INTEGRATION_CONFIG);
   public static final ConfigDef.Recommender schemaCompatibilityRecommender =
       new PartitionerConfig.SchemaCompatibilityRecommender();
+  // CHECKSTYLE:ON
 
   private static ConfigDef config = new ConfigDef();
 

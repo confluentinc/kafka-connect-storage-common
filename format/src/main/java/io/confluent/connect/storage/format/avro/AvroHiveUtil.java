@@ -35,11 +35,10 @@ import io.confluent.connect.storage.partitioner.Partitioner;
 
 public class AvroHiveUtil extends HiveUtil {
 
-  private static final String avroSerde = "org.apache.hadoop.hive.serde2.avro.AvroSerDe";
-  private static final String avroInputFormat = "org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat";
-  private static final String avroOutputFormat = "org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat";
+  private static final String AVRO_SERDE = "org.apache.hadoop.hive.serde2.avro.AvroSerDe";
+  private static final String AVRO_INPUT_FORMAT = "org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat";
+  private static final String AVRO_OUTPUT_FORMAT = "org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat";
   private static final String AVRO_SCHEMA_LITERAL = "avro.schema.literal";
-
 
   public AvroHiveUtil(AbstractConfig connectorConfig, AvroData avroData, HiveMetaStore hiveMetaStore) {
     super(connectorConfig, avroData, hiveMetaStore);
@@ -66,10 +65,10 @@ public class AvroHiveUtil extends HiveUtil {
     table.getParameters().put("EXTERNAL", "TRUE");
     String tablePath = hiveDirectoryName(url, topicsDir, tableName);
     table.setDataLocation(new Path(tablePath));
-    table.setSerializationLib(avroSerde);
+    table.setSerializationLib(AVRO_SERDE);
     try {
-      table.setInputFormatClass(avroInputFormat);
-      table.setOutputFormatClass(avroOutputFormat);
+      table.setInputFormatClass(AVRO_INPUT_FORMAT);
+      table.setOutputFormatClass(AVRO_OUTPUT_FORMAT);
     } catch (HiveException e) {
       throw new HiveMetaStoreException("Cannot find input/output format:", e);
     }

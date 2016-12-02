@@ -124,11 +124,13 @@ public class PartitionerConfig extends AbstractConfig {
   public static final String SCHEMA_GROUP = "Schema";
   public static final String PARTITIONER_GROUP = "Partitioner";
 
+  // CHECKSTYLE:OFF
   public static final ConfigDef.Recommender hiveIntegrationDependentsRecommender =
       new BooleanParentRecommender(HIVE_INTEGRATION_CONFIG);
   public static final ConfigDef.Recommender schemaCompatibilityRecommender = new SchemaCompatibilityRecommender();
-  protected static final ConfigDef.Recommender partitionerClassDependentsRecommender =
+  public static final ConfigDef.Recommender partitionerClassDependentsRecommender =
       new PartitionerClassDependentsRecommender();
+  // CHECKSTYLE:ON
 
   private static ConfigDef config = new ConfigDef();
 

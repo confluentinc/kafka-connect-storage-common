@@ -26,8 +26,10 @@ import java.util.Map;
 
 public class DefaultPartitioner implements Partitioner {
 
+  // CHECKSTYLE:OFF
   private static final String partitionField = "partition";
   private final List<FieldSchema> partitionFields =  new ArrayList<>();
+  // CHECKSTYLE:ON
 
   @Override
   public void configure(Map<String, Object> config) {

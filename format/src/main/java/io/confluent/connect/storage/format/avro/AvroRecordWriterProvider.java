@@ -45,7 +45,7 @@ public class AvroRecordWriterProvider implements RecordWriterProvider {
 
   @Override
   public RecordWriter<SinkRecord> getRecordWriter(Configuration conf, final String fileName,
-                                                        SinkRecord record, final AvroData avroData)
+                                                  SinkRecord record, final AvroData avroData)
       throws IOException {
     DatumWriter<Object> datumWriter = new GenericDatumWriter<>();
     final DataFileWriter<Object> writer = new DataFileWriter<>(datumWriter);
@@ -56,7 +56,7 @@ public class AvroRecordWriterProvider implements RecordWriterProvider {
     org.apache.avro.Schema avroSchema = avroData.fromConnectSchema(schema);
     writer.create(avroSchema, out);
 
-    return new RecordWriter<SinkRecord>(){
+    return new RecordWriter<SinkRecord>() {
       @Override
       public void write(SinkRecord record) throws IOException {
         log.trace("Sink record: {}", record.toString());

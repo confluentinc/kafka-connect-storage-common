@@ -34,10 +34,10 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
   public static final String HDFS_URL_DOC = HiveConfig.HDFS_URL_DOC;
   public static final String HDFS_URL_DISPLAY = HiveConfig.HDFS_URL_DISPLAY;
 
-  public static volatile String STORE_URL_CONFIG = HiveConfig.STORE_URL_CONFIG;
-  public static volatile String STORE_URL_DOC = HiveConfig.STORE_URL_DOC;
+  public static final String STORE_URL_CONFIG = HiveConfig.STORE_URL_CONFIG;
+  public static final String STORE_URL_DOC = HiveConfig.STORE_URL_DOC;
   public static final String STORE_URL_DEFAULT = HiveConfig.STORE_URL_DEFAULT;
-  public static volatile String STORE_URL_DISPLAY = HiveConfig.STORE_URL_DISPLAY;
+  public static final String STORE_URL_DISPLAY = HiveConfig.STORE_URL_DISPLAY;
 
   public static final String TOPICS_DIR_CONFIG = HiveConfig.TOPICS_DIR_CONFIG;
   public static final String TOPICS_DIR_DOC = HiveConfig.TOPICS_DIR_DOC;
@@ -183,9 +183,11 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
   public static final String CONNECTOR_GROUP = "Connector";
   public static final String INTERNAL_GROUP = "Internal";
 
+  // CHECKSTYLE:OFF
   public static final ConfigDef.Recommender hiveIntegrationDependentsRecommender = PartitionerConfig.hiveIntegrationDependentsRecommender;
   public static final ConfigDef.Recommender schemaCompatibilityRecommender = PartitionerConfig.schemaCompatibilityRecommender;
   public static final ConfigDef.Recommender partitionerClassDependentsRecommender = PartitionerConfig.hiveIntegrationDependentsRecommender;
+  // CHECKSTYLE:ON
 
   protected static ConfigDef config = new ConfigDef();
 

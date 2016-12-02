@@ -19,8 +19,10 @@ package io.confluent.connect.storage.wal;
 import org.apache.kafka.connect.errors.ConnectException;
 
 public interface WAL {
+  // CHECKSTYLE:OFF
   String beginMarker = "BEGIN";
   String endMarker = "END";
+  // CHECKSTYLE:ON
 
   void acquireLease() throws ConnectException;
 
