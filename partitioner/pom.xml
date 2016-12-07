@@ -35,6 +35,7 @@
             <groupId>org.apache.kafka</groupId>
             <artifactId>connect-api</artifactId>
             <version>${kafka.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>joda-time</groupId>
