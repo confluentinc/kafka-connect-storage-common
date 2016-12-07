@@ -21,11 +21,12 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.kafka.common.TopicPartition;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 import io.confluent.connect.storage.wal.WAL;
 
-public interface Storage {
+public interface Storage extends Closeable {
   boolean exists(String filename) throws IOException;
 
   boolean mkdirs(String filename) throws IOException;

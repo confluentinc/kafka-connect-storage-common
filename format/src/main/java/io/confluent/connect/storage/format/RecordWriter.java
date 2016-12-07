@@ -16,9 +16,10 @@
 
 package io.confluent.connect.storage.format;
 
+import java.io.Closeable;
 import java.io.IOException;
 
-public interface RecordWriter<V> {
+public interface RecordWriter<V> extends Closeable {
   void write(V value) throws IOException;
 
   void close() throws IOException;
