@@ -16,9 +16,6 @@
 
 package io.confluent.connect.storage;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.PathFilter;
 import org.apache.kafka.common.TopicPartition;
 
 import java.io.Closeable;
@@ -26,7 +23,14 @@ import java.io.IOException;
 
 import io.confluent.connect.storage.wal.WAL;
 
-public interface Storage extends Closeable {
+/**
+ * An interface to the distributed storage.
+ *
+ * @param <R> File listing that is returned when searching the storage contents.
+ * @param <T> A filtering argument to restrict search of files to a given path in storage.
+ * @param <C> The configuration of this storage.
+ */
+public interface Storage<R, T, C> extends Closeable {
   boolean exists(String filename) throws IOException;
 
   boolean mkdirs(String filename) throws IOException;
@@ -41,11 +45,11 @@ public interface Storage extends Closeable {
 
   WAL wal(String topicsDir, TopicPartition topicPart);
 
-  FileStatus[] listStatus(String path, PathFilter filter) throws IOException;
+  R listStatus(String path, T filter) throws IOException;
 
-  FileStatus[] listStatus(String path) throws IOException;
+  R listStatus(String path) throws IOException;
 
   String url();
 
-  Configuration conf();
+  C conf();
 }
