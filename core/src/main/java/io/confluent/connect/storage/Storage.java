@@ -19,35 +19,34 @@ package io.confluent.connect.storage;
 import org.apache.kafka.common.TopicPartition;
 
 import java.io.Closeable;
-import java.io.IOException;
 
 import io.confluent.connect.storage.wal.WAL;
 
 /**
- * An interface to the distributed storage.
+ * Interface to distributed storage.
  *
  * @param <R> File listing that is returned when searching the storage contents.
  * @param <T> A filtering argument to restrict search of files to a given path in storage.
  * @param <C> The configuration of this storage.
  */
 public interface Storage<R, T, C> extends Closeable {
-  boolean exists(String filename) throws IOException;
+  boolean exists(String filename);
 
-  boolean mkdirs(String filename) throws IOException;
+  boolean mkdirs(String filename);
 
-  void append(String filename, Object object) throws IOException;
+  void append(String filename, Object object);
 
-  void delete(String filename) throws IOException;
+  void delete(String filename);
 
-  void commit(String tempFile, String committedFile) throws IOException;
+  void commit(String tempFile, String committedFile);
 
-  void close() throws IOException;
+  void close();
 
   WAL wal(String topicsDir, TopicPartition topicPart);
 
-  R listStatus(String path, T filter) throws IOException;
+  R listStatus(String path, T filter);
 
-  R listStatus(String path) throws IOException;
+  R listStatus(String path);
 
   String url();
 
