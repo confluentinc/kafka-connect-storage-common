@@ -34,6 +34,7 @@ public class HiveConfig extends AbstractConfig {
       "The HDFS connection URL. This configuration has the format of hdfs:://hostname:port and "
       + "specifies the HDFS to export data to. This property is deprecated and will be removed in future releases. "
       + "Use ``store.url`` instead.";
+  public static final String HDFS_URL_DEFAULT = null;
   public static final String HDFS_URL_DISPLAY = "HDFS URL";
 
   public static final String STORE_URL_CONFIG = "store.url";
@@ -101,9 +102,9 @@ public class HiveConfig extends AbstractConfig {
     config.define(STORE_URL_CONFIG, Type.STRING, STORE_URL_DEFAULT, Importance.HIGH, STORE_URL_DOC, STORE_GROUP, 1, Width.MEDIUM, STORE_URL_DISPLAY);
 
     // HDFS_URL_CONFIG property is retained for backwards compatibility with HDFS connector and will be removed in future versions.
-    config.define(HDFS_URL_CONFIG, Type.STRING, Importance.HIGH, HDFS_URL_DOC, STORE_GROUP, 1, Width.MEDIUM, HDFS_URL_DISPLAY);
+    config.define(HDFS_URL_CONFIG, Type.STRING, HDFS_URL_DEFAULT, Importance.HIGH, HDFS_URL_DOC, STORE_GROUP, 2, Width.MEDIUM, HDFS_URL_DISPLAY);
 
-    config.define(TOPICS_DIR_CONFIG, Type.STRING, TOPICS_DIR_DEFAULT, Importance.HIGH, TOPICS_DIR_DOC, STORE_GROUP, 4, Width.SHORT, TOPICS_DIR_DISPLAY);
+    config.define(TOPICS_DIR_CONFIG, Type.STRING, TOPICS_DIR_DEFAULT, Importance.HIGH, TOPICS_DIR_DOC, STORE_GROUP, 3, Width.SHORT, TOPICS_DIR_DISPLAY);
 
     // Define Hive configuration group
     config.define(HIVE_INTEGRATION_CONFIG, Type.BOOLEAN, HIVE_INTEGRATION_DEFAULT, Importance.HIGH, HIVE_INTEGRATION_DOC, HIVE_GROUP, 1, Width.SHORT, HIVE_INTEGRATION_DISPLAY,

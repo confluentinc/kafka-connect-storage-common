@@ -16,22 +16,26 @@
 
 package io.confluent.connect.storage;
 
-import io.confluent.connect.storage.hive.HiveConfig;
-import io.confluent.connect.storage.partitioner.PartitionerConfig;
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigDef.Importance;
 import org.apache.kafka.common.config.ConfigDef.Type;
 import org.apache.kafka.common.config.ConfigDef.Width;
+import org.apache.kafka.common.config.ConfigException;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
+
+import io.confluent.connect.storage.hive.HiveConfig;
+import io.confluent.connect.storage.partitioner.PartitionerConfig;
 
 public class StorageSinkConnectorConfig extends AbstractConfig {
 
   // This config is deprecated and will be removed in future releases. Use store.url instead.
   public static final String HDFS_URL_CONFIG = HiveConfig.HDFS_URL_CONFIG;
   public static final String HDFS_URL_DOC = HiveConfig.HDFS_URL_DOC;
+  public static final String HDFS_URL_DEFAULT = HiveConfig.HDFS_URL_DEFAULT;
   public static final String HDFS_URL_DISPLAY = HiveConfig.HDFS_URL_DISPLAY;
 
   public static final String STORE_URL_CONFIG = HiveConfig.STORE_URL_CONFIG;
@@ -189,21 +193,21 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
   public static final ConfigDef.Recommender partitionerClassDependentsRecommender = PartitionerConfig.hiveIntegrationDependentsRecommender;
   // CHECKSTYLE:ON
 
-  protected static ConfigDef config = new ConfigDef();
+  protected static final ConfigDef CONFIG_DEF = new ConfigDef();
 
   static {
     // Define Store's basic configuration group
-    config.define(STORE_URL_CONFIG, Type.STRING, STORE_URL_DEFAULT, Importance.HIGH, STORE_URL_DOC, STORE_GROUP, 1, Width.MEDIUM, STORE_URL_DISPLAY);
+    CONFIG_DEF.define(STORE_URL_CONFIG, Type.STRING, STORE_URL_DEFAULT, Importance.HIGH, STORE_URL_DOC, STORE_GROUP, 1, Width.MEDIUM, STORE_URL_DISPLAY);
 
     // HDFS_URL_CONFIG property is retained for backwards compatibility with HDFS connector and will be removed in future versions.
-    config.define(HDFS_URL_CONFIG, Type.STRING, Importance.HIGH, HDFS_URL_DOC, STORE_GROUP, 1, Width.MEDIUM, HDFS_URL_DISPLAY);
+    CONFIG_DEF.define(HDFS_URL_CONFIG, Type.STRING, HDFS_URL_DEFAULT, Importance.HIGH, HDFS_URL_DOC, STORE_GROUP, 1, Width.MEDIUM, HDFS_URL_DISPLAY);
 
-    config.define(TOPICS_DIR_CONFIG, Type.STRING, TOPICS_DIR_DEFAULT, Importance.HIGH, TOPICS_DIR_DOC, STORE_GROUP, 4, Width.SHORT, TOPICS_DIR_DISPLAY)
+    CONFIG_DEF.define(TOPICS_DIR_CONFIG, Type.STRING, TOPICS_DIR_DEFAULT, Importance.HIGH, TOPICS_DIR_DOC, STORE_GROUP, 4, Width.SHORT, TOPICS_DIR_DISPLAY)
         .define(LOGS_DIR_CONFIG, Type.STRING, LOGS_DIR_DEFAULT, Importance.HIGH, LOGS_DIR_DOC, STORE_GROUP, 5, Width.SHORT, LOGS_DIR_DISPLAY)
         .define(FORMAT_CLASS_CONFIG, Type.STRING, FORMAT_CLASS_DEFAULT, Importance.HIGH, FORMAT_CLASS_DOC, STORE_GROUP, 6, Width.SHORT, FORMAT_CLASS_DISPLAY);
 
     // Define Hive configuration group
-    config.define(HIVE_INTEGRATION_CONFIG, Type.BOOLEAN, HIVE_INTEGRATION_DEFAULT, Importance.HIGH, HIVE_INTEGRATION_DOC, HIVE_GROUP, 1, Width.SHORT, HIVE_INTEGRATION_DISPLAY,
+    CONFIG_DEF.define(HIVE_INTEGRATION_CONFIG, Type.BOOLEAN, HIVE_INTEGRATION_DEFAULT, Importance.HIGH, HIVE_INTEGRATION_DOC, HIVE_GROUP, 1, Width.SHORT, HIVE_INTEGRATION_DISPLAY,
                   Arrays.asList(HIVE_METASTORE_URIS_CONFIG, HIVE_CONF_DIR_CONFIG, HIVE_HOME_CONFIG, HIVE_DATABASE_CONFIG, SCHEMA_COMPATIBILITY_CONFIG))
         .define(HIVE_METASTORE_URIS_CONFIG, Type.STRING, HIVE_METASTORE_URIS_DEFAULT, Importance.HIGH, HIVE_METASTORE_URIS_DOC, HIVE_GROUP, 2, Width.MEDIUM,
                 HIVE_METASTORE_URIS_DISPLAY, hiveIntegrationDependentsRecommender)
@@ -212,12 +216,12 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
         .define(HIVE_DATABASE_CONFIG, Type.STRING, HIVE_DATABASE_DEFAULT, Importance.HIGH, HIVE_DATABASE_DOC, HIVE_GROUP, 5, Width.SHORT, HIVE_DATABASE_DISPLAY, hiveIntegrationDependentsRecommender);
 
     // Define Schema configuration group
-    config.define(SCHEMA_COMPATIBILITY_CONFIG, Type.STRING, SCHEMA_COMPATIBILITY_DEFAULT, Importance.HIGH, SCHEMA_COMPATIBILITY_DOC, SCHEMA_GROUP, 1, Width.SHORT,
+    CONFIG_DEF.define(SCHEMA_COMPATIBILITY_CONFIG, Type.STRING, SCHEMA_COMPATIBILITY_DEFAULT, Importance.HIGH, SCHEMA_COMPATIBILITY_DOC, SCHEMA_GROUP, 1, Width.SHORT,
                   SCHEMA_COMPATIBILITY_DISPLAY, schemaCompatibilityRecommender)
         .define(SCHEMA_CACHE_SIZE_CONFIG, Type.INT, SCHEMA_CACHE_SIZE_DEFAULT, Importance.LOW, SCHEMA_CACHE_SIZE_DOC, SCHEMA_GROUP, 2, Width.SHORT, SCHEMA_CACHE_SIZE_DISPLAY);
 
     // Define Connector configuration group
-    config.define(FLUSH_SIZE_CONFIG, Type.INT, Importance.HIGH, FLUSH_SIZE_DOC, CONNECTOR_GROUP, 1, Width.SHORT, FLUSH_SIZE_DISPLAY)
+    CONFIG_DEF.define(FLUSH_SIZE_CONFIG, Type.INT, Importance.HIGH, FLUSH_SIZE_DOC, CONNECTOR_GROUP, 1, Width.SHORT, FLUSH_SIZE_DISPLAY)
         .define(ROTATE_INTERVAL_MS_CONFIG, Type.LONG, ROTATE_INTERVAL_MS_DEFAULT, Importance.HIGH, ROTATE_INTERVAL_MS_DOC, CONNECTOR_GROUP, 2, Width.SHORT, ROTATE_INTERVAL_MS_DISPLAY)
         .define(ROTATE_SCHEDULE_INTERVAL_MS_CONFIG, Type.LONG, ROTATE_SCHEDULE_INTERVAL_MS_DEFAULT, Importance.MEDIUM, ROTATE_SCHEDULE_INTERVAL_MS_DOC, CONNECTOR_GROUP, 3, Width.SHORT, ROTATE_SCHEDULE_INTERVAL_MS_DISPLAY)
         .define(RETRY_BACKOFF_CONFIG, Type.LONG, RETRY_BACKOFF_DEFAULT, Importance.LOW, RETRY_BACKOFF_DOC, CONNECTOR_GROUP, 4, Width.SHORT, RETRY_BACKOFF_DISPLAY)
@@ -236,18 +240,24 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
                 CONNECTOR_GROUP, 12, Width.SHORT, FILENAME_OFFSET_ZERO_PAD_WIDTH_DISPLAY);
 
     // Define Internal configuration group
-    config.define(STORAGE_CLASS_CONFIG, Type.STRING, STORAGE_CLASS_DEFAULT, Importance.LOW, STORAGE_CLASS_DOC, INTERNAL_GROUP, 1, Width.MEDIUM, STORAGE_CLASS_DISPLAY);
+    CONFIG_DEF.define(STORAGE_CLASS_CONFIG, Type.STRING, STORAGE_CLASS_DEFAULT, Importance.LOW, STORAGE_CLASS_DOC, INTERNAL_GROUP, 1, Width.MEDIUM, STORAGE_CLASS_DISPLAY);
   }
 
   public static ConfigDef getConfig() {
-    return config;
+    return CONFIG_DEF;
   }
 
   public StorageSinkConnectorConfig(Map<String, String> props) {
-    super(config, props);
+    this(CONFIG_DEF, props);
   }
 
+  protected StorageSinkConnectorConfig(ConfigDef configDef, Map<String, String> props) {
+    super(configDef, props);
+    if (Objects.equals(getString(STORE_URL_CONFIG), STORE_URL_DEFAULT) && Objects.equals(getString(HDFS_URL_CONFIG), HDFS_URL_DEFAULT)) {
+      throw new ConfigException("Missing required configuration \"" + STORE_URL_CONFIG + "\" which has no default value.");
+    }
+  }
   public static void main(String[] args) {
-    System.out.println(config.toRst());
+    System.out.println(CONFIG_DEF.toRst());
   }
 }
