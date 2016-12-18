@@ -69,7 +69,7 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
   }
 
   public boolean shouldChangeSchema(Schema valueSchema, Schema currentSchema) {
-    return validate(valueSchema, currentSchema) | check(valueSchema, currentSchema);
+    return validate(valueSchema, currentSchema) || check(valueSchema, currentSchema);
   }
 
   public SinkRecord project(SinkRecord record, Schema currentSchema) {
