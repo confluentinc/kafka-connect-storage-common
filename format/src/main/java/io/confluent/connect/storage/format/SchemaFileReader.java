@@ -16,15 +16,18 @@
 
 package io.confluent.connect.storage.format;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 import org.apache.kafka.connect.data.Schema;
 
-import java.io.IOException;
 import java.util.Collection;
 
-public interface SchemaFileReader {
-  Schema getSchema(Configuration conf, Path path) throws IOException;
+/**
+ * Interface for reading a schema from the storage.
+ *
+ * @param <C> Storage configuration type.
+ * @param <S> Type used to discover objects in storage (e.g. Path in HDFS, String in S3).
+ */
+public interface SchemaFileReader<C, S> {
+  Schema getSchema(C conf, S path);
 
-  Collection<Object> readData(Configuration conf, Path path) throws IOException;
+  Collection<Object> readData(C conf, S path);
 }

@@ -18,13 +18,19 @@ package io.confluent.connect.storage.format;
 
 import org.apache.kafka.common.config.AbstractConfig;
 
-import io.confluent.connect.storage.hive.HiveMetaStore;
-import io.confluent.connect.storage.hive.HiveUtil;
+import io.confluent.connect.storage.hive.HiveFactory;
 
-public interface Format<T extends AbstractConfig, S, U extends HiveMetaStore> {
-  RecordWriterProvider getRecordWriterProvider();
+/**
+ * Storage format.
+ *
+ * @param <C> Storage configuration type.
+ * @param <T> Data format.
+ * @param <S> Type used to discover objects in storage (e.g. Path in HDFS, String in S3).
+ */
+public interface Format<C, T, S> {
+  RecordWriterProvider<C, T> getRecordWriterProvider();
 
-  SchemaFileReader getSchemaFileReader(S data);
+  SchemaFileReader<C, S> getSchemaFileReader(T data);
 
-  HiveUtil getHiveUtil(T config, S data, U hiveMetaStore);
+  HiveFactory<? extends AbstractConfig, T> getHiveFactory();
 }

@@ -14,11 +14,16 @@
  * limitations under the License.
  */
 
-package io.confluent.connect.storage.format;
+package io.confluent.connect.storage.hive;
 
-public class FileUtils {
+import org.apache.kafka.common.config.AbstractConfig;
 
-  public static String hiveDirectoryName(String url, String topicsDir, String topic) {
-    return url + "/" + topicsDir + "/" + topic + "/";
-  }
+/**
+ * Constructs a hive utility class for a specific storage.
+ *
+ * @param <C> Storage configuration type.
+ * @param <T> Data type (e.g. AvroData).
+ */
+public interface HiveFactory<C extends AbstractConfig, T> {
+  HiveUtil createHiveUtil(C config, T avroData, HiveMetaStore hiveMetaStore);
 }

@@ -16,17 +16,16 @@
 
 package io.confluent.connect.storage.format;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.kafka.connect.sink.SinkRecord;
 
-import java.io.IOException;
-
-import io.confluent.connect.avro.AvroData;
-
-public interface RecordWriterProvider {
+/**
+ * Provider of a record writer for this storage.
+ *
+ * @param <C> Storage configuration type.
+ * @param <T> Data type (e.g. AvroData).
+ */
+public interface RecordWriterProvider<C, T> {
   String getExtension();
 
-  RecordWriter<SinkRecord> getRecordWriter(
-      Configuration conf, String fileName, SinkRecord record, AvroData avroData
-  ) throws IOException;
+  RecordWriter<SinkRecord> getRecordWriter(C conf, String fileName, final SinkRecord record, final T avroData);
 }
