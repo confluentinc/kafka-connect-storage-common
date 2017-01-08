@@ -16,20 +16,30 @@
 
 package io.confluent.connect.storage;
 
+import org.apache.avro.file.SeekableInput;
 import org.apache.kafka.common.TopicPartition;
 
 import java.io.Closeable;
+import java.io.OutputStream;
 
 import io.confluent.connect.storage.wal.WAL;
 
 /**
  * Interface to distributed storage.
  *
- * @param <R> File listing that is returned when searching the storage contents.
- * @param <T> A filtering argument to restrict search of files to a given path in storage.
  * @param <C> The configuration of this storage.
+ * @param <T> A filtering argument to restrict search of files to a given path in storage.
+ * @param <R> File listing that is returned when searching the storage contents.
  */
-public interface Storage<R, T, C> extends Closeable {
+public interface Storage<C, T, R> extends Closeable {
+
+  /**
+   * Returns wheter a filename exists.
+   *
+   * @param filename
+   * @return true if filename exists, false otherwise.
+   * @throws DataException if the call to the underlying distributed storage failed.
+   */
   boolean exists(String filename);
 
   boolean mkdirs(String filename);
@@ -51,4 +61,8 @@ public interface Storage<R, T, C> extends Closeable {
   String url();
 
   C conf();
+
+  SeekableInput open(String path, C conf);
+
+  OutputStream create(String path, C conf, boolean overwrite);
 }

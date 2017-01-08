@@ -38,7 +38,7 @@ public class StorageFactory {
    * @return the storage instance upon success.
    * @throws ConnectException on error.
    */
-  public static <T extends Storage<?, ?, C>, C> T createStorage(Class<T> storageClass, Class<C> confClass, C conf,
+  public static <T extends Storage<C, ?, ?>, C> T createStorage(Class<T> storageClass, Class<C> confClass, C conf,
                                                                 String url) {
     try {
       Constructor<T> ctor =
