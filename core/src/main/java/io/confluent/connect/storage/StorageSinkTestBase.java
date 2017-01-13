@@ -17,18 +17,16 @@
 package io.confluent.connect.storage;
 
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.sink.SinkTaskContext;
 import org.junit.After;
-import org.junit.Before;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.kafka.connect.data.Schema;
 
 public class StorageSinkTestBase {
 
@@ -36,7 +34,7 @@ public class StorageSinkTestBase {
   protected String url;
 
   protected MockSinkTaskContext context;
-  protected static final String TOPIC = "topic";
+  protected static final String TOPIC = "test-topic";
   protected static final int PARTITION = 12;
   protected static final int PARTITION2 = 13;
   protected static final int PARTITION3 = 14;
@@ -92,7 +90,6 @@ public class StorageSinkTestBase {
         .put("string", "def");
   }
 
-  @Before
   public void setUp() throws Exception {
     properties = createProps();
     assignment = new HashSet<>();
