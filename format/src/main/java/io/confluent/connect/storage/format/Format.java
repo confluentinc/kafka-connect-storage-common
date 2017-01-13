@@ -24,13 +24,12 @@ import io.confluent.connect.storage.hive.HiveFactory;
  * Storage format.
  *
  * @param <C> Storage configuration type.
- * @param <T> Data format.
- * @param <S> Type used to discover objects in storage (e.g. Path in HDFS, String in S3).
+ * @param <T> Type used to discover objects in storage (e.g. Path in HDFS, String in S3).
  */
-public interface Format<C, T, S> {
-  RecordWriterProvider<C, T> getRecordWriterProvider();
+public interface Format<C, T> {
+  RecordWriterProvider<C> getRecordWriterProvider();
 
-  SchemaFileReader<C, S> getSchemaFileReader(T data);
+  SchemaFileReader<C, T> getSchemaFileReader();
 
-  HiveFactory<? extends AbstractConfig, T> getHiveFactory();
+  HiveFactory<? extends AbstractConfig> getHiveFactory();
 }

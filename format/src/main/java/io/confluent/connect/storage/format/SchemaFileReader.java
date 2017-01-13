@@ -24,10 +24,10 @@ import java.util.Collection;
  * Interface for reading a schema from the storage.
  *
  * @param <C> Storage configuration type.
- * @param <S> Type used to discover objects in storage (e.g. Path in HDFS, String in S3).
+ * @param <T> Type used to discover objects in storage (e.g. Path in HDFS, String in S3).
  */
-public interface SchemaFileReader<C, S> {
-  Schema getSchema(C conf, S path);
+public interface SchemaFileReader<C, T> {
+  Schema getSchema(C conf, T path);
 
-  Collection<Object> readData(C conf, S path);
+  Collection<Object> readData(C conf, T path);
 }

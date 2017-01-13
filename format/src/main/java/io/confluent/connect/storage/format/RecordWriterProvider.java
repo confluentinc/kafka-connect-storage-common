@@ -22,10 +22,10 @@ import org.apache.kafka.connect.sink.SinkRecord;
  * Provider of a record writer for this storage.
  *
  * @param <C> Storage configuration type.
- * @param <T> Data type (e.g. AvroData).
+ * @param <S> Schema type.
  */
-public interface RecordWriterProvider<C, T> {
+public interface RecordWriterProvider<C> {
   String getExtension();
 
-  RecordWriter<SinkRecord> getRecordWriter(C conf, String fileName, final SinkRecord record, final T avroData);
+  RecordWriter<SinkRecord> getRecordWriter(C conf, String fileName);
 }
