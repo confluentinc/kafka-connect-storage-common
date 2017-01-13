@@ -24,12 +24,14 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class DailyPartitioner extends TimeBasedPartitioner {
-
-  private static long partitionDurationMs = TimeUnit.HOURS.toMillis(24);
-  private static String pathFormat = "'year'=YYYY/'month'=MM/'day'=dd/";
+  private String pathFormat;
 
   @Override
   public void configure(Map<String, Object> config) {
+    long partitionDurationMs = TimeUnit.HOURS.toMillis(24);
+    String delim = (String) config.get(PartitionerConfig.DIRECTORY_DELIM_CONFIG);
+    pathFormat = "'year'=YYYY" + delim + "'month'=MM" + delim + "'day'=dd" + delim;
+
     String localeString = (String) config.get(PartitionerConfig.LOCALE_CONFIG);
     if (localeString.equals("")) {
       throw new ConfigException(PartitionerConfig.LOCALE_CONFIG,

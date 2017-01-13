@@ -30,10 +30,12 @@ public class DefaultPartitioner implements Partitioner {
   private static final String partitionField = "partition";
   private final List<FieldSchema> partitionFields =  new ArrayList<>();
   // CHECKSTYLE:ON
+  private String delim;
 
   @Override
   public void configure(Map<String, Object> config) {
     partitionFields.add(new FieldSchema(partitionField, TypeInfoFactory.stringTypeInfo.toString(), ""));
+    delim = (String) config.get(PartitionerConfig.DIRECTORY_DELIM_CONFIG);
   }
 
   @Override
@@ -43,7 +45,7 @@ public class DefaultPartitioner implements Partitioner {
 
   @Override
   public String generatePartitionedPath(String topic, String encodedPartition) {
-    return topic + "/" + encodedPartition;
+    return topic + delim + encodedPartition;
   }
 
   @Override

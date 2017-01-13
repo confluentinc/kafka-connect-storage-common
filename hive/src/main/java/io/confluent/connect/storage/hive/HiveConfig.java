@@ -88,6 +88,12 @@ public class HiveConfig extends AbstractConfig {
   public static final String HIVE_GROUP = PartitionerConfig.HIVE_GROUP;
   public static final String SCHEMA_GROUP = PartitionerConfig.SCHEMA_GROUP;
 
+  // Partitioner group
+  public static final String DIRECTORY_DELIM_CONFIG = PartitionerConfig.DIRECTORY_DELIM_CONFIG;
+  public static final String DIRECTORY_DELIM_DOC = PartitionerConfig.DIRECTORY_DELIM_DOC;
+  public static final String DIRECTORY_DELIM_DEFAULT = PartitionerConfig.DIRECTORY_DELIM_DEFAULT;
+  public static final String DIRECTORY_DELIM_DISPLAY = PartitionerConfig.DIRECTORY_DELIM_DISPLAY;
+
   // CHECKSTYLE:OFF
   public static final ConfigDef.Recommender hiveIntegrationDependentsRecommender =
       new PartitionerConfig.BooleanParentRecommender(HIVE_INTEGRATION_CONFIG);
@@ -105,6 +111,7 @@ public class HiveConfig extends AbstractConfig {
     config.define(HDFS_URL_CONFIG, Type.STRING, HDFS_URL_DEFAULT, Importance.HIGH, HDFS_URL_DOC, STORE_GROUP, 2, Width.MEDIUM, HDFS_URL_DISPLAY);
 
     config.define(TOPICS_DIR_CONFIG, Type.STRING, TOPICS_DIR_DEFAULT, Importance.HIGH, TOPICS_DIR_DOC, STORE_GROUP, 3, Width.SHORT, TOPICS_DIR_DISPLAY);
+    config.define(DIRECTORY_DELIM_CONFIG, Type.STRING, DIRECTORY_DELIM_DEFAULT, Importance.MEDIUM, DIRECTORY_DELIM_DOC, STORE_GROUP, 10, Width.MEDIUM, DIRECTORY_DELIM_DISPLAY);
 
     // Define Hive configuration group
     config.define(HIVE_INTEGRATION_CONFIG, Type.BOOLEAN, HIVE_INTEGRATION_DEFAULT, Importance.HIGH, HIVE_INTEGRATION_DOC, HIVE_GROUP, 1, Width.SHORT, HIVE_INTEGRATION_DISPLAY,

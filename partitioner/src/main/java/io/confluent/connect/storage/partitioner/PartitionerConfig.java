@@ -60,6 +60,12 @@ public class PartitionerConfig extends AbstractConfig {
   public static final String HIVE_DATABASE_DEFAULT = "default";
   public static final String HIVE_DATABASE_DISPLAY = "Hive database";
 
+  // Partitioner group
+  public static final String DIRECTORY_DELIM_CONFIG = "partitioner.directory.delim";
+  public static final String DIRECTORY_DELIM_DOC = "Directory delimiter pattern";
+  public static final String DIRECTORY_DELIM_DEFAULT = "/";
+  public static final String DIRECTORY_DELIM_DISPLAY = "Directory Delimiter";
+
   public static final String PARTITIONER_CLASS_CONFIG = "partitioner.class";
   public static final String PARTITIONER_CLASS_DOC =
       "The partitioner to use when writing data to the store. You can use ``DefaultPartitioner``, "
@@ -153,6 +159,7 @@ public class PartitionerConfig extends AbstractConfig {
     // Define Connector configuration group
     config.define(PARTITIONER_CLASS_CONFIG, Type.STRING, PARTITIONER_CLASS_DEFAULT, Importance.HIGH, PARTITIONER_CLASS_DOC, PARTITIONER_GROUP, 6, Width.LONG, PARTITIONER_CLASS_DISPLAY,
             Arrays.asList(PARTITION_FIELD_NAME_CONFIG, PARTITION_DURATION_MS_CONFIG, PATH_FORMAT_CONFIG, LOCALE_CONFIG, TIMEZONE_CONFIG))
+        .define(DIRECTORY_DELIM_CONFIG, Type.STRING, DIRECTORY_DELIM_DEFAULT, Importance.MEDIUM, DIRECTORY_DELIM_DOC, PARTITIONER_GROUP, 10, Width.MEDIUM, DIRECTORY_DELIM_DISPLAY)
         .define(PARTITION_FIELD_NAME_CONFIG, Type.STRING, PARTITION_FIELD_NAME_DEFAULT, Importance.MEDIUM, PARTITION_FIELD_NAME_DOC, PARTITIONER_GROUP, 7, Width.MEDIUM,
         PARTITION_FIELD_NAME_DISPLAY, partitionerClassDependentsRecommender)
         .define(PARTITION_DURATION_MS_CONFIG, Type.LONG, PARTITION_DURATION_MS_DEFAULT, Importance.MEDIUM, PARTITION_DURATION_MS_DOC, PARTITIONER_GROUP, 8, Width.SHORT,

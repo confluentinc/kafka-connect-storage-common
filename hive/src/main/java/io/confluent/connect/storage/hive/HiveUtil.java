@@ -19,17 +19,20 @@ package io.confluent.connect.storage.hive;
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.connect.data.Schema;
 
-import io.confluent.connect.avro.AvroData;
 import io.confluent.connect.storage.partitioner.Partitioner;
 
+import static io.confluent.connect.storage.hive.HiveConfig.DIRECTORY_DELIM_CONFIG;
+
+/**
+ * Utility class for integration with Hive.
+ */
 public abstract class HiveUtil {
 
   protected final String url;
-  protected final String topicsDir;
-  protected final AvroData avroData;
   protected final HiveMetaStore hiveMetaStore;
+  protected final String delim;
 
-  public HiveUtil(AbstractConfig connectorConfig, AvroData avroData, HiveMetaStore hiveMetaStore) {
+  public HiveUtil(AbstractConfig connectorConfig, HiveMetaStore hiveMetaStore) {
     String urlKey;
 
     urlKey = connectorConfig.getString(HiveConfig.STORE_URL_CONFIG);
@@ -38,9 +41,8 @@ public abstract class HiveUtil {
     }
 
     this.url = urlKey;
-    this.topicsDir = connectorConfig.getString(HiveConfig.TOPICS_DIR_CONFIG);
-    this.avroData = avroData;
     this.hiveMetaStore = hiveMetaStore;
+    this.delim = connectorConfig.getString(DIRECTORY_DELIM_CONFIG);
   }
 
   public abstract void createTable(String database, String tableName, Schema schema, Partitioner partitioner);
@@ -48,6 +50,6 @@ public abstract class HiveUtil {
   public abstract void alterSchema(String database, String tableName, Schema schema);
 
   public String hiveDirectoryName(String url, String topicsDir, String topic) {
-    return url + "/" + topicsDir + "/" + topic + "/";
+    return url + delim + topicsDir + delim + topic + delim;
   }
 }

@@ -74,7 +74,8 @@ public class FieldPartitioner implements Partitioner {
 
   @Override
   public String generatePartitionedPath(String topic, String encodedPartition) {
-    return topic + "/" + encodedPartition;
+    // return topic + "/" + encodedPartition;
+    return topic + "_" + encodedPartition;
   }
 
   @Override
