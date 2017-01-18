@@ -50,6 +50,7 @@
     </scm>
 
     <modules>
+        <module>common</module>
         <module>core</module>
         <module>wal</module>
         <module>partitioner</module>

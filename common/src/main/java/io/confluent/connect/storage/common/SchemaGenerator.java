@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Confluent Inc.
+ * Copyright 2017 Confluent Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package io.confluent.connect.storage.partitioner;
-
-import org.apache.kafka.connect.sink.SinkRecord;
+package io.confluent.connect.storage.common;
 
 import java.util.List;
-import java.util.Map;
 
-/**
- * Partition incoming records, and generates directories and file names in which to store the
- * incoming records.
- *
- * @param <T> The type representing the field schemas.
- */
-public interface Partitioner<T> {
-  void configure(Map<String, Object> config);
-
-  String encodePartition(SinkRecord sinkRecord);
-
-  String generatePartitionedPath(String topic, String encodedPartition);
-
-  List<T> partitionFields();
+public interface SchemaGenerator<T> {
+  /**
+   *
+   * @return
+   */
+  List<T> newPartitionFields(String partitionField);
 }

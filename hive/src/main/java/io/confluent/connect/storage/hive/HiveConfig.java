@@ -16,7 +16,6 @@
 
 package io.confluent.connect.storage.hive;
 
-import io.confluent.connect.storage.partitioner.PartitionerConfig;
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigDef.Importance;
@@ -24,119 +23,203 @@ import org.apache.kafka.common.config.ConfigDef.Type;
 import org.apache.kafka.common.config.ConfigDef.Width;
 
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 public class HiveConfig extends AbstractConfig {
+  // Hive group
+  public static final String HIVE_INTEGRATION_CONFIG = "hive.integration";
+  public static final String HIVE_INTEGRATION_DOC =
+      "Configuration indicating whether to integrate with Hive when running the connector.";
+  public static final boolean HIVE_INTEGRATION_DEFAULT = false;
+  public static final String HIVE_INTEGRATION_DISPLAY = "Hive Integration";
 
-  // This config is deprecated and will be removed in future releases. Use store.url instead.
-  public static final String HDFS_URL_CONFIG = "hdfs.url";
-  public static final String HDFS_URL_DOC =
-      "The HDFS connection URL. This configuration has the format of hdfs:://hostname:port and "
-      + "specifies the HDFS to export data to. This property is deprecated and will be removed in future releases. "
-      + "Use ``store.url`` instead.";
-  public static final String HDFS_URL_DEFAULT = null;
-  public static final String HDFS_URL_DISPLAY = "HDFS URL";
+  public static final String HIVE_METASTORE_URIS_CONFIG = "hive.metastore.uris";
+  public static final String HIVE_METASTORE_URIS_DOC =
+      "The Hive metastore URIs, can be IP address or fully-qualified domain name "
+      + "and port of the metastore host.";
+  public static final String HIVE_METASTORE_URIS_DEFAULT = "";
+  public static final String HIVE_METASTORE_URIS_DISPLAY = "Hive Metastore URIs";
 
-  public static final String STORE_URL_CONFIG = "store.url";
-  public static final String STORE_URL_DOC = "Store's connection URL, if applicable.";
-  public static final String STORE_URL_DEFAULT = null;
-  public static final String STORE_URL_DISPLAY = "Store URL";
+  public static final String HIVE_CONF_DIR_CONFIG = "hive.conf.dir";
+  public static final String HIVE_CONF_DIR_DOC = "Hive configuration directory";
+  public static final String HIVE_CONF_DIR_DEFAULT = "";
+  public static final String HIVE_CONF_DIR_DISPLAY = "Hive configuration directory.";
 
-  public static final String TOPICS_DIR_CONFIG = "topics.dir";
-  public static final String TOPICS_DIR_DOC = "Top level directory to store the data ingested from Kafka.";
-  public static final String TOPICS_DIR_DEFAULT = "topics";
-  public static final String TOPICS_DIR_DISPLAY = "Topics directory";
+  public static final String HIVE_HOME_CONFIG = "hive.home";
+  public static final String HIVE_HOME_DOC = "Hive home directory.";
+  public static final String HIVE_HOME_DEFAULT = "";
+  public static final String HIVE_HOME_DISPLAY = "Hive home directory";
+
+  public static final String HIVE_DATABASE_CONFIG = "hive.database";
+  public static final String HIVE_DATABASE_DOC =
+      "The database to use when the connector creates tables in Hive.";
+  public static final String HIVE_DATABASE_DEFAULT = "default";
+  public static final String HIVE_DATABASE_DISPLAY = "Hive database";
 
   // Schema group
-  public static final String SCHEMA_COMPATIBILITY_CONFIG = PartitionerConfig.SCHEMA_COMPATIBILITY_CONFIG;
-  public static final String SCHEMA_COMPATIBILITY_DOC = PartitionerConfig.SCHEMA_COMPATIBILITY_DOC;
-  public static final String SCHEMA_COMPATIBILITY_DEFAULT = PartitionerConfig.SCHEMA_COMPATIBILITY_DEFAULT;
-  public static final String SCHEMA_COMPATIBILITY_DISPLAY = PartitionerConfig.SCHEMA_COMPATIBILITY_DISPLAY;
+  public static final String SCHEMA_COMPATIBILITY_CONFIG = "schema.compatibility";
+  public static final String SCHEMA_COMPATIBILITY_DOC =
+      "The schema compatibility rule to use when the connector is observing schema changes. The "
+      + "supported configurations are NONE, BACKWARD, FORWARD and FULL.";
+  public static final String SCHEMA_COMPATIBILITY_DEFAULT = "NONE";
+  public static final String SCHEMA_COMPATIBILITY_DISPLAY = "Schema Compatibility";
 
-  public static final String SCHEMA_CACHE_SIZE_CONFIG = PartitionerConfig.SCHEMA_CACHE_SIZE_CONFIG;
-  public static final String SCHEMA_CACHE_SIZE_DOC = PartitionerConfig.SCHEMA_CACHE_SIZE_DOC;
-  public static final int SCHEMA_CACHE_SIZE_DEFAULT = PartitionerConfig.SCHEMA_CACHE_SIZE_DEFAULT;
-  public static final String SCHEMA_CACHE_SIZE_DISPLAY = PartitionerConfig.SCHEMA_CACHE_SIZE_DISPLAY;
-
-  // Hive group
-  public static final String HIVE_INTEGRATION_CONFIG = PartitionerConfig.HIVE_INTEGRATION_CONFIG;
-  public static final String HIVE_INTEGRATION_DOC = PartitionerConfig.HIVE_INTEGRATION_DOC;
-  public static final boolean HIVE_INTEGRATION_DEFAULT = PartitionerConfig.HIVE_INTEGRATION_DEFAULT;
-  public static final String HIVE_INTEGRATION_DISPLAY = PartitionerConfig.HIVE_INTEGRATION_DISPLAY;
-
-  public static final String HIVE_METASTORE_URIS_CONFIG = PartitionerConfig.HIVE_METASTORE_URIS_CONFIG;
-  public static final String HIVE_METASTORE_URIS_DOC = PartitionerConfig.HIVE_METASTORE_URIS_DOC;
-  public static final String HIVE_METASTORE_URIS_DEFAULT = PartitionerConfig.HIVE_METASTORE_URIS_DEFAULT;
-  public static final String HIVE_METASTORE_URIS_DISPLAY = PartitionerConfig.HIVE_METASTORE_URIS_DISPLAY;
-
-  public static final String HIVE_CONF_DIR_CONFIG = PartitionerConfig.HIVE_CONF_DIR_CONFIG;
-  public static final String HIVE_CONF_DIR_DOC = PartitionerConfig.HIVE_CONF_DIR_DOC;
-  public static final String HIVE_CONF_DIR_DEFAULT = PartitionerConfig.HIVE_CONF_DIR_DEFAULT;
-  public static final String HIVE_CONF_DIR_DISPLAY = PartitionerConfig.HIVE_CONF_DIR_DISPLAY;
-
-  public static final String HIVE_HOME_CONFIG = PartitionerConfig.HIVE_HOME_CONFIG;
-  public static final String HIVE_HOME_DOC = PartitionerConfig.HIVE_HOME_DOC;
-  public static final String HIVE_HOME_DEFAULT = PartitionerConfig.HIVE_HOME_DEFAULT;
-  public static final String HIVE_HOME_DISPLAY = PartitionerConfig.HIVE_HOME_DISPLAY;
-
-  public static final String HIVE_DATABASE_CONFIG = PartitionerConfig.HIVE_DATABASE_CONFIG;
-  public static final String HIVE_DATABASE_DOC = PartitionerConfig.HIVE_DATABASE_DOC;
-  public static final String HIVE_DATABASE_DEFAULT = PartitionerConfig.HIVE_DATABASE_DEFAULT;
-  public static final String HIVE_DATABASE_DISPLAY = PartitionerConfig.HIVE_DATABASE_DISPLAY;
-
-  public static final String STORE_GROUP = "Store";
-  public static final String HIVE_GROUP = PartitionerConfig.HIVE_GROUP;
-  public static final String SCHEMA_GROUP = PartitionerConfig.SCHEMA_GROUP;
-
-  // Partitioner group
-  public static final String DIRECTORY_DELIM_CONFIG = PartitionerConfig.DIRECTORY_DELIM_CONFIG;
-  public static final String DIRECTORY_DELIM_DOC = PartitionerConfig.DIRECTORY_DELIM_DOC;
-  public static final String DIRECTORY_DELIM_DEFAULT = PartitionerConfig.DIRECTORY_DELIM_DEFAULT;
-  public static final String DIRECTORY_DELIM_DISPLAY = PartitionerConfig.DIRECTORY_DELIM_DISPLAY;
+  public static final String SCHEMA_CACHE_SIZE_CONFIG = "schema.cache.size";
+  public static final String SCHEMA_CACHE_SIZE_DOC =
+      "The size of the schema cache used in the Avro converter.";
+  public static final int SCHEMA_CACHE_SIZE_DEFAULT = 1000;
+  public static final String SCHEMA_CACHE_SIZE_DISPLAY = "Schema Cache Size";
 
   // CHECKSTYLE:OFF
   public static final ConfigDef.Recommender hiveIntegrationDependentsRecommender =
-      new PartitionerConfig.BooleanParentRecommender(HIVE_INTEGRATION_CONFIG);
+      new BooleanParentRecommender(HIVE_INTEGRATION_CONFIG);
   public static final ConfigDef.Recommender schemaCompatibilityRecommender =
-      new PartitionerConfig.SchemaCompatibilityRecommender();
+      new SchemaCompatibilityRecommender();
   // CHECKSTYLE:ON
 
-  private static ConfigDef config = new ConfigDef();
+  protected static final ConfigDef CONFIG_DEF = new ConfigDef();
 
   static {
-    // Define Store's basic configuration group
-    config.define(STORE_URL_CONFIG, Type.STRING, STORE_URL_DEFAULT, Importance.HIGH, STORE_URL_DOC, STORE_GROUP, 1, Width.MEDIUM, STORE_URL_DISPLAY);
+    {
+      // Define Hive configuration group
+      final String group = "Hive";
+      int orderInGroup = 0;
 
-    // HDFS_URL_CONFIG property is retained for backwards compatibility with HDFS connector and will be removed in future versions.
-    config.define(HDFS_URL_CONFIG, Type.STRING, HDFS_URL_DEFAULT, Importance.HIGH, HDFS_URL_DOC, STORE_GROUP, 2, Width.MEDIUM, HDFS_URL_DISPLAY);
+      CONFIG_DEF.define(HIVE_INTEGRATION_CONFIG,
+          Type.BOOLEAN,
+          HIVE_INTEGRATION_DEFAULT,
+          Importance.HIGH,
+          HIVE_INTEGRATION_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          HIVE_INTEGRATION_DISPLAY,
+          Arrays.asList(HIVE_METASTORE_URIS_CONFIG, HIVE_CONF_DIR_CONFIG, HIVE_HOME_CONFIG, HIVE_DATABASE_CONFIG, SCHEMA_COMPATIBILITY_CONFIG));
 
-    config.define(TOPICS_DIR_CONFIG, Type.STRING, TOPICS_DIR_DEFAULT, Importance.HIGH, TOPICS_DIR_DOC, STORE_GROUP, 3, Width.SHORT, TOPICS_DIR_DISPLAY);
-    config.define(DIRECTORY_DELIM_CONFIG, Type.STRING, DIRECTORY_DELIM_DEFAULT, Importance.MEDIUM, DIRECTORY_DELIM_DOC, STORE_GROUP, 10, Width.MEDIUM, DIRECTORY_DELIM_DISPLAY);
+      CONFIG_DEF.define(HIVE_METASTORE_URIS_CONFIG,
+          Type.STRING,
+          HIVE_METASTORE_URIS_DEFAULT,
+          Importance.HIGH,
+          HIVE_METASTORE_URIS_DOC,
+          group,
+          ++orderInGroup,
+          Width.MEDIUM,
+          HIVE_METASTORE_URIS_DISPLAY,
+          hiveIntegrationDependentsRecommender);
 
-    // Define Hive configuration group
-    config.define(HIVE_INTEGRATION_CONFIG, Type.BOOLEAN, HIVE_INTEGRATION_DEFAULT, Importance.HIGH, HIVE_INTEGRATION_DOC, HIVE_GROUP, 1, Width.SHORT, HIVE_INTEGRATION_DISPLAY,
-                  Arrays.asList(HIVE_METASTORE_URIS_CONFIG, HIVE_CONF_DIR_CONFIG, HIVE_HOME_CONFIG, HIVE_DATABASE_CONFIG, SCHEMA_COMPATIBILITY_CONFIG))
-        .define(HIVE_METASTORE_URIS_CONFIG, Type.STRING, HIVE_METASTORE_URIS_DEFAULT, Importance.HIGH, HIVE_METASTORE_URIS_DOC, HIVE_GROUP, 2, Width.MEDIUM,
-                HIVE_METASTORE_URIS_DISPLAY, hiveIntegrationDependentsRecommender)
-        .define(HIVE_CONF_DIR_CONFIG, Type.STRING, HIVE_CONF_DIR_DEFAULT, Importance.HIGH, HIVE_CONF_DIR_DOC, HIVE_GROUP, 3, Width.MEDIUM, HIVE_CONF_DIR_DISPLAY, hiveIntegrationDependentsRecommender)
-        .define(HIVE_HOME_CONFIG, Type.STRING, HIVE_HOME_DEFAULT, Importance.HIGH, HIVE_HOME_DOC, HIVE_GROUP, 4, Width.MEDIUM, HIVE_HOME_DISPLAY, hiveIntegrationDependentsRecommender)
-        .define(HIVE_DATABASE_CONFIG, Type.STRING, HIVE_DATABASE_DEFAULT, Importance.HIGH, HIVE_DATABASE_DOC, HIVE_GROUP, 5, Width.SHORT, HIVE_DATABASE_DISPLAY, hiveIntegrationDependentsRecommender);
+      CONFIG_DEF.define(HIVE_CONF_DIR_CONFIG,
+          Type.STRING,
+          HIVE_CONF_DIR_DEFAULT,
+          Importance.HIGH,
+          HIVE_CONF_DIR_DOC,
+          group,
+          ++orderInGroup,
+          Width.MEDIUM,
+          HIVE_CONF_DIR_DISPLAY,
+          hiveIntegrationDependentsRecommender);
 
-    // Define Schema configuration group
-    config.define(SCHEMA_COMPATIBILITY_CONFIG, Type.STRING, SCHEMA_COMPATIBILITY_DEFAULT, Importance.HIGH, SCHEMA_COMPATIBILITY_DOC, SCHEMA_GROUP, 1, Width.SHORT,
-                  SCHEMA_COMPATIBILITY_DISPLAY, schemaCompatibilityRecommender)
-        .define(SCHEMA_CACHE_SIZE_CONFIG, Type.INT, SCHEMA_CACHE_SIZE_DEFAULT, Importance.LOW, SCHEMA_CACHE_SIZE_DOC, SCHEMA_GROUP, 2, Width.SHORT, SCHEMA_CACHE_SIZE_DISPLAY);
+      CONFIG_DEF.define(HIVE_HOME_CONFIG,
+          Type.STRING,
+          HIVE_HOME_DEFAULT,
+          Importance.HIGH,
+          HIVE_HOME_DOC,
+          group,
+          ++orderInGroup,
+          Width.MEDIUM,
+          HIVE_HOME_DISPLAY,
+          hiveIntegrationDependentsRecommender);
+
+      CONFIG_DEF.define(HIVE_DATABASE_CONFIG,
+          Type.STRING,
+          HIVE_DATABASE_DEFAULT,
+          Importance.HIGH,
+          HIVE_DATABASE_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          HIVE_DATABASE_DISPLAY,
+          hiveIntegrationDependentsRecommender);
+    }
+
+    {
+      // Define Schema configuration group
+      final String group = "Schema";
+      int orderInGroup = 0;
+
+      // Define Schema configuration group
+      CONFIG_DEF.define(SCHEMA_COMPATIBILITY_CONFIG,
+          Type.STRING,
+          SCHEMA_COMPATIBILITY_DEFAULT,
+          Importance.HIGH,
+          SCHEMA_COMPATIBILITY_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          SCHEMA_COMPATIBILITY_DISPLAY,
+          schemaCompatibilityRecommender);
+
+      CONFIG_DEF.define(SCHEMA_CACHE_SIZE_CONFIG,
+          Type.INT,
+          SCHEMA_CACHE_SIZE_DEFAULT,
+          Importance.LOW,
+          SCHEMA_CACHE_SIZE_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          SCHEMA_CACHE_SIZE_DISPLAY);
+    }
+  }
+
+  public static class SchemaCompatibilityRecommender extends BooleanParentRecommender {
+    public SchemaCompatibilityRecommender() {
+      super(HIVE_INTEGRATION_CONFIG);
+    }
+
+    @Override
+    public List<Object> validValues(String name, Map<String, Object> connectorConfigs) {
+      boolean hiveIntegration = (Boolean) connectorConfigs.get(parentConfigName);
+      if (hiveIntegration) {
+        return Arrays.<Object>asList("BACKWARD", "FORWARD", "FULL");
+      } else {
+        return Arrays.<Object>asList("NONE", "BACKWARD", "FORWARD", "FULL");
+      }
+    }
+
+    @Override
+    public boolean visible(String name, Map<String, Object> connectorConfigs) {
+      return true;
+    }
+  }
+
+  public static class BooleanParentRecommender implements ConfigDef.Recommender {
+    protected String parentConfigName;
+
+    public BooleanParentRecommender(String parentConfigName) {
+      this.parentConfigName = parentConfigName;
+    }
+
+    @Override
+    public List<Object> validValues(String name, Map<String, Object> connectorConfigs) {
+      return new LinkedList<>();
+    }
+
+    @Override
+    public boolean visible(String name, Map<String, Object> connectorConfigs) {
+      return (Boolean) connectorConfigs.get(parentConfigName);
+    }
   }
 
   public static ConfigDef getConfig() {
-    return config;
+    return CONFIG_DEF;
   }
 
   public HiveConfig(Map<String, String> props) {
-    super(config, props);
+    super(CONFIG_DEF, props);
   }
 
   public static void main(String[] args) {
-    System.out.println(config.toRst());
+    System.out.println(CONFIG_DEF.toRst());
   }
 }

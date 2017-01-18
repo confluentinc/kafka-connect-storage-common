@@ -23,13 +23,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class DailyPartitioner extends TimeBasedPartitioner {
+import io.confluent.connect.storage.common.StorageCommonConfig;
+
+public class DailyPartitioner<T> extends TimeBasedPartitioner<T> {
   private String pathFormat;
 
   @Override
   public void configure(Map<String, Object> config) {
     long partitionDurationMs = TimeUnit.HOURS.toMillis(24);
-    String delim = (String) config.get(PartitionerConfig.DIRECTORY_DELIM_CONFIG);
+    String delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
     pathFormat = "'year'=YYYY" + delim + "'month'=MM" + delim + "'day'=dd" + delim;
 
     String localeString = (String) config.get(PartitionerConfig.LOCALE_CONFIG);
@@ -37,16 +39,16 @@ public class DailyPartitioner extends TimeBasedPartitioner {
       throw new ConfigException(PartitionerConfig.LOCALE_CONFIG,
                                 localeString, "Locale cannot be empty.");
     }
+
     String timeZoneString = (String) config.get(PartitionerConfig.TIMEZONE_CONFIG);
     if (timeZoneString.equals("")) {
       throw new ConfigException(PartitionerConfig.TIMEZONE_CONFIG,
                                 timeZoneString, "Timezone cannot be empty.");
     }
-    String hiveIntString = (String) config.get(PartitionerConfig.HIVE_INTEGRATION_CONFIG);
-    boolean hiveIntegration = hiveIntString != null && hiveIntString.toLowerCase().equals("true");
+
     Locale locale = new Locale(localeString);
     DateTimeZone timeZone = DateTimeZone.forID(timeZoneString);
-    init(partitionDurationMs, pathFormat, locale, timeZone, hiveIntegration);
+    init(partitionDurationMs, pathFormat, locale, timeZone, config);
   }
 
   public String getPathFormat() {

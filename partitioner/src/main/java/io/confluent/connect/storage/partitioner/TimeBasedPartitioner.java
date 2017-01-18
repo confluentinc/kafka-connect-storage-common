@@ -16,8 +16,6 @@
 
 package io.confluent.connect.storage.partitioner;
 
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.kafka.common.config.ConfigException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.joda.time.DateTime;
@@ -25,27 +23,32 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public class TimeBasedPartitioner implements Partitioner {
+import io.confluent.connect.storage.common.SchemaGenerator;
+import io.confluent.connect.storage.common.StorageCommonConfig;
 
+public class TimeBasedPartitioner<T> implements Partitioner<T> {
   // Duration of a partition in milliseconds.
   private long partitionDurationMs;
   private DateTimeFormatter formatter;
-  protected List<FieldSchema> partitionFields = new ArrayList<>();
+  protected List<T> partitionFields = new ArrayList<>();
   private String delim;
-  private Pattern pattern;
 
-  protected void init(long partitionDurationMs, String pathFormat, Locale locale,
-                      DateTimeZone timeZone, boolean hiveIntegration) {
+  protected void init(long partitionDurationMs, String pathFormat, Locale locale, DateTimeZone timeZone,
+                      Map<String, Object> config) {
+    delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
     this.partitionDurationMs = partitionDurationMs;
     this.formatter = getDateTimeFormatter(pathFormat, timeZone).withLocale(locale);
-    addToPartitionFields(pathFormat, hiveIntegration);
+    try {
+      partitionFields = newSchemaGenerator(config).newPartitionFields(pathFormat);
+    } catch (IllegalArgumentException e) {
+      throw new ConfigException(PartitionerConfig.PATH_FORMAT_CONFIG, pathFormat, e.getMessage());
+    }
   }
 
   private static DateTimeFormatter getDateTimeFormatter(String str, DateTimeZone timeZone) {
@@ -60,14 +63,6 @@ public class TimeBasedPartitioner implements Partitioner {
 
   @Override
   public void configure(Map<String, Object> config) {
-    delim = (String) config.get(PartitionerConfig.DIRECTORY_DELIM_CONFIG);
-    String patternString =
-        "'year'=Y{1,5}" + delim +
-        "('month'=M{1,5}" + delim +
-        ")?('day'=d{1,3}" + delim +
-        ")?('hour'=H{1,3}" + delim +
-        ")?('minute'=m{1,3}" + delim + ")?";
-    pattern = Pattern.compile(patternString);
     long partitionDurationMs = (long) config.get(PartitionerConfig.PARTITION_DURATION_MS_CONFIG);
     if (partitionDurationMs < 0) {
       throw new ConfigException(PartitionerConfig.PARTITION_DURATION_MS_CONFIG,
@@ -91,12 +86,10 @@ public class TimeBasedPartitioner implements Partitioner {
                                 timeZoneString, "Timezone cannot be empty.");
     }
 
-    String hiveIntString = (String) config.get(PartitionerConfig.HIVE_INTEGRATION_CONFIG);
-    boolean hiveIntegration = hiveIntString != null && hiveIntString.toLowerCase().equals("true");
 
     Locale locale = new Locale(localeString);
     DateTimeZone timeZone = DateTimeZone.forID(timeZoneString);
-    init(partitionDurationMs, pathFormat, locale, timeZone, hiveIntegration);
+    init(partitionDurationMs, pathFormat, locale, timeZone, config);
   }
 
   @Override
@@ -113,25 +106,20 @@ public class TimeBasedPartitioner implements Partitioner {
   }
 
   @Override
-  public List<FieldSchema> partitionFields() {
+  public List<T> partitionFields() {
     return partitionFields;
   }
 
-  private boolean verifyDateTimeFormat(String pathFormat) {
-    Matcher m = pattern.matcher(pathFormat);
-    return m.matches();
-  }
-
-  private void addToPartitionFields(String pathFormat, boolean hiveIntegration) {
-    if (hiveIntegration && !verifyDateTimeFormat(pathFormat)) {
-      throw new ConfigException(PartitionerConfig.PATH_FORMAT_CONFIG, pathFormat,
-                                "Path format doesn't meet the requirements for Hive integration, "
-                                + "which require prefixing each DateTime component with its name.");
-    }
-    for (String field: pathFormat.split(delim)) {
-      String[] parts = field.split("=");
-      FieldSchema fieldSchema = new FieldSchema(parts[0].replace("'", ""), TypeInfoFactory.stringTypeInfo.toString(), "");
-      partitionFields.add(fieldSchema);
+  public SchemaGenerator<T> newSchemaGenerator(Map<String, Object> config) {
+    String generatorName = (String) config.get(PartitionerConfig.SCHEMA_GENERATOR_CLASS_CONFIG);
+    try {
+      @SuppressWarnings("unchecked")
+      Class<? extends SchemaGenerator<T>> generatorClass =
+          (Class<? extends SchemaGenerator<T>>) Class.forName(generatorName);
+      return generatorClass.getConstructor(Map.class).newInstance(config);
+    } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | InvocationTargetException
+                 | NoSuchMethodException e) {
+      throw new ConfigException("Schema generator class not found: " + generatorName);
     }
   }
 }

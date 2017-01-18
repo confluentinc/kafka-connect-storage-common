@@ -16,36 +16,30 @@
 
 package io.confluent.connect.storage.hive;
 
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.connect.data.Schema;
 
+import io.confluent.connect.storage.common.StorageCommonConfig;
 import io.confluent.connect.storage.partitioner.Partitioner;
-
-import static io.confluent.connect.storage.hive.HiveConfig.DIRECTORY_DELIM_CONFIG;
 
 /**
  * Utility class for integration with Hive.
  */
 public abstract class HiveUtil {
 
-  protected final String url;
+  protected String url;
   protected final HiveMetaStore hiveMetaStore;
   protected final String delim;
 
   public HiveUtil(AbstractConfig connectorConfig, HiveMetaStore hiveMetaStore) {
-    String urlKey;
-
-    urlKey = connectorConfig.getString(HiveConfig.STORE_URL_CONFIG);
-    if (urlKey == null || urlKey.equals(HiveConfig.STORE_URL_DEFAULT)) {
-      urlKey = connectorConfig.getString(HiveConfig.HDFS_URL_CONFIG);
-    }
-
-    this.url = urlKey;
+    this.url = connectorConfig.getString(StorageCommonConfig.STORE_URL_CONFIG);
     this.hiveMetaStore = hiveMetaStore;
-    this.delim = connectorConfig.getString(DIRECTORY_DELIM_CONFIG);
+    this.delim = connectorConfig.getString(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
   }
 
-  public abstract void createTable(String database, String tableName, Schema schema, Partitioner partitioner);
+  public abstract void createTable(String database, String tableName, Schema schema,
+                                   Partitioner<FieldSchema> partitioner);
 
   public abstract void alterSchema(String database, String tableName, Schema schema);
 

@@ -26,31 +26,16 @@
         <version>3.2.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>kafka-connect-storage-partitioner</artifactId>
+    <groupId>io.confluent</groupId>
+    <artifactId>kafka-connect-storage-common</artifactId>
     <packaging>jar</packaging>
-    <name>kafka-connect-storage-partitioner</name>
+    <name>kafka-connect-storage-common</name>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>connect-api</artifactId>
             <version>${kafka.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.confluent</groupId>
-            <artifactId>kafka-connect-storage-common</artifactId>
-            <version>${confluent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>joda-time</groupId>
-            <artifactId>joda-time</artifactId>
-            <version>${joda.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hive.hcatalog</groupId>
-            <artifactId>hive-hcatalog-core</artifactId>
-            <version>${hive.version}</version>
         </dependency>
     </dependencies>
 </project>

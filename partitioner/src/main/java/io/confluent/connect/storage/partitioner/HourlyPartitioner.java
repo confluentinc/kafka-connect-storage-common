@@ -23,7 +23,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class HourlyPartitioner extends TimeBasedPartitioner {
+public class HourlyPartitioner<T> extends TimeBasedPartitioner<T> {
 
   private static long partitionDurationMs = TimeUnit.HOURS.toMillis(1);
   private static String pathFormat = "'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH/";
@@ -40,11 +40,9 @@ public class HourlyPartitioner extends TimeBasedPartitioner {
       throw new ConfigException(PartitionerConfig.TIMEZONE_CONFIG,
                                 timeZoneString, "Timezone cannot be empty.");
     }
-    String hiveIntString = (String) config.get(PartitionerConfig.HIVE_INTEGRATION_CONFIG);
-    boolean hiveIntegration = hiveIntString != null && hiveIntString.toLowerCase().equals("true");
     Locale locale = new Locale(localeString);
     DateTimeZone timeZone = DateTimeZone.forID(timeZoneString);
-    init(partitionDurationMs, pathFormat, locale, timeZone, hiveIntegration);
+    init(partitionDurationMs, pathFormat, locale, timeZone, config);
   }
 
   public String getPathFormat() {

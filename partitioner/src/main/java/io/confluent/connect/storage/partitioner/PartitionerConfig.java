@@ -30,42 +30,7 @@ import java.util.Map;
 
 public class PartitionerConfig extends AbstractConfig {
 
-  // Hive group
-  public static final String HIVE_INTEGRATION_CONFIG = "hive.integration";
-  public static final String HIVE_INTEGRATION_DOC =
-      "Configuration indicating whether to integrate with Hive when running the connector.";
-  public static final boolean HIVE_INTEGRATION_DEFAULT = false;
-  public static final String HIVE_INTEGRATION_DISPLAY = "Hive Integration";
-
-  public static final String HIVE_METASTORE_URIS_CONFIG = "hive.metastore.uris";
-  public static final String HIVE_METASTORE_URIS_DOC =
-      "The Hive metastore URIs, can be IP address or fully-qualified domain name "
-      + "and port of the metastore host.";
-  public static final String HIVE_METASTORE_URIS_DEFAULT = "";
-  public static final String HIVE_METASTORE_URIS_DISPLAY = "Hive Metastore URIs";
-
-  public static final String HIVE_CONF_DIR_CONFIG = "hive.conf.dir";
-  public static final String HIVE_CONF_DIR_DOC = "Hive configuration directory";
-  public static final String HIVE_CONF_DIR_DEFAULT = "";
-  public static final String HIVE_CONF_DIR_DISPLAY = "Hive configuration directory.";
-
-  public static final String HIVE_HOME_CONFIG = "hive.home";
-  public static final String HIVE_HOME_DOC = "Hive home directory.";
-  public static final String HIVE_HOME_DEFAULT = "";
-  public static final String HIVE_HOME_DISPLAY = "Hive home directory";
-
-  public static final String HIVE_DATABASE_CONFIG = "hive.database";
-  public static final String HIVE_DATABASE_DOC =
-      "The database to use when the connector creates tables in Hive.";
-  public static final String HIVE_DATABASE_DEFAULT = "default";
-  public static final String HIVE_DATABASE_DISPLAY = "Hive database";
-
   // Partitioner group
-  public static final String DIRECTORY_DELIM_CONFIG = "partitioner.directory.delim";
-  public static final String DIRECTORY_DELIM_DOC = "Directory delimiter pattern";
-  public static final String DIRECTORY_DELIM_DEFAULT = "/";
-  public static final String DIRECTORY_DELIM_DISPLAY = "Directory Delimiter";
-
   public static final String PARTITIONER_CLASS_CONFIG = "partitioner.class";
   public static final String PARTITIONER_CLASS_DOC =
       "The partitioner to use when writing data to the store. You can use ``DefaultPartitioner``, "
@@ -113,87 +78,108 @@ public class PartitionerConfig extends AbstractConfig {
   public static final String TIMEZONE_DISPLAY = "Timezone";
 
   // Schema group
-  public static final String SCHEMA_COMPATIBILITY_CONFIG = "schema.compatibility";
-  public static final String SCHEMA_COMPATIBILITY_DOC =
-      "The schema compatibility rule to use when the connector is observing schema changes. The "
-      + "supported configurations are NONE, BACKWARD, FORWARD and FULL.";
-  public static final String SCHEMA_COMPATIBILITY_DEFAULT = "NONE";
-  public static final String SCHEMA_COMPATIBILITY_DISPLAY = "Schema Compatibility";
-
-  public static final String SCHEMA_CACHE_SIZE_CONFIG = "schema.cache.size";
-  public static final String SCHEMA_CACHE_SIZE_DOC =
-      "The size of the schema cache used in the Avro converter.";
-  public static final int SCHEMA_CACHE_SIZE_DEFAULT = 1000;
-  public static final String SCHEMA_CACHE_SIZE_DISPLAY = "Schema Cache Size";
-
-  public static final String HIVE_GROUP = "Hive";
-  public static final String SCHEMA_GROUP = "Schema";
-  public static final String PARTITIONER_GROUP = "Partitioner";
+  public static final String SCHEMA_GENERATOR_CLASS_CONFIG = "schema.generator.class";
+  public static final String SCHEMA_GENERATOR_CLASS_DOC =
+      "The schema generator to use for integration with Hive. You can use ``DefaultSchemaGenerator``, "
+      + "for both ``DefaultPartitioner`` and ``FieldPartitioner`` or ``TimeBasedSchemaGenerator`` for any "
+      + "``TimeBasedPartitioner``.";
+  public static final String SCHEMA_GENERATOR_CLASS_DEFAULT =
+      "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator";
+  public static final String SCHEMA_GENERATOR_CLASS_DISPLAY = "Schema Generator Class";
 
   // CHECKSTYLE:OFF
-  public static final ConfigDef.Recommender hiveIntegrationDependentsRecommender =
-      new BooleanParentRecommender(HIVE_INTEGRATION_CONFIG);
-  public static final ConfigDef.Recommender schemaCompatibilityRecommender = new SchemaCompatibilityRecommender();
   public static final ConfigDef.Recommender partitionerClassDependentsRecommender =
       new PartitionerClassDependentsRecommender();
   // CHECKSTYLE:ON
 
-  private static ConfigDef config = new ConfigDef();
+  protected static final ConfigDef CONFIG_DEF = new ConfigDef();
 
   static {
+    {
+      // Define Hive configuration group
+      final String group = "Partitioner";
+      int orderInGroup = 0;
 
-    // Define Schema configuration group
-    config.define(SCHEMA_COMPATIBILITY_CONFIG, Type.STRING, SCHEMA_COMPATIBILITY_DEFAULT, Importance.HIGH, SCHEMA_COMPATIBILITY_DOC, SCHEMA_GROUP, 1, Width.SHORT,
-                  SCHEMA_COMPATIBILITY_DISPLAY, schemaCompatibilityRecommender)
-        .define(SCHEMA_CACHE_SIZE_CONFIG, Type.INT, SCHEMA_CACHE_SIZE_DEFAULT, Importance.LOW, SCHEMA_CACHE_SIZE_DOC, SCHEMA_GROUP, 2, Width.SHORT, SCHEMA_CACHE_SIZE_DISPLAY);
+      // Define Connector configuration group
+      CONFIG_DEF.define(PARTITIONER_CLASS_CONFIG,
+          Type.STRING,
+          PARTITIONER_CLASS_DEFAULT,
+          Importance.HIGH,
+          PARTITIONER_CLASS_DOC,
+          group,
+          ++orderInGroup,
+          Width.LONG,
+          PARTITIONER_CLASS_DISPLAY,
+          Arrays.asList(PARTITION_FIELD_NAME_CONFIG, PARTITION_DURATION_MS_CONFIG, PATH_FORMAT_CONFIG, LOCALE_CONFIG, TIMEZONE_CONFIG, SCHEMA_GENERATOR_CLASS_CONFIG));
 
-    // Define Hive configuration group
-    config.define(HIVE_INTEGRATION_CONFIG, Type.BOOLEAN, HIVE_INTEGRATION_DEFAULT, Importance.HIGH, HIVE_INTEGRATION_DOC, HIVE_GROUP, 1, Width.SHORT, HIVE_INTEGRATION_DISPLAY,
-        Arrays.asList(HIVE_METASTORE_URIS_CONFIG, HIVE_CONF_DIR_CONFIG, HIVE_HOME_CONFIG, HIVE_DATABASE_CONFIG, SCHEMA_COMPATIBILITY_CONFIG))
-        .define(HIVE_METASTORE_URIS_CONFIG, Type.STRING, HIVE_METASTORE_URIS_DEFAULT, Importance.HIGH, HIVE_METASTORE_URIS_DOC, HIVE_GROUP, 2, Width.MEDIUM,
-            HIVE_METASTORE_URIS_DISPLAY, hiveIntegrationDependentsRecommender)
-        .define(HIVE_CONF_DIR_CONFIG, Type.STRING, HIVE_CONF_DIR_DEFAULT, Importance.HIGH, HIVE_CONF_DIR_DOC, HIVE_GROUP, 3, Width.MEDIUM, HIVE_CONF_DIR_DISPLAY, hiveIntegrationDependentsRecommender)
-        .define(HIVE_HOME_CONFIG, Type.STRING, HIVE_HOME_DEFAULT, Importance.HIGH, HIVE_HOME_DOC, HIVE_GROUP, 4, Width.MEDIUM, HIVE_HOME_DISPLAY, hiveIntegrationDependentsRecommender)
-        .define(HIVE_DATABASE_CONFIG, Type.STRING, HIVE_DATABASE_DEFAULT, Importance.HIGH, HIVE_DATABASE_DOC, HIVE_GROUP, 5, Width.SHORT, HIVE_DATABASE_DISPLAY, hiveIntegrationDependentsRecommender);
+      CONFIG_DEF.define(PARTITION_FIELD_NAME_CONFIG,
+          Type.STRING,
+          PARTITION_FIELD_NAME_DEFAULT,
+          Importance.MEDIUM,
+          PARTITION_FIELD_NAME_DOC,
+          group,
+          ++orderInGroup,
+          Width.MEDIUM,
+          PARTITION_FIELD_NAME_DISPLAY,
+          partitionerClassDependentsRecommender);
 
-    // Define Connector configuration group
-    config.define(PARTITIONER_CLASS_CONFIG, Type.STRING, PARTITIONER_CLASS_DEFAULT, Importance.HIGH, PARTITIONER_CLASS_DOC, PARTITIONER_GROUP, 6, Width.LONG, PARTITIONER_CLASS_DISPLAY,
-            Arrays.asList(PARTITION_FIELD_NAME_CONFIG, PARTITION_DURATION_MS_CONFIG, PATH_FORMAT_CONFIG, LOCALE_CONFIG, TIMEZONE_CONFIG))
-        .define(DIRECTORY_DELIM_CONFIG, Type.STRING, DIRECTORY_DELIM_DEFAULT, Importance.MEDIUM, DIRECTORY_DELIM_DOC, PARTITIONER_GROUP, 10, Width.MEDIUM, DIRECTORY_DELIM_DISPLAY)
-        .define(PARTITION_FIELD_NAME_CONFIG, Type.STRING, PARTITION_FIELD_NAME_DEFAULT, Importance.MEDIUM, PARTITION_FIELD_NAME_DOC, PARTITIONER_GROUP, 7, Width.MEDIUM,
-        PARTITION_FIELD_NAME_DISPLAY, partitionerClassDependentsRecommender)
-        .define(PARTITION_DURATION_MS_CONFIG, Type.LONG, PARTITION_DURATION_MS_DEFAULT, Importance.MEDIUM, PARTITION_DURATION_MS_DOC, PARTITIONER_GROUP, 8, Width.SHORT,
-            PARTITION_DURATION_MS_DISPLAY, partitionerClassDependentsRecommender)
-        .define(PATH_FORMAT_CONFIG, Type.STRING, PATH_FORMAT_DEFAULT, Importance.MEDIUM, PATH_FORMAT_DOC, PARTITIONER_GROUP, 9, Width.LONG, PATH_FORMAT_DISPLAY,
-            partitionerClassDependentsRecommender)
-        .define(LOCALE_CONFIG, Type.STRING, LOCALE_DEFAULT, Importance.MEDIUM, LOCALE_DOC, PARTITIONER_GROUP, 10, Width.MEDIUM, LOCALE_DISPLAY, partitionerClassDependentsRecommender)
-        .define(TIMEZONE_CONFIG, Type.STRING, TIMEZONE_DEFAULT, Importance.MEDIUM, TIMEZONE_DOC, PARTITIONER_GROUP, 11, Width.MEDIUM, TIMEZONE_DISPLAY, partitionerClassDependentsRecommender);
-  }
+      CONFIG_DEF.define(PARTITION_DURATION_MS_CONFIG,
+          Type.LONG,
+          PARTITION_DURATION_MS_DEFAULT,
+          Importance.MEDIUM,
+          PARTITION_DURATION_MS_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          PARTITION_DURATION_MS_DISPLAY,
+          partitionerClassDependentsRecommender);
 
-  public static class SchemaCompatibilityRecommender extends BooleanParentRecommender {
+      CONFIG_DEF.define(PATH_FORMAT_CONFIG,
+          Type.STRING,
+          PATH_FORMAT_DEFAULT,
+          Importance.MEDIUM,
+          PATH_FORMAT_DOC,
+          group,
+          ++orderInGroup,
+          Width.LONG,
+          PATH_FORMAT_DISPLAY,
+          partitionerClassDependentsRecommender);
 
-    public SchemaCompatibilityRecommender() {
-      super(HIVE_INTEGRATION_CONFIG);
-    }
+      CONFIG_DEF.define(LOCALE_CONFIG,
+          Type.STRING,
+          LOCALE_DEFAULT,
+          Importance.MEDIUM,
+          LOCALE_DOC,
+          group,
+          ++orderInGroup,
+          Width.MEDIUM,
+          LOCALE_DISPLAY,
+          partitionerClassDependentsRecommender);
 
-    @Override
-    public List<Object> validValues(String name, Map<String, Object> connectorConfigs) {
-      boolean hiveIntegration = (Boolean) connectorConfigs.get(parentConfigName);
-      if (hiveIntegration) {
-        return Arrays.<Object>asList("BACKWARD", "FORWARD", "FULL");
-      } else {
-        return Arrays.<Object>asList("NONE", "BACKWARD", "FORWARD", "FULL");
-      }
-    }
+      CONFIG_DEF.define(TIMEZONE_CONFIG,
+          Type.STRING,
+          TIMEZONE_DEFAULT,
+          Importance.MEDIUM,
+          TIMEZONE_DOC,
+          group,
+          ++orderInGroup,
+          Width.MEDIUM,
+          TIMEZONE_DISPLAY,
+          partitionerClassDependentsRecommender);
 
-    @Override
-    public boolean visible(String name, Map<String, Object> connectorConfigs) {
-      return true;
+      CONFIG_DEF.define(SCHEMA_GENERATOR_CLASS_CONFIG,
+          Type.STRING,
+          SCHEMA_GENERATOR_CLASS_DEFAULT,
+          Importance.HIGH,
+          SCHEMA_GENERATOR_CLASS_DOC,
+          group,
+          ++orderInGroup,
+          Width.LONG,
+          SCHEMA_GENERATOR_CLASS_DISPLAY);
     }
   }
 
   public static class BooleanParentRecommender implements ConfigDef.Recommender {
-    
     protected String parentConfigName;
     
     public BooleanParentRecommender(String parentConfigName) {
@@ -223,7 +209,7 @@ public class PartitionerConfig extends AbstractConfig {
       String partitionerName = (String) connectorConfigs.get(PARTITIONER_CLASS_CONFIG);
       try {
         @SuppressWarnings("unchecked")
-        Class<? extends Partitioner> partitioner = (Class<? extends Partitioner>) Class.forName(partitionerName);
+        Class<? extends Partitioner<?>> partitioner = (Class<? extends Partitioner<?>>) Class.forName(partitionerName);
         if (classNameEquals(partitionerName, DefaultPartitioner.class)) {
           return false;
         } else if (FieldPartitioner.class.isAssignableFrom(partitioner)) {
@@ -250,14 +236,14 @@ public class PartitionerConfig extends AbstractConfig {
   }
 
   public static ConfigDef getConfig() {
-    return config;
+    return CONFIG_DEF;
   }
 
   public PartitionerConfig(Map<String, String> props) {
-    super(config, props);
+    super(CONFIG_DEF, props);
   }
 
   public static void main(String[] args) {
-    System.out.println(config.toRst());
+    System.out.println(CONFIG_DEF.toRst());
   }
 }

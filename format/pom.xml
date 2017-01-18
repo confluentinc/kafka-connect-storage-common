@@ -33,15 +33,15 @@
 
     <dependencies>
         <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-connect-storage-hive</artifactId>
+            <version>${confluent.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>connect-api</artifactId>
             <version>${kafka.version}</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.confluent</groupId>
-            <artifactId>kafka-connect-storage-hive</artifactId>
-            <version>${confluent.version}</version>
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>

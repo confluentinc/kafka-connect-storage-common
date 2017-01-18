@@ -28,6 +28,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import io.confluent.connect.storage.common.StorageCommonConfig;
+
 public class StorageSinkTestBase {
 
   protected Map<String, String> properties;
@@ -45,7 +47,7 @@ public class StorageSinkTestBase {
 
   protected Map<String, String> createProps() {
     Map<String, String> props = new HashMap<>();
-    props.put(StorageSinkConnectorConfig.STORE_URL_CONFIG, url);
+    props.put(StorageCommonConfig.STORE_URL_CONFIG, url);
     props.put(StorageSinkConnectorConfig.FLUSH_SIZE_CONFIG, "3");
     return props;
   }

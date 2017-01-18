@@ -27,11 +27,16 @@
     </parent>
 
     <groupId>io.confluent</groupId>
-    <artifactId>kafka-connect-storage-common</artifactId>
+    <artifactId>kafka-connect-storage-core</artifactId>
     <packaging>jar</packaging>
-    <name>kafka-connect-storage-common</name>
+    <name>kafka-connect-storage-core</name>
 
     <dependencies>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-connect-storage-common</artifactId>
+            <version>${confluent.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>connect-api</artifactId>
@@ -41,21 +46,6 @@
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-storage-wal</artifactId>
-            <version>${confluent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.confluent</groupId>
-            <artifactId>kafka-connect-storage-partitioner</artifactId>
-            <version>${confluent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.confluent</groupId>
-            <artifactId>kafka-connect-storage-hive</artifactId>
-            <version>${confluent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.confluent</groupId>
-            <artifactId>kafka-connect-storage-format</artifactId>
             <version>${confluent.version}</version>
         </dependency>
         <dependency>

@@ -16,8 +16,7 @@
 
 package io.confluent.connect.storage.partitioner;
 
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
+import org.apache.kafka.common.config.ConfigException;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Schema.Type;
 import org.apache.kafka.connect.data.Struct;
@@ -29,17 +28,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import io.confluent.connect.storage.common.SchemaGenerator;
+import io.confluent.connect.storage.common.StorageCommonConfig;
 import io.confluent.connect.storage.errors.PartitionException;
 
-public class FieldPartitioner implements Partitioner {
+public class FieldPartitioner<T> implements Partitioner<T> {
   private static final Logger log = LoggerFactory.getLogger(FieldPartitioner.class);
   private static String fieldName;
-  private List<FieldSchema> partitionFields = new ArrayList<>();
+  private List<T> partitionFields = new ArrayList<>();
+  private String delim;
 
   @Override
   public void configure(Map<String, Object> config) {
     fieldName = (String) config.get(PartitionerConfig.PARTITION_FIELD_NAME_CONFIG);
-    partitionFields.add(new FieldSchema(fieldName, TypeInfoFactory.stringTypeInfo.toString(), ""));
+    partitionFields = newSchemaGenerator(config).newPartitionFields(fieldName);
+    delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
   }
 
   @Override
@@ -74,12 +77,23 @@ public class FieldPartitioner implements Partitioner {
 
   @Override
   public String generatePartitionedPath(String topic, String encodedPartition) {
-    // return topic + "/" + encodedPartition;
-    return topic + "_" + encodedPartition;
+    return topic + delim + encodedPartition;
   }
 
   @Override
-  public List<FieldSchema> partitionFields() {
+  public List<T> partitionFields() {
     return partitionFields;
+  }
+
+  public SchemaGenerator<T> newSchemaGenerator(Map<String, Object> config) {
+    String generatorName = (String) config.get(PartitionerConfig.SCHEMA_GENERATOR_CLASS_CONFIG);
+    try {
+      @SuppressWarnings("unchecked")
+      Class<? extends SchemaGenerator<T>> generatorClass =
+          (Class<? extends SchemaGenerator<T>>) Class.forName(generatorName);
+      return generatorClass.newInstance();
+    } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+      throw new ConfigException("Schema generator class not found: " + generatorName);
+    }
   }
 }
