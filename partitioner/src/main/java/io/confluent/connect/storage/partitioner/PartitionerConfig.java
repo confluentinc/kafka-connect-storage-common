@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Confluent Inc.
+ * Copyright 2017 Confluent Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,11 +96,10 @@ public class PartitionerConfig extends AbstractConfig {
 
   static {
     {
-      // Define Hive configuration group
+      // Define Partitioner configuration group
       final String group = "Partitioner";
       int orderInGroup = 0;
 
-      // Define Connector configuration group
       CONFIG_DEF.define(PARTITIONER_CLASS_CONFIG,
           Type.STRING,
           PARTITIONER_CLASS_DEFAULT,
