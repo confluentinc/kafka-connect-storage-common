@@ -81,62 +81,62 @@ public class HiveMetaStore {
     R call() throws TException;
   }
 
-  private <R> R doAction(ClientAction<R> action) throws TException {
+  private <R> R doAction(ClientAction<R> action) throws HiveMetaStoreException {
     // No need to implement retries here. We use RetryingMetaStoreClient
     // which creates a proxy for a IMetaStoreClient implementation and 
     // retries calls to it on failure. The retrying client is conscious
     // of the socket timeout and does not call reconnect on an open connection.
     // Since HiveMetaStoreClient's reconnect method does not check the status 
     // of the connection, blind retries may cause a huge spike in the number
-    // of connections to the Hive MetaStore. 
-    return action.call();
+    // of connections to the Hive MetaStore.
+    try {
+      return action.call();
+    } catch (MetaException e) {
+      throw new HiveMetaStoreException("Hive MetaStore exception", e);
+    } catch (TException e) {
+      throw new HiveMetaStoreException("Exception communicating with the Hive MetaStore", e);
+    }
   }
 
-  public void addPartition(final String database, final String tableName, final String path) throws HiveMetaStoreException {
+  public void addPartition(final String database, final String tableName, final String path)
+      throws HiveMetaStoreException {
     ClientAction<Void> addPartition = new ClientAction<Void>() {
       @Override
       public Void call() throws TException {
-        // purposely don't check if the partition already exists because
-        // getPartition(db, table, path) will throw an exception to indicate the
-        // partition doesn't exist also. this way, it's only one call.
-        client.appendPartition(database, tableName, path);
+        try {
+          // purposely don't check if the partition already exists because
+          // getPartition(db, table, path) will throw an exception to indicate the
+          // partition doesn't exist also. this way, it's only one call.
+          client.appendPartition(database, tableName, path);
+        } catch (AlreadyExistsException e) {
+          // this is okay
+        } catch (InvalidObjectException e) {
+          throw new HiveMetaStoreException("Invalid partition for " + database + "." + tableName + ": " + path, e);
+        }
         return null;
       }
     };
 
-    try {
-      doAction(addPartition);
-    } catch (AlreadyExistsException e) {
-      // this is okay
-    } catch (InvalidObjectException e) {
-      throw new HiveMetaStoreException("Invalid partition for " + database + "." + tableName + ": " + path, e);
-    } catch (MetaException e) {
-      throw new HiveMetaStoreException("Hive MetaStore exception", e);
-    } catch (TException e) {
-      throw new HiveMetaStoreException("Exception communicating with the Hive MetaStore", e);
-    }
+    doAction(addPartition);
   }
 
-  public void dropPartition(final String database, final String tableName, final String path) throws HiveMetaStoreException {
+  public void dropPartition(final String database, final String tableName, final String path)
+      throws HiveMetaStoreException {
     ClientAction<Void> dropPartition = new ClientAction<Void>() {
       @Override
       public Void call() throws TException {
-        client.dropPartition(database, tableName, path, false);
+        try {
+          client.dropPartition(database, tableName, path, false);
+        } catch (NoSuchObjectException e) {
+          // this is okay
+        } catch (InvalidObjectException e) {
+          throw new HiveMetaStoreException("Invalid partition for " + database + "." + tableName + ": " + path, e);
+        }
         return null;
       }
     };
 
-    try {
-      doAction(dropPartition);
-    } catch (NoSuchObjectException e) {
-      // this is okay
-    } catch (InvalidObjectException e) {
-      throw new HiveMetaStoreException("Invalid partition for " + database + "." + tableName + ": " + path, e);
-    } catch (MetaException e) {
-      throw new HiveMetaStoreException("Hive MetaStore exception", e);
-    } catch (TException e) {
-      throw new HiveMetaStoreException("Exception communicating with the Hive MetaStore", e);
-    }
+    doAction(dropPartition);
   }
 
 
@@ -144,219 +144,176 @@ public class HiveMetaStore {
     ClientAction<Void> create = new ClientAction<Void>() {
       @Override
       public Void call() throws TException {
-        client.createDatabase(new Database(database, "Database created by Kafka Connect", null, null));
+        try {
+          client.createDatabase(new Database(database, "Database created by Kafka Connect", null, null));
+        } catch (AlreadyExistsException e) {
+          log.warn("Hive database already exists: {}", database);
+        } catch (InvalidObjectException e) {
+          throw new HiveMetaStoreException("Invalid database: " + database, e);
+        }
         return null;
       }
     };
 
-    try {
-      doAction(create);
-    } catch (AlreadyExistsException e) {
-      log.warn("Hive database already exists: {}", database);
-    } catch (InvalidObjectException e) {
-      throw new HiveMetaStoreException("Invalid database: " + database, e);
-    } catch (MetaException e) {
-      throw new HiveMetaStoreException("Hive MetaStore exception", e);
-    } catch (TException e) {
-      throw new HiveMetaStoreException("Exception communicating with the Hive MetaStore", e);
-    }
+    doAction(create);
   }
-
 
   public void dropDatabase(final String name, final boolean deleteData) throws HiveMetaStoreException {
     ClientAction<Void> drop = new ClientAction<Void>() {
       @Override
       public Void call() throws TException {
-        client.dropDatabase(name, deleteData, true);
+        try {
+          client.dropDatabase(name, deleteData, true);
+        } catch (NoSuchObjectException e) {
+          // this is ok
+        }
         return null;
       }
     };
 
-    try {
-      doAction(drop);
-    } catch (NoSuchObjectException e) {
-      // this is okey
-    } catch (MetaException e) {
-      throw new HiveMetaStoreException("Hive MetaStore exception", e);
-    } catch (TException e) {
-      throw new HiveMetaStoreException("Exception communicating with the Hive MetaStore", e);
-    }
+    doAction(drop);
   }
 
   public void createTable(final Table table) throws HiveMetaStoreException {
     ClientAction<Void> create = new ClientAction<Void>() {
       @Override
       public Void call() throws TException {
-        client.createTable(table.getTTable());
+        try {
+          client.createTable(table.getTTable());
+        } catch (NoSuchObjectException e) {
+          throw new HiveMetaStoreException("Hive table not found: " + table.getDbName() + "." + table.getTableName());
+        } catch (AlreadyExistsException e) {
+          // this is ok
+          log.warn("Hive table already exists: {}.{}", table.getDbName(), table.getTableName());
+        } catch (InvalidObjectException e) {
+          throw new HiveMetaStoreException("Invalid table", e);
+        }
         return null;
       }
     };
 
     createDatabase(table.getDbName());
-
-    try {
-      doAction(create);
-    } catch (NoSuchObjectException e) {
-      throw new HiveMetaStoreException("Hive table not found: " + table.getDbName() + "." + table.getTableName());
-    } catch (AlreadyExistsException e) {
-      // this is okey
-      log.warn("Hive table already exists: {}.{}", table.getDbName(), table.getTableName());
-    } catch (InvalidObjectException e) {
-      throw new HiveMetaStoreException("Invalid table", e);
-    } catch (MetaException e) {
-      throw new HiveMetaStoreException("Hive MetaStore exception", e);
-    } catch (TException e) {
-      throw new HiveMetaStoreException("Exception communicating with the Hive MetaStore", e);
-    }
+    doAction(create);
   }
 
   public void alterTable(final Table table) throws HiveMetaStoreException {
     ClientAction<Void> alter = new ClientAction<Void>() {
       @Override
       public Void call() throws TException {
-        client.alter_table(table.getDbName(), table.getTableName(), table.getTTable());
+        try {
+          client.alter_table(table.getDbName(), table.getTableName(), table.getTTable());
+        } catch (NoSuchObjectException e) {
+          throw new HiveMetaStoreException("Hive table not found: " + table.getDbName() + "." + table.getTableName());
+        } catch (InvalidObjectException e) {
+          throw new HiveMetaStoreException("Invalid table", e);
+        } catch (InvalidOperationException e) {
+          throw new HiveMetaStoreException("Invalid table change", e);
+        }
         return null;
       }
     };
 
-    try {
-      doAction(alter);
-    } catch (NoSuchObjectException e) {
-      throw new HiveMetaStoreException("Hive table not found: " + table.getDbName() + "." + table.getTableName());
-    } catch (InvalidObjectException e) {
-      throw new HiveMetaStoreException("Invalid table", e);
-    } catch (InvalidOperationException e) {
-      throw new HiveMetaStoreException("Invalid table change", e);
-    } catch (MetaException e) {
-      throw new HiveMetaStoreException("Hive MetaStore exception", e);
-    } catch (TException e) {
-      throw new HiveMetaStoreException("Exception communicating with the Hive MetaStore", e);
-    }
+    doAction(alter);
   }
 
   public void dropTable(final String database, final String tableName) {
     ClientAction<Void> drop = new ClientAction<Void>() {
       @Override
       public Void call() throws TException {
-        client.dropTable(database, tableName, false, true);
+        try {
+          client.dropTable(database, tableName, false, true);
+        } catch (NoSuchObjectException e) {
+          // this is okay
+        }
         return null;
       }
     };
 
-    try {
-      doAction(drop);
-    } catch (NoSuchObjectException e) {
-      // this is okay
-    } catch (MetaException e) {
-      throw new HiveMetaStoreException("Hive MetaStore exception", e);
-    } catch (TException e) {
-      throw new HiveMetaStoreException("Exception communicating with the Hive MetaStore", e);
-    }
+    doAction(drop);
   }
 
   public boolean tableExists(final String database, final String tableName) throws HiveMetaStoreException {
     ClientAction<Boolean> exists = new ClientAction<Boolean>() {
       @Override
       public Boolean call() throws TException {
-        return client.tableExists(database, tableName);
+        try {
+          return client.tableExists(database, tableName);
+        } catch (UnknownDBException e) {
+          return false;
+        }
       }
     };
-    try {
-      return doAction(exists);
-    } catch (UnknownDBException e) {
-      return false;
-    } catch (MetaException e) {
-      throw new HiveMetaStoreException("Hive MetaStore exception", e);
-    } catch (TException e) {
-      throw new HiveMetaStoreException("Exception communicating with the Hive MetaStore", e);
-    }
+
+    return doAction(exists);
   }
 
   public Table getTable(final String database, final String tableName) throws HiveMetaStoreException {
     ClientAction<Table> getTable = new ClientAction<Table>() {
       @Override
       public Table call() throws TException {
-        return new Table(client.getTable(database, tableName));
+        try {
+          return new Table(client.getTable(database, tableName));
+        } catch (NoSuchObjectException e) {
+          throw new HiveMetaStoreException("Hive table not found: " + database + "." + tableName);
+        }
       }
     };
 
-    Table table;
-    try {
-      table = doAction(getTable);
-    } catch (NoSuchObjectException e) {
-      throw new HiveMetaStoreException("Hive table not found: " + database + "." + tableName);
-    } catch (MetaException e) {
-      throw new HiveMetaStoreException("Hive table lookup exception", e);
-    } catch (TException e) {
-      throw new HiveMetaStoreException("Exception communicating with the Hive MetaStore", e);
-    }
-
+    Table table = doAction(getTable);
     if (table == null) {
       throw new HiveMetaStoreException("Could not find info for table: " + tableName);
     }
     return table;
   }
 
-  public List<String> listPartitions(final String database, final String tableName, final short max) throws HiveMetaStoreException {
+  public List<String> listPartitions(final String database, final String tableName, final short max)
+      throws HiveMetaStoreException {
     ClientAction<List<String>> listPartitions = new ClientAction<List<String>>() {
       @Override
       public List<String> call() throws TException {
-        List<Partition> partitions = client.listPartitions(database, tableName, max);
-        List<String> paths = new ArrayList<>();
-        for (Partition partition : partitions) {
-          paths.add(partition.getSd().getLocation());
+        try {
+          List<Partition> partitions = client.listPartitions(database, tableName, max);
+          List<String> paths = new ArrayList<>();
+          for (Partition partition : partitions) {
+            paths.add(partition.getSd().getLocation());
+          }
+          return paths;
+        } catch (NoSuchObjectException e) {
+          return new ArrayList<>();
         }
-        return paths;
       }
     };
 
-    try {
-      return doAction(listPartitions);
-    } catch (NoSuchObjectException e) {
-      return new ArrayList<>();
-    } catch (MetaException e) {
-      throw new HiveMetaStoreException("Hive MetaStore exception", e);
-    } catch (TException e) {
-      throw new HiveMetaStoreException("Exception communicating with the Hive MetaStore", e);
-    }
+    return doAction(listPartitions);
   }
 
   public List<String> getAllTables(final String database) throws HiveMetaStoreException {
     ClientAction<List<String>> getAllTables = new ClientAction<List<String>>() {
       @Override
       public List<String> call() throws TException {
-        return client.getAllTables(database);
+        try {
+          return client.getAllTables(database);
+        } catch (NoSuchObjectException e) {
+          return new ArrayList<>();
+        }
       }
     };
 
-    try {
-      return doAction(getAllTables);
-    } catch (NoSuchObjectException e) {
-      return new ArrayList<>();
-    } catch (MetaException e) {
-      throw new HiveMetaStoreException("Hive MetaStore exception", e);
-    } catch (TException e) {
-      throw new HiveMetaStoreException("Exception communicating with the Hive MetaStore", e);
-    }
+    return doAction(getAllTables);
   }
 
   public List<String> getAllDatabases() throws HiveMetaStoreException {
-    ClientAction<List<String>> create =
-        new ClientAction<List<String>>() {
-          @Override
-          public List<String> call() throws TException {
-            return client.getAllDatabases();
-          }
-        };
+    ClientAction<List<String>> create = new ClientAction<List<String>>() {
+      @Override
+      public List<String> call() throws TException {
+        try {
+          return client.getAllDatabases();
+        } catch (NoSuchObjectException e) {
+          return new ArrayList<>();
+        }
+      }
+    };
 
-    try {
-      return doAction(create);
-    } catch (NoSuchObjectException e) {
-      return new ArrayList<>();
-    } catch (MetaException e) {
-      throw new HiveMetaStoreException("Hive MetaStore exception", e);
-    } catch (TException e) {
-      throw new HiveMetaStoreException("Exception communicating with the Hive MetaStore", e);
-    }
+    return doAction(create);
   }
 }
