@@ -20,9 +20,7 @@ import org.apache.kafka.common.config.AbstractConfig;
 
 /**
  * Constructs a hive utility class for a specific storage.
- *
- * @param <C> Storage configuration type.
  */
-public interface HiveFactory<C extends AbstractConfig> {
-  HiveUtil createHiveUtil(C config, HiveMetaStore hiveMetaStore);
+public interface HiveFactory {
+  HiveUtil createHiveUtil(AbstractConfig config, HiveMetaStore hiveMetaStore);
 }

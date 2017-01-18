@@ -16,8 +16,6 @@
 
 package io.confluent.connect.storage.format;
 
-import org.apache.kafka.common.config.AbstractConfig;
-
 import io.confluent.connect.storage.hive.HiveFactory;
 
 /**
@@ -31,5 +29,5 @@ public interface Format<C, T> {
 
   SchemaFileReader<C, T> getSchemaFileReader();
 
-  HiveFactory<? extends AbstractConfig> getHiveFactory();
+  HiveFactory getHiveFactory();
 }

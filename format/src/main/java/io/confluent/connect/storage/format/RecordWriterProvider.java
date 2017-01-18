@@ -22,7 +22,6 @@ import org.apache.kafka.connect.sink.SinkRecord;
  * Provider of a record writer for this storage.
  *
  * @param <C> Storage configuration type.
- * @param <S> Schema type.
  */
 public interface RecordWriterProvider<C> {
   String getExtension();

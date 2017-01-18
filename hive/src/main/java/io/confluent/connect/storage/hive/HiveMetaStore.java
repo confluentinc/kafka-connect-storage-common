@@ -46,6 +46,10 @@ public class HiveMetaStore {
   private static final Logger log = LoggerFactory.getLogger(HiveMetaStore.class);
   protected final IMetaStoreClient client;
 
+  public HiveMetaStore(AbstractConfig connectorConfig) {
+    this(new Configuration(), connectorConfig);
+  }
+
   public HiveMetaStore(Configuration conf, AbstractConfig connectorConfig)
       throws HiveMetaStoreException {
     HiveConf hiveConf = new HiveConf(conf, HiveConf.class);
