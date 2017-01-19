@@ -16,20 +16,20 @@
 
 package io.confluent.connect.storage.format;
 
+import org.apache.kafka.connect.sink.SinkRecord;
+
 import java.io.Closeable;
 
 /**
  * Storage specific RecordWriter.
- *
- * @param <T> Record type.
  */
-public interface RecordWriter<T> extends Closeable {
+public interface RecordWriter extends Closeable {
   /**
    * Write a record to storage.
    *
-   * @param value
+   * @param record the record to persist.
    */
-  void write(T value);
+  void write(SinkRecord record);
 
   /**
    * Close this writer.

@@ -16,8 +16,6 @@
 
 package io.confluent.connect.storage.format;
 
-import org.apache.kafka.connect.sink.SinkRecord;
-
 /**
  * Provider of a record writer for this storage.
  *
@@ -26,5 +24,5 @@ import org.apache.kafka.connect.sink.SinkRecord;
 public interface RecordWriterProvider<C> {
   String getExtension();
 
-  RecordWriter<SinkRecord> getRecordWriter(C conf, String fileName);
+  RecordWriter getRecordWriter(C conf, String fileName);
 }
