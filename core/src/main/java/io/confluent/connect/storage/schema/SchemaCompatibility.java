@@ -18,9 +18,12 @@ package io.confluent.connect.storage.schema;
 
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.sink.SinkRecord;
+import org.apache.kafka.connect.source.SourceRecord;
 
 public interface SchemaCompatibility {
   boolean shouldChangeSchema(Schema value, Schema current);
 
   SinkRecord project(SinkRecord record, Schema currentSchema);
+
+  SourceRecord project(SourceRecord record, Schema currentSchema);
 }

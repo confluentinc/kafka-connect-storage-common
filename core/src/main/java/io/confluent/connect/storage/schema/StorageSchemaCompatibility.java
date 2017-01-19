@@ -16,10 +16,12 @@
 
 package io.confluent.connect.storage.schema;
 
+import org.apache.kafka.connect.connector.ConnectRecord;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaProjector;
 import org.apache.kafka.connect.errors.SchemaProjectorException;
 import org.apache.kafka.connect.sink.SinkRecord;
+import org.apache.kafka.connect.source.SourceRecord;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -75,14 +77,32 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
   }
 
   public SinkRecord project(SinkRecord record, Schema currentSchema) {
-    Schema sourceSchema = record.valueSchema();
-    Object value = record.value();
-    if (sourceSchema == currentSchema || sourceSchema.equals(currentSchema)) {
-      return record;
-    }
-    Object projected = SchemaProjector.project(sourceSchema, value, currentSchema);
-    return new SinkRecord(record.topic(), record.kafkaPartition(), record.keySchema(),
-        record.key(), currentSchema, projected, record.kafkaOffset());
+    Object projected = projectInternal(record, currentSchema);
+
+    // Just reference comparison.
+    return projected == record ?
+        record :
+        new SinkRecord(record.topic(), record.kafkaPartition(), record.keySchema(), record.key(), currentSchema,
+            projected, record.kafkaOffset());
   }
 
+  public SourceRecord project(SourceRecord record, Schema currentSchema) {
+    Object projected = projectInternal(record, currentSchema);
+
+    // Just reference comparison.
+    return projected == record ?
+        record :
+        new SourceRecord(record.sourcePartition(), record.sourceOffset(), record.topic(), record.kafkaPartition(),
+            record.keySchema(), record.key(), currentSchema, projected, record.timestamp());
+  }
+
+  private Object projectInternal(ConnectRecord<?> record, Schema currentSchema) {
+    Schema originalSchema = record.valueSchema();
+    Object value = record.value();
+
+    if (originalSchema == currentSchema || originalSchema.equals(currentSchema)) {
+      return record;
+    }
+    return SchemaProjector.project(originalSchema, value, currentSchema);
+  }
 }
