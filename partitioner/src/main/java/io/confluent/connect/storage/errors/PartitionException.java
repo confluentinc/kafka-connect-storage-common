@@ -16,7 +16,9 @@
 
 package io.confluent.connect.storage.errors;
 
-public class PartitionException extends RuntimeException {
+import org.apache.kafka.connect.errors.ConnectException;
+
+public class PartitionException extends ConnectException {
   
   public PartitionException(String s) {
     super(s);

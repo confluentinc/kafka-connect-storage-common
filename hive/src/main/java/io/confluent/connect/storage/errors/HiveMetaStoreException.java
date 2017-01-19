@@ -16,7 +16,9 @@
 
 package io.confluent.connect.storage.errors;
 
-public class HiveMetaStoreException extends RuntimeException {
+import org.apache.kafka.connect.errors.ConnectException;
+
+public class HiveMetaStoreException extends ConnectException {
 
   public HiveMetaStoreException(String s) {
     super(s);
