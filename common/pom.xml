@@ -30,12 +30,4 @@
     <artifactId>kafka-connect-storage-common</artifactId>
     <packaging>jar</packaging>
     <name>kafka-connect-storage-common</name>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>connect-api</artifactId>
-            <version>${kafka.version}</version>
-        </dependency>
-    </dependencies>
 </project>

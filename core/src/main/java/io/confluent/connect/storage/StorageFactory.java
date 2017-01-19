@@ -17,7 +17,6 @@
 package io.confluent.connect.storage;
 
 import org.apache.kafka.connect.errors.ConnectException;
-import org.apache.velocity.exception.MethodInvocationException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -44,7 +43,7 @@ public class StorageFactory {
       Constructor<T> ctor =
           storageClass.getConstructor(confClass, String.class);
       return ctor.newInstance(conf, url);
-    } catch (NoSuchMethodException | InvocationTargetException | MethodInvocationException | InstantiationException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
       throw new ConnectException(e);
     }
   }

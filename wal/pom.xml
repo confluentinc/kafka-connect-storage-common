@@ -30,13 +30,4 @@
     <artifactId>kafka-connect-storage-wal</artifactId>
     <packaging>jar</packaging>
     <name>kafka-connect-storage-wal</name>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>connect-api</artifactId>
-            <version>${kafka.version}</version>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
 </project>
