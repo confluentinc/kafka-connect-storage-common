@@ -18,7 +18,8 @@ package io.confluent.connect.storage.format;
 
 import org.apache.kafka.connect.data.Schema;
 
-import java.util.Collection;
+import java.io.Closeable;
+import java.util.Iterator;
 
 /**
  * Interface for reading a schema from the storage.
@@ -26,8 +27,13 @@ import java.util.Collection;
  * @param <C> Storage configuration type.
  * @param <T> Type used to discover objects in storage (e.g. Path in HDFS, String in S3).
  */
-public interface SchemaFileReader<C, T> {
+public interface SchemaFileReader<C, T> extends Iterator<Object>, Iterable<Object>, Closeable {
+  /**
+   * Get the schema for this object at the given path.
+   *
+   * @param conf storage configuration.
+   * @param path the path to the object.
+   * @return the schema.
+   */
   Schema getSchema(C conf, T path);
-
-  Collection<Object> readData(C conf, T path);
 }
