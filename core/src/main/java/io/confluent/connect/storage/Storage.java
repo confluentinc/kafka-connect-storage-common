@@ -36,6 +36,8 @@ public interface Storage<C, R> extends Closeable {
   /**
    * Returns whether an object exists.
    *
+   * In stores supporting weak consistency models (e.g. eventual consistency) this operation might affect semantics.
+   *
    * @param path the path to the object.
    * @return true if object exists, false otherwise.
    * @throws DataException if the call to the underlying distributed storage failed.
@@ -43,7 +45,7 @@ public interface Storage<C, R> extends Closeable {
   boolean exists(String path);
 
   /**
-   * Creates an object container (e.g. a directory or a bucket).
+   * Creates an object container, e.g. a directory or a bucket (optional operation).
    *
    * @param path the path of the container
    * @return true if the container does not exist and was successfully created; false otherwise.
@@ -62,6 +64,11 @@ public interface Storage<C, R> extends Closeable {
   /**
    * Creates a new object in the given path and with the given configuration.
    *
+   * In stores supporting weak consistency models (e.g. eventual consistency) the success of this operation might depend on
+   * successfully completing all operations on the output stream. For instance successfully closing the stream after
+   * writing all the data. Additionally, the effect of this operation might not be immediately visible to subsequent
+   * operations.
+   *
    * @param path the path of the object to be created.
    * @param conf storage configuration.
    * @param overwrite whether to override an existing object with the same path (optional operation).
@@ -70,7 +77,7 @@ public interface Storage<C, R> extends Closeable {
   OutputStream create(String path, C conf, boolean overwrite);
 
   /**
-   * Append data to an existing object at the given path.
+   * Append data to an existing object at the given path (optional operation).
    *
    * @param path the path of the object to be appended.
    * @return an output stream associated with the existing object.
@@ -80,12 +87,19 @@ public interface Storage<C, R> extends Closeable {
   /**
    * Delete the given object or container.
    *
+   * In stores supporting weak consistency models (e.g. eventual consistency) the result of this operation might not be
+   * immediately visible.
+   *
    * @param path the path to the object or container to delete.
    */
   void delete(String path);
 
   /**
    * List the contents of the storage at a given path.
+   *
+   * In stores supporting weak consistency models (e.g. eventual consistency) the result of this operation might not be
+   * correspond to the most recent state of the store. For instance, created files might not show up, deleted files
+   * might still be listed.
    *
    * @param path the path.
    * @return the listing of the contents.
