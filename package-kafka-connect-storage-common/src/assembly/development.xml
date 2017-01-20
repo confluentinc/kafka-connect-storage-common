@@ -27,15 +27,14 @@
     <includeBaseDirectory>false</includeBaseDirectory>
     <dependencySets>
         <dependencySet>
-            <outputDirectory>share/java/kafka-connect-storage-partitioner/</outputDirectory>
-            <useProjectArtifact>true</useProjectArtifact>
+            <outputDirectory>share/java/kafka-connect-storage-common/</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <excludes>
                 <!-- Exclude these jars during packaging. This avoids conflicts of jars
                 shipped with Confluent platform and other dependencies such as Hadoop and Avro.
                 This allows correctly setup of CLASSPATH in kafka-run-class.sh when running
                 Kafka Connect connectors using common storage packages. -->
-                <exclude>org.apache.kafka:connect-api</exclude>
                 <exclude>org.mortbay.jetty:*</exclude>
                 <exclude>com.sun.jersey:*</exclude>
                 <exclude>org.eclipse.jetty.aggregate:jetty-all</exclude>

@@ -26,7 +26,6 @@
         <version>3.2.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>io.confluent</groupId>
     <artifactId>kafka-connect-storage-core</artifactId>
     <packaging>jar</packaging>
     <name>kafka-connect-storage-core</name>
@@ -35,11 +34,6 @@
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-storage-common</artifactId>
-            <version>${confluent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.confluent</groupId>
-            <artifactId>kafka-connect-storage-wal</artifactId>
             <version>${confluent.version}</version>
         </dependency>
         <dependency>
