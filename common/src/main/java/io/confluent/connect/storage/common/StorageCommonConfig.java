@@ -29,9 +29,7 @@ public class StorageCommonConfig extends AbstractConfig {
   // Common group
 
   public static final String STORAGE_CLASS_CONFIG = "storage.class";
-  public static final String STORAGE_CLASS_DOC =
-      "The underlying storage layer. The default is HDFS.";
-  public static final String STORAGE_CLASS_DEFAULT = "io.confluent.connect.hdfs.storage.HdfsStorage";
+  public static final String STORAGE_CLASS_DOC = "The underlying storage layer.";
   public static final String STORAGE_CLASS_DISPLAY = "Storage Class";
 
   public static final String STORE_URL_CONFIG = "store.url";
@@ -58,10 +56,11 @@ public class StorageCommonConfig extends AbstractConfig {
       int orderInGroup = 0;
 
       CONFIG_DEF.define(STORAGE_CLASS_CONFIG,
-          Type.STRING,
-          STORAGE_CLASS_DEFAULT,
-          Importance.LOW,
-          STORAGE_CLASS_DOC, group, ++orderInGroup,
+          Type.CLASS,
+          Importance.HIGH,
+          STORAGE_CLASS_DOC,
+          group,
+          ++orderInGroup,
           Width.MEDIUM,
           STORAGE_CLASS_DISPLAY);
 

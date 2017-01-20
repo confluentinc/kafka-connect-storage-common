@@ -101,7 +101,7 @@ public class PartitionerConfig extends AbstractConfig {
       int orderInGroup = 0;
 
       CONFIG_DEF.define(PARTITIONER_CLASS_CONFIG,
-          Type.STRING,
+          Type.CLASS,
           PARTITIONER_CLASS_DEFAULT,
           Importance.HIGH,
           PARTITIONER_CLASS_DOC,
@@ -167,7 +167,7 @@ public class PartitionerConfig extends AbstractConfig {
           partitionerClassDependentsRecommender);
 
       CONFIG_DEF.define(SCHEMA_GENERATOR_CLASS_CONFIG,
-          Type.STRING,
+          Type.CLASS,
           SCHEMA_GENERATOR_CLASS_DEFAULT,
           Importance.HIGH,
           SCHEMA_GENERATOR_CLASS_DOC,

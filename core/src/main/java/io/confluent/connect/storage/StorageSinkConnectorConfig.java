@@ -88,7 +88,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
       int orderInGroup = 0;
 
       CONFIG_DEF.define(FORMAT_CLASS_CONFIG,
-          Type.STRING,
+          Type.CLASS,
           FORMAT_CLASS_DEFAULT,
           Importance.HIGH,
           FORMAT_CLASS_DOC,
