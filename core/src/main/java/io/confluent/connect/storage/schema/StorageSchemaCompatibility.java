@@ -23,24 +23,31 @@ import org.apache.kafka.connect.errors.SchemaProjectorException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.source.SourceRecord;
 
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public enum StorageSchemaCompatibility implements SchemaCompatibility {
   NONE {
-    public SinkRecord project(SinkRecord record, Schema currentSchema) {
+    @Override
+    public SourceRecord project(SourceRecord record, Schema currentKeySchema, Schema currentValueSchema) {
       return record;
     }
     @Override
-    protected boolean check(Schema valueSchema, Schema currentSchema) {
-      return !valueSchema.equals(currentSchema);
+    public SinkRecord project(SinkRecord record, Schema currentKeySchema, Schema currentValueSchema) {
+      return record;
+    }
+    @Override
+    protected boolean check(Schema originalSchema, Schema currentSchema) {
+      return !originalSchema.equals(currentSchema);
     }
   },
   BACKWARD,
   FORWARD {
     @Override
-    protected boolean check(Schema valueSchema, Schema currentSchema) {
-      return (valueSchema.version()).compareTo(currentSchema.version()) < 0;
+    protected boolean check(Schema originalSchema, Schema currentSchema) {
+      return (originalSchema.version()).compareTo(currentSchema.version()) < 0;
     }
   },
   FULL;
@@ -68,40 +75,45 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
     return false;
   }
 
-  protected boolean check(Schema valueSchema, Schema currentSchema) {
-    return (valueSchema.version()).compareTo(currentSchema.version()) > 0;
+  protected boolean check(Schema originalSchema, Schema currentSchema) {
+    return (originalSchema.version()).compareTo(currentSchema.version()) > 0;
   }
 
-  public boolean shouldChangeSchema(Schema valueSchema, Schema currentSchema) {
-    return validate(valueSchema, currentSchema) || check(valueSchema, currentSchema);
+  public boolean shouldChangeSchema(ConnectRecord<?> record, Schema currentKeySchema, Schema currentValueSchema) {
+    // Currently in Storage only value schemas are considered for compatibility resolution.
+    return validate(record.valueSchema(), currentValueSchema) || check(record.valueSchema(), currentValueSchema);
   }
 
-  public SinkRecord project(SinkRecord record, Schema currentSchema) {
-    Object projected = projectInternal(record, currentSchema);
+  public SourceRecord project(SourceRecord record, Schema currentKeySchema, Schema currentValueSchema) {
+    Map.Entry<Object, Object> projected = projectInternal(record, currentKeySchema, currentValueSchema);
 
-    // Just reference comparison.
-    return projected == record ?
-        record :
-        new SinkRecord(record.topic(), record.kafkaPartition(), record.keySchema(), record.key(), currentSchema,
-            projected, record.kafkaOffset());
-  }
-
-  public SourceRecord project(SourceRecord record, Schema currentSchema) {
-    Object projected = projectInternal(record, currentSchema);
-
-    // Just reference comparison.
-    return projected == record ?
+    // Just reference comparison here.
+    return projected.getKey() == record.key() && projected.getValue() == record.value() ?
         record :
         new SourceRecord(record.sourcePartition(), record.sourceOffset(), record.topic(), record.kafkaPartition(),
-            record.keySchema(), record.key(), currentSchema, projected, record.timestamp());
+            currentKeySchema, projected.getKey(), currentValueSchema, projected.getValue(), record.timestamp());
   }
 
-  private Object projectInternal(ConnectRecord<?> record, Schema currentSchema) {
-    Schema originalSchema = record.valueSchema();
-    Object value = record.value();
+  public SinkRecord project(SinkRecord record, Schema currentKeySchema, Schema currentValueSchema) {
+    Map.Entry<Object, Object> projected = projectInternal(record, currentKeySchema, currentValueSchema);
 
-    if (originalSchema == currentSchema || originalSchema.equals(currentSchema)) {
-      return record;
+    // Just reference comparison here.
+    return projected.getKey() == record.key() && projected.getValue() == record.value() ?
+        record :
+        new SinkRecord(record.topic(), record.kafkaPartition(), currentKeySchema, projected.getKey(),
+            currentValueSchema, projected.getValue(), record.kafkaOffset());
+  }
+
+  private static Map.Entry<Object, Object> projectInternal(ConnectRecord<?> record, Schema currentKeySchema,
+                                                           Schema currentValueSchema) {
+    // Currently in Storage only value schemas are considered for compatibility resolution.
+    Object value = projectInternal(record.valueSchema(), record.value(), currentValueSchema);
+    return new AbstractMap.SimpleEntry<>(record.key(), value);
+  }
+
+  private static Object projectInternal(Schema originalSchema, Object value, Schema currentSchema) {
+    if (Objects.equals(originalSchema, currentSchema)) {
+      return value;
     }
     return SchemaProjector.project(originalSchema, value, currentSchema);
   }
