@@ -25,8 +25,8 @@ import java.util.concurrent.TimeUnit;
 
 public class HourlyPartitioner<T> extends TimeBasedPartitioner<T> {
 
-  private static long partitionDurationMs = TimeUnit.HOURS.toMillis(1);
-  private static String pathFormat = "'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH/";
+  private static final long PARTITION_DURATION_MS = TimeUnit.HOURS.toMillis(1);
+  private static final String PATH_FORMAT = "'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH/";
 
   @Override
   public void configure(Map<String, Object> config) {
@@ -42,10 +42,10 @@ public class HourlyPartitioner<T> extends TimeBasedPartitioner<T> {
     }
     Locale locale = new Locale(localeString);
     DateTimeZone timeZone = DateTimeZone.forID(timeZoneString);
-    init(partitionDurationMs, pathFormat, locale, timeZone, config);
+    init(PARTITION_DURATION_MS, PATH_FORMAT, locale, timeZone, config);
   }
 
   public String getPathFormat() {
-    return pathFormat;
+    return PATH_FORMAT;
   }
 }

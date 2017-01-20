@@ -35,18 +35,18 @@ public class TimeBasedSchemaGenerator implements SchemaGenerator<FieldSchema> {
   }
 
   @Override
-  public List<FieldSchema> newPartitionFields(String partitionField) {
+  public List<FieldSchema> newPartitionFields(String format) {
     String hiveIntegrationString = (String) config.get(HiveConfig.HIVE_INTEGRATION_CONFIG);
     String delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
     boolean hiveIntegration = hiveIntegrationString != null && hiveIntegrationString.toLowerCase().equals("true");
-    if (hiveIntegration && !verifyDateTimeFormat(partitionField, delim)) {
+    if (hiveIntegration && !verifyDateTimeFormat(format, delim)) {
       throw new IllegalArgumentException("Path format doesn't meet the requirements for Hive integration, "
           + "which require prefixing each DateTime component with its name.");
     }
 
     List<FieldSchema> fields = new ArrayList<>();
 
-    for (String field : partitionField.split(delim)) {
+    for (String field : format.split(delim)) {
       String[] parts = field.split("=");
       FieldSchema fieldSchema =
           new FieldSchema(parts[0].replace("'", ""), TypeInfoFactory.stringTypeInfo.toString(), "");

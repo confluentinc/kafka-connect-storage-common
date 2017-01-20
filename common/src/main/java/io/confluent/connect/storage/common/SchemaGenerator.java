@@ -19,8 +19,9 @@ import java.util.List;
 
 public interface SchemaGenerator<T> {
   /**
+   * Generate a list of fields based on the given format.
    *
-   * @return
+   * @return the generated schema as a list of fields.
    */
-  List<T> newPartitionFields(String partitionField);
+  List<T> newPartitionFields(String format);
 }

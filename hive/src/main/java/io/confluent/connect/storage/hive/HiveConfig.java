@@ -194,7 +194,7 @@ public class HiveConfig extends AbstractConfig {
   }
 
   public static class BooleanParentRecommender implements ConfigDef.Recommender {
-    protected String parentConfigName;
+    protected final String parentConfigName;
 
     public BooleanParentRecommender(String parentConfigName) {
       this.parentConfigName = parentConfigName;

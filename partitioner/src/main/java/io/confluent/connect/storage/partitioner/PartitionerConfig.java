@@ -36,7 +36,7 @@ public class PartitionerConfig extends AbstractConfig {
       "The partitioner to use when writing data to the store. You can use ``DefaultPartitioner``, "
       + "which preserves the Kafka partitions; ``FieldPartitioner``, which partitions the data to "
       + "different directories according to the value of the partitioning field specified "
-      + "in ``partition.field.name``; ``TimebasedPartitioner``, which partitions data "
+      + "in ``partition.field.name``; ``TimeBasedPartitioner``, which partitions data "
       + "according to ingestion time.";
   public static final String PARTITIONER_CLASS_DEFAULT =
       "io.confluent.connect.hdfs.partitioner.DefaultPartitioner";
@@ -51,7 +51,7 @@ public class PartitionerConfig extends AbstractConfig {
   public static final String PARTITION_DURATION_MS_CONFIG = "partition.duration.ms";
   public static final String PARTITION_DURATION_MS_DOC =
       "The duration of a partition milliseconds used by ``TimeBasedPartitioner``. "
-      + "The default value -1 means that we are not using ``TimebasedPartitioner``.";
+      + "The default value -1 means that we are not using ``TimeBasedPartitioner``.";
   public static final long PARTITION_DURATION_MS_DEFAULT = -1L;
   public static final String PARTITION_DURATION_MS_DISPLAY = "Partition Duration (ms)";
 
@@ -179,7 +179,7 @@ public class PartitionerConfig extends AbstractConfig {
   }
 
   public static class BooleanParentRecommender implements ConfigDef.Recommender {
-    protected String parentConfigName;
+    protected final String parentConfigName;
     
     public BooleanParentRecommender(String parentConfigName) {
       this.parentConfigName = parentConfigName;

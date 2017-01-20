@@ -40,9 +40,9 @@ public class StorageFactory {
   public static <S extends Storage<C, ?>, C> S createStorage(Class<S> storageClass, Class<C> confClass, C conf,
                                                              String url) {
     try {
-      Constructor<S> ctor =
+      Constructor<S> constructor =
           storageClass.getConstructor(confClass, String.class);
-      return ctor.newInstance(conf, url);
+      return constructor.newInstance(conf, url);
     } catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
       throw new ConnectException(e);
     }
