@@ -17,52 +17,98 @@
 package io.confluent.connect.storage;
 
 import org.apache.avro.file.SeekableInput;
-import org.apache.kafka.common.TopicPartition;
 
 import java.io.Closeable;
 import java.io.OutputStream;
 
-import io.confluent.connect.storage.wal.WAL;
-
 /**
  * Interface to distributed storage.
  *
+ * Depending on the storage implementation, an object corresponds to a file or a directory in a distributed filesystem
+ * or an object in an object store. Similarly, a path corresponds to an actual path in a distributed filesystem or a
+ * lookup key in an object store.
+ *
  * @param <C> The configuration of this storage.
- * @param <T> A filtering argument to restrict search of files to a given path in storage.
- * @param <R> File listing that is returned when searching the storage contents.
+ * @param <R> Object listing that is returned when searching the storage contents.
  */
-public interface Storage<C, T, R> extends Closeable {
+public interface Storage<C, R> extends Closeable {
 
   /**
-   * Returns wheter a filename exists.
+   * Returns whether an object exists.
    *
-   * @param filename
-   * @return true if filename exists, false otherwise.
+   * @param path the path to the object.
+   * @return true if object exists, false otherwise.
    * @throws DataException if the call to the underlying distributed storage failed.
    */
-  boolean exists(String filename);
+  boolean exists(String path);
 
-  boolean mkdirs(String filename);
+  /**
+   * Creates an object container (e.g. a directory or a bucket).
+   *
+   * @param path the path of the container
+   * @return true if the container does not exist and was successfully created; false otherwise.
+   */
+  boolean create(String path);
 
-  void append(String filename, Object object);
-
-  void delete(String filename);
-
-  void commit(String tempFile, String committedFile);
-
-  void close();
-
-  WAL wal(String topicsDir, TopicPartition topicPart);
-
-  R listStatus(String path, T filter);
-
-  R listStatus(String path);
-
-  String url();
-
-  C conf();
-
+  /**
+   * Open for reading an object at the given path.
+   *
+   * @param path the path of the object to be read.
+   * @param conf storage configuration.
+   * @return a seek-able input stream associated with the requested object.
+   */
   SeekableInput open(String path, C conf);
 
+  /**
+   * Creates a new object in the given path and with the given configuration.
+   *
+   * @param path the path of the object to be created.
+   * @param conf storage configuration.
+   * @param overwrite whether to override an existing object with the same path (optional operation).
+   * @return an output stream associated with the new object.
+   */
   OutputStream create(String path, C conf, boolean overwrite);
+
+  /**
+   * Append data to an existing object at the given path.
+   *
+   * @param path the path of the object to be appended.
+   * @return an output stream associated with the existing object.
+   */
+  OutputStream append(String path);
+
+  /**
+   * Delete the given object or container.
+   *
+   * @param path the path to the object or container to delete.
+   */
+  void delete(String path);
+
+  /**
+   * List the contents of the storage at a given path.
+   *
+   * @param path the path.
+   * @return the listing of the contents.
+   */
+  R list(String path);
+
+  /**
+   * Stop using this storage.
+   */
+  void close();
+
+  /**
+   * Get the storage endpoint.
+   *
+   * @return the storage endpoint as a string.
+   */
+  String url();
+
+  /**
+   * Get the storage configuration.
+   *
+   * @return the storage configuration.
+   */
+  C conf();
+
 }

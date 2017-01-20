@@ -32,15 +32,15 @@ public class StorageFactory {
    * @param confClass the class of the configuration.
    * @param conf the configuration contents.
    * @param url the address of the storage.
-   * @param <T> the storage type.
+   * @param <S> the storage type.
    * @param <C> the configuration type.
    * @return the storage instance upon success.
    * @throws ConnectException on error.
    */
-  public static <T extends Storage<C, ?, ?>, C> T createStorage(Class<T> storageClass, Class<C> confClass, C conf,
-                                                                String url) {
+  public static <S extends Storage<C, ?>, C> S createStorage(Class<S> storageClass, Class<C> confClass, C conf,
+                                                             String url) {
     try {
-      Constructor<T> ctor =
+      Constructor<S> ctor =
           storageClass.getConstructor(confClass, String.class);
       return ctor.newInstance(conf, url);
     } catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
