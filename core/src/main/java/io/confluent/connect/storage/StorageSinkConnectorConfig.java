@@ -30,7 +30,6 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
   public static final String FORMAT_CLASS_CONFIG = "format.class";
   public static final String FORMAT_CLASS_DOC =
       "The format class to use when writing data to the store. ";
-  public static final String FORMAT_CLASS_DEFAULT = "io.confluent.connect.hdfs.avro.AvroFormat";
   public static final String FORMAT_CLASS_DISPLAY = "Format class";
 
   public static final String FLUSH_SIZE_CONFIG = "flush.size";
@@ -89,7 +88,6 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
 
       CONFIG_DEF.define(FORMAT_CLASS_CONFIG,
           Type.CLASS,
-          FORMAT_CLASS_DEFAULT,
           Importance.HIGH,
           FORMAT_CLASS_DOC,
           group,

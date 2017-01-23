@@ -24,20 +24,16 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import io.confluent.connect.storage.common.SchemaGenerator;
 import io.confluent.connect.storage.common.StorageCommonConfig;
 
-public class TimeBasedPartitioner<T> implements Partitioner<T> {
+public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
   // Duration of a partition in milliseconds.
   private long partitionDurationMs;
   private DateTimeFormatter formatter;
-  protected List<T> partitionFields = new ArrayList<>();
-  private String delim;
 
   protected void init(long partitionDurationMs, String pathFormat, Locale locale, DateTimeZone timeZone,
                       Map<String, Object> config) {
@@ -99,27 +95,17 @@ public class TimeBasedPartitioner<T> implements Partitioner<T> {
     return bucket.toString(formatter);
   }
 
-
   @Override
-  public String generatePartitionedPath(String topic, String encodedPartition) {
-    return topic + delim + encodedPartition;
-  }
-
-  @Override
-  public List<T> partitionFields() {
-    return partitionFields;
-  }
-
+  @SuppressWarnings("unchecked")
   public SchemaGenerator<T> newSchemaGenerator(Map<String, Object> config) {
-    String generatorName = (String) config.get(PartitionerConfig.SCHEMA_GENERATOR_CLASS_CONFIG);
+    Class<? extends SchemaGenerator<T>> generatorClass = null;
     try {
-      @SuppressWarnings("unchecked")
-      Class<? extends SchemaGenerator<T>> generatorClass =
-          (Class<? extends SchemaGenerator<T>>) Class.forName(generatorName);
+      generatorClass =
+          (Class<? extends SchemaGenerator<T>>) config.get(PartitionerConfig.SCHEMA_GENERATOR_CLASS_CONFIG);
       return generatorClass.getConstructor(Map.class).newInstance(config);
-    } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | InvocationTargetException
-                 | NoSuchMethodException e) {
-      throw new ConfigException("Schema generator class not found: " + generatorName);
+    } catch (ClassCastException | IllegalAccessException | InstantiationException | InvocationTargetException
+        | NoSuchMethodException e) {
+      throw new ConfigException("Invalid generator class: " + generatorClass);
     }
   }
 }

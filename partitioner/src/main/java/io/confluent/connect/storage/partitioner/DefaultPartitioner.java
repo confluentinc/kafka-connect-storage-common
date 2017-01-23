@@ -31,22 +31,19 @@ import io.confluent.connect.storage.common.StorageCommonConfig;
  * @param <T> The type representing the field schemas.
  */
 public class DefaultPartitioner<T> implements Partitioner<T> {
-
-  // CHECKSTYLE:OFF
-  private static final String partitionField = "partition";
-  private List<T> partitionFields =  new ArrayList<>();
-  // CHECKSTYLE:ON
-  private String delim;
+  private static final String PARTITION_FIELD = "partition";
+  protected List<T> partitionFields =  new ArrayList<>();
+  protected String delim;
 
   @Override
   public void configure(Map<String, Object> config) {
-    partitionFields = newSchemaGenerator(config).newPartitionFields(partitionField);
+    partitionFields = newSchemaGenerator(config).newPartitionFields(PARTITION_FIELD);
     delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
   }
 
   @Override
   public String encodePartition(SinkRecord sinkRecord) {
-    return partitionField + "=" + String.valueOf(sinkRecord.kafkaPartition());
+    return PARTITION_FIELD + "=" + String.valueOf(sinkRecord.kafkaPartition());
   }
 
   @Override
@@ -59,15 +56,15 @@ public class DefaultPartitioner<T> implements Partitioner<T> {
     return partitionFields;
   }
 
+  @SuppressWarnings("unchecked")
   public SchemaGenerator<T> newSchemaGenerator(Map<String, Object> config) {
-    String generatorName = (String) config.get(PartitionerConfig.SCHEMA_GENERATOR_CLASS_CONFIG);
+    Class<? extends SchemaGenerator<T>> generatorClass = null;
     try {
-      @SuppressWarnings("unchecked")
-      Class<? extends SchemaGenerator<T>> generatorClass =
-          (Class<? extends SchemaGenerator<T>>) Class.forName(generatorName);
+      generatorClass =
+          (Class<? extends SchemaGenerator<T>>) config.get(PartitionerConfig.SCHEMA_GENERATOR_CLASS_CONFIG);
       return generatorClass.newInstance();
-    } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
-      throw new ConfigException("Schema generator class not found: " + generatorName);
+    } catch (ClassCastException | IllegalAccessException | InstantiationException e) {
+      throw new ConfigException("Invalid generator class: " + generatorClass);
     }
   }
 }

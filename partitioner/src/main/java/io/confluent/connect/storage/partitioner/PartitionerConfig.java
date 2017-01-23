@@ -38,8 +38,7 @@ public class PartitionerConfig extends AbstractConfig {
       + "different directories according to the value of the partitioning field specified "
       + "in ``partition.field.name``; ``TimeBasedPartitioner``, which partitions data "
       + "according to ingestion time.";
-  public static final String PARTITIONER_CLASS_DEFAULT =
-      "io.confluent.connect.hdfs.partitioner.DefaultPartitioner";
+  public static final Class<?> PARTITIONER_CLASS_DEFAULT = DefaultPartitioner.class;
   public static final String PARTITIONER_CLASS_DISPLAY = "Partitioner Class";
 
   public static final String PARTITION_FIELD_NAME_CONFIG = "partition.field.name";
@@ -83,8 +82,10 @@ public class PartitionerConfig extends AbstractConfig {
       "The schema generator to use for integration with Hive. You can use ``DefaultSchemaGenerator``, "
       + "for both ``DefaultPartitioner`` and ``FieldPartitioner`` or ``TimeBasedSchemaGenerator`` for any "
       + "``TimeBasedPartitioner``.";
-  public static final String SCHEMA_GENERATOR_CLASS_DEFAULT =
-      "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator";
+  public static final Class<?> SCHEMA_GENERATOR_CLASS_DEFAULT =
+      (Class<?>) ConfigDef.parseType(SCHEMA_GENERATOR_CLASS_CONFIG,
+                                     "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator",
+                                     Type.CLASS);
   public static final String SCHEMA_GENERATOR_CLASS_DISPLAY = "Schema Generator Class";
 
   // CHECKSTYLE:OFF
