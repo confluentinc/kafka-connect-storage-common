@@ -78,14 +78,7 @@ public class PartitionerConfig extends AbstractConfig {
 
   // Schema group
   public static final String SCHEMA_GENERATOR_CLASS_CONFIG = "schema.generator.class";
-  public static final String SCHEMA_GENERATOR_CLASS_DOC =
-      "The schema generator to use for integration with Hive. You can use ``DefaultSchemaGenerator``, "
-      + "for both ``DefaultPartitioner`` and ``FieldPartitioner`` or ``TimeBasedSchemaGenerator`` for any "
-      + "``TimeBasedPartitioner``.";
-  public static final Class<?> SCHEMA_GENERATOR_CLASS_DEFAULT =
-      (Class<?>) ConfigDef.parseType(SCHEMA_GENERATOR_CLASS_CONFIG,
-                                     "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator",
-                                     Type.CLASS);
+  public static final String SCHEMA_GENERATOR_CLASS_DOC = "The schema generator to use with partitioners.";
   public static final String SCHEMA_GENERATOR_CLASS_DISPLAY = "Schema Generator Class";
 
   // CHECKSTYLE:OFF
@@ -169,7 +162,6 @@ public class PartitionerConfig extends AbstractConfig {
 
       CONFIG_DEF.define(SCHEMA_GENERATOR_CLASS_CONFIG,
           Type.CLASS,
-          SCHEMA_GENERATOR_CLASS_DEFAULT,
           Importance.HIGH,
           SCHEMA_GENERATOR_CLASS_DOC,
           group,
