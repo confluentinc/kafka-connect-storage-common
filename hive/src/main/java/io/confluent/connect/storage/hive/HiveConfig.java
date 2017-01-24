@@ -198,7 +198,7 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
   }
 
   @Override
-  public Object getValue(String key) {
+  public Object get(String key) {
     return super.get(key);
   }
 

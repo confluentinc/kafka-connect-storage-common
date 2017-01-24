@@ -226,7 +226,7 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   }
 
   @Override
-  public Object getValue(String key) {
+  public Object get(String key) {
     return super.get(key);
   }
 

@@ -17,6 +17,6 @@
 package io.confluent.connect.storage.common;
 
 public interface ComposableConfig {
-  Object getValue(String key);
+  Object get(String key);
 }
 

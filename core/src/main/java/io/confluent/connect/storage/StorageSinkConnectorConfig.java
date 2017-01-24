@@ -176,7 +176,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   }
 
   @Override
-  public Object getValue(String key) {
+  public Object get(String key) {
     return super.get(key);
   }
 

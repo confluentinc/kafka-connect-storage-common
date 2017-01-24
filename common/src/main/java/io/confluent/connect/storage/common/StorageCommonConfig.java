@@ -101,7 +101,7 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
   }
 
   @Override
-  public Object getValue(String key) {
+  public Object get(String key) {
     return super.get(key);
   }
 
