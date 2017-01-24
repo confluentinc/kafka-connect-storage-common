@@ -66,12 +66,6 @@ public class HiveConfig extends AbstractConfig {
   public static final String SCHEMA_COMPATIBILITY_DEFAULT = "NONE";
   public static final String SCHEMA_COMPATIBILITY_DISPLAY = "Schema Compatibility";
 
-  public static final String SCHEMA_CACHE_SIZE_CONFIG = "schema.cache.size";
-  public static final String SCHEMA_CACHE_SIZE_DOC =
-      "The size of the schema cache used in the Avro converter.";
-  public static final int SCHEMA_CACHE_SIZE_DEFAULT = 1000;
-  public static final String SCHEMA_CACHE_SIZE_DISPLAY = "Schema Cache Size";
-
   // CHECKSTYLE:OFF
   public static final ConfigDef.Recommender hiveIntegrationDependentsRecommender =
       new BooleanParentRecommender(HIVE_INTEGRATION_CONFIG);
@@ -159,16 +153,6 @@ public class HiveConfig extends AbstractConfig {
           Width.SHORT,
           SCHEMA_COMPATIBILITY_DISPLAY,
           schemaCompatibilityRecommender);
-
-      CONFIG_DEF.define(SCHEMA_CACHE_SIZE_CONFIG,
-          Type.INT,
-          SCHEMA_CACHE_SIZE_DEFAULT,
-          Importance.LOW,
-          SCHEMA_CACHE_SIZE_DOC,
-          group,
-          ++orderInGroup,
-          Width.SHORT,
-          SCHEMA_CACHE_SIZE_DISPLAY);
     }
   }
 

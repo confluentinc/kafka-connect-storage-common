@@ -78,6 +78,12 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
   public static final int FILENAME_OFFSET_ZERO_PAD_WIDTH_DEFAULT = 10;
   public static final String FILENAME_OFFSET_ZERO_PAD_WIDTH_DISPLAY = "Filename Offset Zero Pad Width";
 
+  public static final String SCHEMA_CACHE_SIZE_CONFIG = "schema.cache.size";
+  public static final String SCHEMA_CACHE_SIZE_DOC =
+      "The size of the schema cache used in the Avro converter.";
+  public static final int SCHEMA_CACHE_SIZE_DEFAULT = 1000;
+  public static final String SCHEMA_CACHE_SIZE_DISPLAY = "Schema Cache Size";
+
   protected static final ConfigDef CONFIG_DEF = new ConfigDef();
 
   static {
@@ -154,6 +160,16 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
           ++orderInGroup,
           Width.SHORT,
           FILENAME_OFFSET_ZERO_PAD_WIDTH_DISPLAY);
+
+      CONFIG_DEF.define(SCHEMA_CACHE_SIZE_CONFIG,
+          Type.INT,
+          SCHEMA_CACHE_SIZE_DEFAULT,
+          Importance.LOW,
+          SCHEMA_CACHE_SIZE_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          SCHEMA_CACHE_SIZE_DISPLAY);
     }
   }
 
