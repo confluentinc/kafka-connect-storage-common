@@ -27,7 +27,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class HiveConfig extends AbstractConfig {
+import io.confluent.connect.storage.common.ComposableConfig;
+
+public class HiveConfig extends AbstractConfig implements ComposableConfig {
   // Hive group
   public static final String HIVE_INTEGRATION_CONFIG = "hive.integration";
   public static final String HIVE_INTEGRATION_DOC =
@@ -193,6 +195,11 @@ public class HiveConfig extends AbstractConfig {
     public boolean visible(String name, Map<String, Object> connectorConfigs) {
       return (Boolean) connectorConfigs.get(parentConfigName);
     }
+  }
+
+  @Override
+  public Object get(String key) {
+    return super.get(key);
   }
 
   public static ConfigDef getConfig() {

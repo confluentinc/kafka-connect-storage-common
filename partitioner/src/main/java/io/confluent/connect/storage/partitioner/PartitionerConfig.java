@@ -28,7 +28,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class PartitionerConfig extends AbstractConfig {
+import io.confluent.connect.storage.common.ComposableConfig;
+
+public class PartitionerConfig extends AbstractConfig implements ComposableConfig {
 
   // Partitioner group
   public static final String PARTITIONER_CLASS_CONFIG = "partitioner.class";
@@ -221,6 +223,11 @@ public class PartitionerConfig extends AbstractConfig {
         throw new ConfigException("Partitioner class not found: " + partitionerName);
       }
     }
+  }
+
+  @Override
+  public Object get(String key) {
+    return super.get(key);
   }
 
   private static boolean classNameEquals(String className, Class<?> clazz) {
