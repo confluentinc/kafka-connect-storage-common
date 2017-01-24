@@ -24,7 +24,9 @@ import org.apache.kafka.common.config.ConfigDef.Width;
 
 import java.util.Map;
 
-public class StorageSinkConnectorConfig extends AbstractConfig {
+import io.confluent.connect.storage.common.ComposableConfig;
+
+public class StorageSinkConnectorConfig extends AbstractConfig implements ComposableConfig {
 
   // Connector group
   public static final String FORMAT_CLASS_CONFIG = "format.class";
@@ -171,6 +173,11 @@ public class StorageSinkConnectorConfig extends AbstractConfig {
           Width.SHORT,
           SCHEMA_CACHE_SIZE_DISPLAY);
     }
+  }
+
+  @Override
+  public Object getValue(String key) {
+    return super.get(key);
   }
 
   public static ConfigDef getConfig() {
