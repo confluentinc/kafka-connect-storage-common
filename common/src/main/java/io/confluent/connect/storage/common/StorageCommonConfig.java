@@ -47,6 +47,11 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
   public static final String DIRECTORY_DELIM_DEFAULT = "/";
   public static final String DIRECTORY_DELIM_DISPLAY = "Directory Delimiter";
 
+  public static final String FILE_DELIM_CONFIG = "file.delim";
+  public static final String FILE_DELIM_DOC = "File delimiter pattern";
+  public static final String FILE_DELIM_DEFAULT = "+";
+  public static final String FILE_DELIM_DISPLAY = "File Delimiter";
+
   protected static final ConfigDef CONFIG_DEF = new ConfigDef();
 
   static {
@@ -93,6 +98,16 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           ++orderInGroup,
           Width.SHORT,
           DIRECTORY_DELIM_DISPLAY);
+
+      CONFIG_DEF.define(FILE_DELIM_CONFIG,
+          Type.STRING,
+          FILE_DELIM_DEFAULT,
+          Importance.MEDIUM,
+          FILE_DELIM_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          FILE_DELIM_DISPLAY);
     }
   }
 
