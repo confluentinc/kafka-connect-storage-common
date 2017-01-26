@@ -15,8 +15,8 @@ Requires: confluent-common
 
 %description
 
-Kafka Connect Storage Cloud is a suite of Kafka Connectors for copying data between Kafka and Cloud storage such as
-Amazon S3, Google Cloud Storage or Azure Storage.
+Kafka Connect Storage Common contains packages used by connectors copying data between Kafka and distributed or cloud storage.
+Examples of such connectors are HDFS connector, S3 connector and others.
 
 %define __jar_repack %{nil}
 
@@ -57,5 +57,5 @@ exit 0
 [ "%{buildroot}" != "/" ] && %{__rm} -rf %{buildroot}
 
 %changelog
-* Wed Nov 11 2015 Confluent Packaging <packages@confluent.io>
+* Thu Jan 26 2017 Confluent Packaging <packages@confluent.io>
 - Initial import
