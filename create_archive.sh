@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Creates an archive suitable for distribution (standard layout for binaries,
 # libraries, etc.).
@@ -23,11 +23,25 @@ mkdir -p ${DESTDIR}${BINPATH}
 mkdir -p ${DESTDIR}${LIBPATH}
 mkdir -p ${DESTDIR}${SYSCONFDIR}
 
-PREPACKAGED="target/kafka-connect-storage-common-${VERSION}-package"
-pushd ${PREPACKAGED}
-find bin/ -type f | grep -v README[.]rpm | xargs -I XXX ${INSTALL_X} -o root -g root XXX ${DESTDIR}${PREFIX}/XXX
-find share/ -type f | grep -v README[.]rpm | xargs -I XXX ${INSTALL} -o root -g root XXX ${DESTDIR}${PREFIX}/XXX
-pushd etc/kafka-connect-storage-common/
-find . -type f | grep -v README[.]rpm | xargs -I XXX ${INSTALL} -o root -g root XXX ${DESTDIR}${SYSCONFDIR}/XXX
-popd
-popd
+function copy_subpackage() {
+    local SUBPACKAGE="$1"
+    pushd "package-${SUBPACKAGE}/target/${SUBPACKAGE}-${VERSION}-package"
+    find bin/ -type f | grep -v README[.]rpm | xargs -I XXX ${INSTALL_X} -o root -g root XXX ${DESTDIR}${PREFIX}/XXX
+    find share/ -type f | grep -v README[.]rpm | xargs -I XXX ${INSTALL} -o root -g root XXX ${DESTDIR}${PREFIX}/XXX
+    if [ -d etc/${PACKAGE_TITLE}/ ]; then
+        pushd etc/${PACKAGE_TITLE}/
+        find . -type f | grep -v README[.]rpm | xargs -I XXX ${INSTALL} -o root -g root XXX ${DESTDIR}${SYSCONFDIR}/XXX
+        popd
+    fi
+    popd
+}
+
+case "${PACKAGE_TITLE}" in
+  "kafka-connect-storage-common")
+    copy_subpackage ${PACKAGE_TITLE}
+    ;;
+  *)
+    echo "Unexpected value for PACKAGE_TITLE environment variable found: ${PACKAGE_TITLE}. Expected kafka-connect-storage-common."
+    exit 1
+    ;;
+esac
