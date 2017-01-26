@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Creates an archive suitable for distribution (standard layout for binaries,
 # libraries, etc.).
@@ -36,10 +36,12 @@ function copy_subpackage() {
     popd
 }
 
-if [ ${PACKAGE_TITLE} == "kafka-connect-storage-common" ]
-then
+case "${PACKAGE_TITLE}" in
+  "kafka-connect-storage-common")
     copy_subpackage ${PACKAGE_TITLE}
-else
-  echo "Unexpected value for PACKAGE_TITLE environment variable found: ${PACKAGE_TITLE}. Expected kafka-connect-storage-common."
-  exit 1
-fi
+    ;;
+  *)
+    echo "Unexpected value for PACKAGE_TITLE environment variable found: ${PACKAGE_TITLE}. Expected kafka-connect-storage-common."
+    exit 1
+    ;;
+esac
