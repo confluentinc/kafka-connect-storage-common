@@ -12,7 +12,7 @@ VERSION=$(shell grep version pom.xml | head -n 1 | awk -F'>|<' '{ print $$3 }')
 endif
 
 export PACKAGE_TITLE=kafka-connect-storage-common
-export FULL_PACKAGE_TITLE=confluent-kafka-connect-storage-common
+export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
 export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
 
 # Defaults that are likely to vary by platform. These are cleanly separated so
@@ -78,7 +78,7 @@ endif
 
 build: apply-patches
 ifeq ($(SKIP_TESTS),yes)
-	mvn -DskipTests=true install
+	mvn -Dmaven.test.skip=true install
 else
 	mvn install
 endif

@@ -3,11 +3,11 @@ Upstream-Name: kafka-connect-storage-common
 Source: https://github.com/confluentinc/kafka-connect-storage-common
 
 Files: *
-Copyright: 2015 Confluent, Inc.
+Copyright: 2017 Confluent, Inc.
 License: Apache-2
 
 Files: debian/*
-Copyright: 2015 Confluent, Inc.
+Copyright: 2017 Confluent, Inc.
 License: Apache-2
 
 License: Apache-2
