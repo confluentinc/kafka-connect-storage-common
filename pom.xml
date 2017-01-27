@@ -23,7 +23,7 @@
     <groupId>io.confluent</groupId>
     <artifactId>kafka-connect-storage-common-parent</artifactId>
     <packaging>pom</packaging>
-    <version>3.2.0-SNAPSHOT</version>
+    <version>3.3.0-SNAPSHOT</version>
     <name>kafka-connect-storage-common-parent</name>
     <organization>
         <name>Confluent, Inc.</name>
@@ -60,8 +60,8 @@
     </modules>
 
     <properties>
-        <confluent.version>3.2.0-SNAPSHOT</confluent.version>
-        <kafka.version>0.10.2.0-SNAPSHOT</kafka.version>
+        <confluent.version>3.3.0-SNAPSHOT</confluent.version>
+        <kafka.version>0.10.3.0-SNAPSHOT</kafka.version>
         <junit.version>4.12</junit.version>
         <hadoop.version>2.7.3</hadoop.version>
         <hive.version>1.2.1</hive.version>
