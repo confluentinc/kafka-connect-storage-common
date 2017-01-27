@@ -37,11 +37,11 @@ function copy_subpackage() {
 }
 
 case "${PACKAGE_TITLE}" in
-  "kafka-connect-storage-common")
+  "kafka-connect-storage-common-package")
     copy_subpackage ${PACKAGE_TITLE}
     ;;
   *)
-    echo "Unexpected value for PACKAGE_TITLE environment variable found: ${PACKAGE_TITLE}. Expected kafka-connect-storage-common."
+    echo "Unexpected value for PACKAGE_TITLE environment variable found: ${PACKAGE_TITLE}. Expected kafka-connect-storage-common-package."
     exit 1
     ;;
 esac
