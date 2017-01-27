@@ -37,7 +37,7 @@ function copy_subpackage() {
 }
 
 case "${PACKAGE_TITLE}" in
-  "kafka-connect-storage-common")
+  "kafka-connect-storage-common-package")
     copy_subpackage ${PACKAGE_TITLE}
     ;;
   *)
