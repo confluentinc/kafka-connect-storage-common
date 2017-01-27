@@ -25,7 +25,7 @@ mkdir -p ${DESTDIR}${SYSCONFDIR}
 
 function copy_subpackage() {
     local SUBPACKAGE="$1"
-    pushd "package-${SUBPACKAGE}/target/${SUBPACKAGE}-${VERSION}-package"
+    pushd "package-${SUBPACKAGE}/target/${SUBPACKAGE}-package-${VERSION}-package"
     find bin/ -type f | grep -v README[.]rpm | xargs -I XXX ${INSTALL_X} -o root -g root XXX ${DESTDIR}${PREFIX}/XXX
     find share/ -type f | grep -v README[.]rpm | xargs -I XXX ${INSTALL} -o root -g root XXX ${DESTDIR}${PREFIX}/XXX
     if [ -d etc/${PACKAGE_TITLE}/ ]; then
@@ -37,11 +37,11 @@ function copy_subpackage() {
 }
 
 case "${PACKAGE_TITLE}" in
-  "kafka-connect-storage-common-package")
+  "kafka-connect-storage-common")
     copy_subpackage ${PACKAGE_TITLE}
     ;;
   *)
-    echo "Unexpected value for PACKAGE_TITLE environment variable found: ${PACKAGE_TITLE}. Expected kafka-connect-storage-common-package."
+    echo "Unexpected value for PACKAGE_TITLE environment variable found: ${PACKAGE_TITLE}. Expected kafka-connect-storage-common."
     exit 1
     ;;
 esac
