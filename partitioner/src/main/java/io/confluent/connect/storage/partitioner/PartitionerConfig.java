@@ -187,7 +187,7 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
 
     @Override
     public boolean visible(String name, Map<String, Object> connectorConfigs) {
-      return (Boolean) connectorConfigs.get(parentConfigName);
+      return (boolean) connectorConfigs.get(parentConfigName);
     }
   }
 
@@ -200,27 +200,28 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
 
     @Override
     public boolean visible(String name, Map<String, Object> connectorConfigs) {
-      String partitionerName = (String) connectorConfigs.get(PARTITIONER_CLASS_CONFIG);
       try {
         @SuppressWarnings("unchecked")
-        Class<? extends Partitioner<?>> partitioner = (Class<? extends Partitioner<?>>) Class.forName(partitionerName);
-        if (classNameEquals(partitionerName, DefaultPartitioner.class)) {
+        Class<? extends Partitioner<?>> partitioner =
+            (Class<? extends Partitioner<?>>) connectorConfigs.get(PARTITIONER_CLASS_CONFIG);
+        if (DefaultPartitioner.class.isInstance(partitioner)) {
           return false;
         } else if (FieldPartitioner.class.isAssignableFrom(partitioner)) {
           // subclass of FieldPartitioner
           return name.equals(PARTITION_FIELD_NAME_CONFIG);
         } else if (TimeBasedPartitioner.class.isAssignableFrom(partitioner)) {
           // subclass of TimeBasedPartitioner
-          if (classNameEquals(partitionerName, DailyPartitioner.class) || classNameEquals(partitionerName, HourlyPartitioner.class)) {
+          if (DailyPartitioner.class.isInstance(partitioner) ||
+              HourlyPartitioner.class.isInstance(partitioner)) {
             return name.equals(LOCALE_CONFIG) || name.equals(TIMEZONE_CONFIG);
           } else {
             return name.equals(PARTITION_DURATION_MS_CONFIG) || name.equals(PATH_FORMAT_CONFIG) || name.equals(LOCALE_CONFIG) || name.equals(TIMEZONE_CONFIG);
           }
         } else {
-          throw new ConfigException("Not a valid partitioner class: " + partitionerName);
+          throw new ConfigException("Not a valid partitioner class: " + partitioner);
         }
-      } catch (ClassNotFoundException e) {
-        throw new ConfigException("Partitioner class not found: " + partitionerName);
+      } catch (ClassCastException e) {
+        throw new ConfigException("Partitioner class not found: " + PARTITIONER_CLASS_CONFIG);
       }
     }
   }
