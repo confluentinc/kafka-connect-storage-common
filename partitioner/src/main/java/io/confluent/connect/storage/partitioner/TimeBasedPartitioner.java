@@ -82,7 +82,6 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
                                 timeZoneString, "Timezone cannot be empty.");
     }
 
-
     Locale locale = new Locale(localeString);
     DateTimeZone timeZone = DateTimeZone.forID(timeZoneString);
     init(partitionDurationMs, pathFormat, locale, timeZone, config);
