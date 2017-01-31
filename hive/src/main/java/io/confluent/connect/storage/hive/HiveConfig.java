@@ -165,7 +165,7 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
 
     @Override
     public List<Object> validValues(String name, Map<String, Object> connectorConfigs) {
-      boolean hiveIntegration = (Boolean) connectorConfigs.get(parentConfigName);
+      boolean hiveIntegration = (boolean) connectorConfigs.get(parentConfigName);
       if (hiveIntegration) {
         return Arrays.<Object>asList("BACKWARD", "FORWARD", "FULL");
       } else {
@@ -193,7 +193,7 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
 
     @Override
     public boolean visible(String name, Map<String, Object> connectorConfigs) {
-      return (Boolean) connectorConfigs.get(parentConfigName);
+      return (boolean) connectorConfigs.get(parentConfigName);
     }
   }
 
