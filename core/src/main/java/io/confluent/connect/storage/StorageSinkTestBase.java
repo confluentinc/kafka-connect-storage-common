@@ -31,11 +31,6 @@ import java.util.Set;
 import io.confluent.connect.storage.common.StorageCommonConfig;
 
 public class StorageSinkTestBase {
-
-  protected Map<String, String> properties;
-  protected String url;
-
-  protected MockSinkTaskContext context;
   protected static final String TOPIC = "test-topic";
   protected static final int PARTITION = 12;
   protected static final int PARTITION2 = 13;
@@ -43,7 +38,10 @@ public class StorageSinkTestBase {
   protected static final TopicPartition TOPIC_PARTITION = new TopicPartition(TOPIC, PARTITION);
   protected static final TopicPartition TOPIC_PARTITION2 = new TopicPartition(TOPIC, PARTITION2);
   protected static final TopicPartition TOPIC_PARTITION3 = new TopicPartition(TOPIC, PARTITION3);
-  protected static Set<TopicPartition> assignment;
+
+  protected Map<String, String> properties;
+  protected String url;
+  protected MockSinkTaskContext context;
 
   protected Map<String, String> createProps() {
     Map<String, String> props = new HashMap<>();
@@ -94,10 +92,10 @@ public class StorageSinkTestBase {
 
   public void setUp() throws Exception {
     properties = createProps();
-    assignment = new HashSet<>();
+    Set<TopicPartition> assignment = new HashSet<>();
     assignment.add(TOPIC_PARTITION);
     assignment.add(TOPIC_PARTITION2);
-    context = new MockSinkTaskContext();
+    context = new MockSinkTaskContext(assignment);
   }
 
   @After
@@ -107,10 +105,12 @@ public class StorageSinkTestBase {
 
     private final Map<TopicPartition, Long> offsets;
     private long timeoutMs;
+    private Set<TopicPartition> assignment;
 
-    public MockSinkTaskContext() {
+    public MockSinkTaskContext(Set<TopicPartition> assignment) {
       this.offsets = new HashMap<>();
       this.timeoutMs = -1L;
+      this.assignment = assignment;
     }
 
     @Override
@@ -147,6 +147,10 @@ public class StorageSinkTestBase {
     @Override
     public Set<TopicPartition> assignment() {
       return assignment;
+    }
+
+    public void setAssignment(Set<TopicPartition> nextAssignment) {
+      assignment = nextAssignment;
     }
 
     @Override
