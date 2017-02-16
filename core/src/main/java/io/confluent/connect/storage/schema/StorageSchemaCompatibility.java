@@ -65,23 +65,30 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
     return compat != null ? compat : StorageSchemaCompatibility.NONE;
   }
 
-  protected boolean validate(Schema valueSchema, Schema currentSchema) {
-    if (currentSchema == null) {
+  protected boolean validateAndCheck(Schema valueSchema, Schema currentSchema) {
+    if (currentSchema == null && valueSchema == null) {
+      return false;
+    }
+
+    if (currentSchema == null || valueSchema == null) {
+      // Change between schema-based and schema-less or vice versa always returns true.
       return true;
     }
+
     if ((valueSchema.version() == null || currentSchema.version() == null) && this != NONE) {
       throw new SchemaProjectorException("Schema version required for " + toString() + " compatibility");
     }
-    return false;
+
+    return check(valueSchema, currentSchema);
   }
 
   protected boolean check(Schema originalSchema, Schema currentSchema) {
-    return (originalSchema.version()).compareTo(currentSchema.version()) > 0;
+    return originalSchema.version().compareTo(currentSchema.version()) > 0;
   }
 
   public boolean shouldChangeSchema(ConnectRecord<?> record, Schema currentKeySchema, Schema currentValueSchema) {
     // Currently in Storage only value schemas are considered for compatibility resolution.
-    return validate(record.valueSchema(), currentValueSchema) || check(record.valueSchema(), currentValueSchema);
+    return validateAndCheck(record.valueSchema(), currentValueSchema);
   }
 
   public SourceRecord project(SourceRecord record, Schema currentKeySchema, Schema currentValueSchema) {
