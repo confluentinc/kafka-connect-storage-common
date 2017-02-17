@@ -71,8 +71,8 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
     }
 
     if (currentSchema == null || valueSchema == null) {
-      // Change between schema-based and schema-less or vice versa always returns true.
-      return true;
+      // Change between schema-based and schema-less or vice versa throws exception.
+      throw new SchemaProjectorException("Switch between schema-based and schema-less data is not supported");
     }
 
     if ((valueSchema.version() == null || currentSchema.version() == null) && this != NONE) {
