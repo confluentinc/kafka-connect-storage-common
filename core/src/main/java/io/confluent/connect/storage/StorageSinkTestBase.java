@@ -90,6 +90,16 @@ public class StorageSinkTestBase {
         .put("string", "def");
   }
 
+  protected Schema createSchemaNoVersion() {
+    return SchemaBuilder.struct().name("record")
+        .field("boolean", Schema.BOOLEAN_SCHEMA)
+        .field("int", Schema.INT32_SCHEMA)
+        .field("long", Schema.INT64_SCHEMA)
+        .field("float", Schema.FLOAT32_SCHEMA)
+        .field("double", Schema.FLOAT64_SCHEMA)
+        .build();
+  }
+
   public void setUp() throws Exception {
     properties = createProps();
     Set<TopicPartition> assignment = new HashSet<>();
