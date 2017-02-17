@@ -41,6 +41,7 @@ public class SchemaSourceTask extends SourceTask {
   public static final String THROUGHPUT_CONFIG = "throughput";
   public static final String MULTIPLE_SCHEMA_CONFIG = "multiple.schema";
   public static final String PARTITION_COUNT_CONFIG = "partition.count";
+  public static final String ENABLE_STDOUT_CONFIG = "enable.stdout";
 
   private static final String ID_FIELD = "id";
   private static final String SEQNO_FIELD = "seqno";
@@ -55,6 +56,7 @@ public class SchemaSourceTask extends SourceTask {
   private long maxNumMsgs;
   private boolean multipleSchema;
   private int partitionCount;
+  private boolean isOutputEnabled;
 
   // Until we can use ThroughputThrottler from Kafka, use a fixed sleep interval. This isn't perfect, but close enough
   // for system testing purposes
@@ -98,6 +100,8 @@ public class SchemaSourceTask extends SourceTask {
       multipleSchema = Boolean.parseBoolean(props.get(MULTIPLE_SCHEMA_CONFIG));
       partitionCount = Integer.parseInt(props.containsKey(PARTITION_COUNT_CONFIG) ?
                                         props.get(PARTITION_COUNT_CONFIG) : "1");
+      isOutputEnabled = Boolean.parseBoolean(props.containsKey(ENABLE_STDOUT_CONFIG) ?
+                                        props.get(ENABLE_STDOUT_CONFIG) : "true");
       String throughputStr = props.get(THROUGHPUT_CONFIG);
       if (throughputStr != null) {
         long throughput = Long.parseLong(throughputStr);
@@ -163,8 +167,10 @@ public class SchemaSourceTask extends SourceTask {
 
         srcRecord = new SourceRecord(partition, ccOffset, topic, id, Schema.STRING_SCHEMA, "key", valueSchema2, data);
       }
-      
-      System.out.println("{\"task\": " + id + ", \"seqno\": " + seqno + "}");
+
+      if (isOutputEnabled) {
+        System.out.println("{\"task\": " + id + ", \"seqno\": " + seqno + "}");
+      }
       List<SourceRecord> result = Arrays.asList(srcRecord);
       seqno++;
       count++;
