@@ -66,18 +66,8 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           STORAGE_CLASS_DOC,
           group,
           ++orderInGroup,
-          Width.MEDIUM,
+          Width.NONE,
           STORAGE_CLASS_DISPLAY);
-
-      CONFIG_DEF.define(STORE_URL_CONFIG,
-          Type.STRING,
-          STORE_URL_DEFAULT,
-          Importance.HIGH,
-          STORE_URL_DOC,
-          group,
-          ++orderInGroup,
-          Width.MEDIUM,
-          STORE_URL_DISPLAY);
 
       CONFIG_DEF.define(TOPICS_DIR_CONFIG,
           Type.STRING,
@@ -86,8 +76,18 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           TOPICS_DIR_DOC,
           group,
           ++orderInGroup,
-          Width.SHORT,
+          Width.NONE,
           TOPICS_DIR_DISPLAY);
+
+      CONFIG_DEF.define(STORE_URL_CONFIG,
+          Type.STRING,
+          STORE_URL_DEFAULT,
+          Importance.HIGH,
+          STORE_URL_DOC,
+          group,
+          ++orderInGroup,
+          Width.NONE,
+          STORE_URL_DISPLAY);
 
       CONFIG_DEF.define(DIRECTORY_DELIM_CONFIG,
           Type.STRING,
@@ -96,7 +96,7 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           DIRECTORY_DELIM_DOC,
           group,
           ++orderInGroup,
-          Width.SHORT,
+          Width.LONG,
           DIRECTORY_DELIM_DISPLAY);
 
       CONFIG_DEF.define(FILE_DELIM_CONFIG,
@@ -106,7 +106,7 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           FILE_DELIM_DOC,
           group,
           ++orderInGroup,
-          Width.SHORT,
+          Width.LONG,
           FILE_DELIM_DISPLAY);
     }
   }
