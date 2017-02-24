@@ -100,7 +100,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           FORMAT_CLASS_DOC,
           group,
           ++orderInGroup,
-          Width.SHORT,
+          Width.NONE,
           FORMAT_CLASS_DISPLAY);
 
       CONFIG_DEF.define(FLUSH_SIZE_CONFIG,
@@ -109,7 +109,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           FLUSH_SIZE_DOC,
           group,
           ++orderInGroup,
-          Width.SHORT,
+          Width.LONG,
           FLUSH_SIZE_DISPLAY);
 
       CONFIG_DEF.define(ROTATE_INTERVAL_MS_CONFIG,
@@ -119,7 +119,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           ROTATE_INTERVAL_MS_DOC,
           group,
           ++orderInGroup,
-          Width.SHORT,
+          Width.MEDIUM,
           ROTATE_INTERVAL_MS_DISPLAY);
 
       CONFIG_DEF.define(ROTATE_SCHEDULE_INTERVAL_MS_CONFIG,
@@ -129,8 +129,18 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           ROTATE_SCHEDULE_INTERVAL_MS_DOC,
           group,
           ++orderInGroup,
-          Width.SHORT,
+          Width.MEDIUM,
           ROTATE_SCHEDULE_INTERVAL_MS_DISPLAY);
+
+      CONFIG_DEF.define(SCHEMA_CACHE_SIZE_CONFIG,
+          Type.INT,
+          SCHEMA_CACHE_SIZE_DEFAULT,
+          Importance.LOW,
+          SCHEMA_CACHE_SIZE_DOC,
+          group,
+          ++orderInGroup,
+          Width.LONG,
+          SCHEMA_CACHE_SIZE_DISPLAY);
 
       CONFIG_DEF.define(RETRY_BACKOFF_CONFIG,
           Type.LONG,
@@ -139,7 +149,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           RETRY_BACKOFF_DOC,
           group,
           ++orderInGroup,
-          Width.SHORT,
+          Width.MEDIUM,
           RETRY_BACKOFF_DISPLAY);
 
       CONFIG_DEF.define(SHUTDOWN_TIMEOUT_CONFIG,
@@ -149,7 +159,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           SHUTDOWN_TIMEOUT_DOC,
           group,
           ++orderInGroup,
-          Width.SHORT,
+          Width.MEDIUM,
           SHUTDOWN_TIMEOUT_DISPLAY);
 
       CONFIG_DEF.define(FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG,
@@ -160,18 +170,9 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           FILENAME_OFFSET_ZERO_PAD_WIDTH_DOC,
           group,
           ++orderInGroup,
-          Width.SHORT,
+          Width.LONG,
           FILENAME_OFFSET_ZERO_PAD_WIDTH_DISPLAY);
 
-      CONFIG_DEF.define(SCHEMA_CACHE_SIZE_CONFIG,
-          Type.INT,
-          SCHEMA_CACHE_SIZE_DEFAULT,
-          Importance.LOW,
-          SCHEMA_CACHE_SIZE_DOC,
-          group,
-          ++orderInGroup,
-          Width.SHORT,
-          SCHEMA_CACHE_SIZE_DISPLAY);
     }
   }
 
