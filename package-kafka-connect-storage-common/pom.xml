@@ -117,9 +117,6 @@
         </profile>
         <profile>
             <id>licenses-package</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <build>
                 <plugins>
                     <plugin>
