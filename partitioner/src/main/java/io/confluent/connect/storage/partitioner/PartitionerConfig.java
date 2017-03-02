@@ -107,6 +107,15 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           PARTITIONER_CLASS_DISPLAY,
           Arrays.asList(PARTITION_FIELD_NAME_CONFIG, PARTITION_DURATION_MS_CONFIG, PATH_FORMAT_CONFIG, LOCALE_CONFIG, TIMEZONE_CONFIG, SCHEMA_GENERATOR_CLASS_CONFIG));
 
+      CONFIG_DEF.define(SCHEMA_GENERATOR_CLASS_CONFIG,
+          Type.CLASS,
+          Importance.HIGH,
+          SCHEMA_GENERATOR_CLASS_DOC,
+          group,
+          ++orderInGroup,
+          Width.LONG,
+          SCHEMA_GENERATOR_CLASS_DISPLAY);
+
       CONFIG_DEF.define(PARTITION_FIELD_NAME_CONFIG,
           Type.STRING,
           PARTITION_FIELD_NAME_DEFAULT,
@@ -114,9 +123,8 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           PARTITION_FIELD_NAME_DOC,
           group,
           ++orderInGroup,
-          Width.MEDIUM,
-          PARTITION_FIELD_NAME_DISPLAY,
-          partitionerClassDependentsRecommender);
+          Width.NONE,
+          PARTITION_FIELD_NAME_DISPLAY);
 
       CONFIG_DEF.define(PARTITION_DURATION_MS_CONFIG,
           Type.LONG,
@@ -125,9 +133,8 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           PARTITION_DURATION_MS_DOC,
           group,
           ++orderInGroup,
-          Width.SHORT,
-          PARTITION_DURATION_MS_DISPLAY,
-          partitionerClassDependentsRecommender);
+          Width.LONG,
+          PARTITION_DURATION_MS_DISPLAY);
 
       CONFIG_DEF.define(PATH_FORMAT_CONFIG,
           Type.STRING,
@@ -137,8 +144,7 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           group,
           ++orderInGroup,
           Width.LONG,
-          PATH_FORMAT_DISPLAY,
-          partitionerClassDependentsRecommender);
+          PATH_FORMAT_DISPLAY);
 
       CONFIG_DEF.define(LOCALE_CONFIG,
           Type.STRING,
@@ -147,9 +153,8 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           LOCALE_DOC,
           group,
           ++orderInGroup,
-          Width.MEDIUM,
-          LOCALE_DISPLAY,
-          partitionerClassDependentsRecommender);
+          Width.LONG,
+          LOCALE_DISPLAY);
 
       CONFIG_DEF.define(TIMEZONE_CONFIG,
           Type.STRING,
@@ -158,18 +163,9 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           TIMEZONE_DOC,
           group,
           ++orderInGroup,
-          Width.MEDIUM,
-          TIMEZONE_DISPLAY,
-          partitionerClassDependentsRecommender);
-
-      CONFIG_DEF.define(SCHEMA_GENERATOR_CLASS_CONFIG,
-          Type.CLASS,
-          Importance.HIGH,
-          SCHEMA_GENERATOR_CLASS_DOC,
-          group,
-          ++orderInGroup,
           Width.LONG,
-          SCHEMA_GENERATOR_CLASS_DISPLAY);
+          TIMEZONE_DISPLAY);
+
     }
   }
 
