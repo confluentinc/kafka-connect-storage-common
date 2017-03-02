@@ -70,7 +70,7 @@
         <commons-io.version>2.4</commons-io.version>
         <joda.version>2.9.6</joda.version>
         <confluent.maven.repo>http://packages.confluent.io/maven/</confluent.maven.repo>
-        <licenses.version>3.2.0-SNAPSHOT</licenses.version>
+        <licenses.version>3.2.1-SNAPSHOT</licenses.version>
         <maven-assembly.version>2.6</maven-assembly.version>
     </properties>
 
