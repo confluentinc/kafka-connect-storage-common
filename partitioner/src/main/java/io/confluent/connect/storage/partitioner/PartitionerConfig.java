@@ -84,9 +84,11 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final String TIMEZONE_DISPLAY = "Timezone";
 
   public static final String TIMESTAMP_EXTRACTOR_CLASS_CONFIG = "timestamp.extractor";
-  public static final String TIMESTAMP_EXTRACTOR_CLASS_DOC =
-      "The extractor used to get timestamp for records when partitioning with "
-          + "``TimeBasedPartitioner``.";
+  public static final String TIMESTAMP_EXTRACTOR_CLASS_DOC = "The extractor that gets the "
+      + "timestamp for records when partitioning with ``TimeBasedPartitioner``. It can be set to "
+      + "``Wallclock``, ``Record`` or ``RecordField`` in order to use one of the built-in "
+      + "timestamp extractors or be given the fully-qualified class name of a user-defined class "
+      + "that extends the ``TimestampExtractor`` interface.";
   public static final String TIMESTAMP_EXTRACTOR_CLASS_DEFAULT = "Wallclock";
   public static final String TIMESTAMP_EXTRACTOR_CLASS_DISPLAY = "Timestamp Extractor";
 
