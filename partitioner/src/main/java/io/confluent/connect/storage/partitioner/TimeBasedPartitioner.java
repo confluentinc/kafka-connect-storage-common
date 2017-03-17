@@ -17,21 +17,23 @@
 package io.confluent.connect.storage.partitioner;
 
 import org.apache.kafka.common.config.ConfigException;
+import org.apache.kafka.common.utils.Time;
 import org.apache.kafka.connect.connector.ConnectRecord;
 import org.apache.kafka.connect.data.Schema;
-import org.apache.kafka.connect.data.Schema.Type;
 import org.apache.kafka.connect.data.Struct;
-import org.apache.kafka.common.utils.Time;
+import org.apache.kafka.connect.data.Timestamp;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 
@@ -68,8 +70,8 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
   }
 
   public static long getPartition(long timeGranularityMs, long timestamp, DateTimeZone timeZone) {
-    long adjustedTimeStamp = timeZone.convertUTCToLocal(timestamp);
-    long partitionedTime = (adjustedTimeStamp / timeGranularityMs) * timeGranularityMs;
+    long adjustedTimestamp = timeZone.convertUTCToLocal(timestamp);
+    long partitionedTime = (adjustedTimestamp / timeGranularityMs) * timeGranularityMs;
     return timeZone.convertLocalToUTC(partitionedTime, false);
   }
 
@@ -200,42 +202,62 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
 
   public static class RecordFieldTimestampExtractor implements TimestampExtractor {
     private String fieldName;
+    private DateTimeFormatter dateTime;
 
     @Override
     public void configure(Map<String, Object> config) {
       fieldName = (String) config.get(PartitionerConfig.TIMESTAMP_FIELD_NAME_CONFIG);
+      dateTime = ISODateTimeFormat.dateTime();
     }
 
     @Override
     public Long extract(ConnectRecord<?> record) {
       Object value = record.value();
-      Schema valueSchema = record.valueSchema();
       if (value instanceof Struct) {
         Struct struct = (Struct) value;
         Object timestampValue = struct.get(fieldName);
-        Type type = valueSchema.field(fieldName).schema().type();
-        switch (type) {
-          case INT8:
-          case INT16:
+        Schema valueSchema = record.valueSchema();
+        Schema fieldSchema = valueSchema.field(fieldName).schema();
+
+        if (fieldSchema.name().equals(Timestamp.LOGICAL_NAME)) {
+          return ((Date) timestampValue).getTime();
+        }
+
+        switch (fieldSchema.type()) {
           case INT32:
           case INT64:
-            Number timestamp = (Number) timestampValue;
-            return timestamp.longValue();
+            return ((Number) timestampValue).longValue();
           case STRING:
-            // Should we support parsing from string?
-          case BYTES:
-            // Do we support serialized timestamps?
+            return dateTime.parseMillis((String) timestampValue);
           default:
             log.error(
-                "Type {} is not supported as a user-defined record timestamp field.",
-                type.getName()
+                "Unsupported type '{}' for user-defined timestamp field.",
+                fieldSchema.type().getName()
             );
             throw new PartitionException(
                 "Error extracting timestamp from record field: " + fieldName
             );
         }
+      } else if (value instanceof Map) {
+        Map<?, ?> map = (Map<?, ?>) value;
+        Object timestampValue = map.get(fieldName);
+        if (timestampValue instanceof Number) {
+          return ((Number) timestampValue).longValue();
+        } else if (timestampValue instanceof String) {
+          return dateTime.parseMillis((String) timestampValue);
+        } else if (timestampValue instanceof Date) {
+          return ((Date) timestampValue).getTime();
+        } else {
+          log.error(
+              "Unsupported type '{}' for user-defined timestamp field.",
+              timestampValue.getClass()
+          );
+          throw new PartitionException(
+              "Error extracting timestamp from record field: " + fieldName
+          );
+        }
       } else {
-        log.error("Value is not Struct type.");
+        log.error("Value is not of Struct or Map type.");
         throw new PartitionException("Error encoding partition.");
       }
     }
