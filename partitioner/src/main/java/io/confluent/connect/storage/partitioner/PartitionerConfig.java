@@ -95,7 +95,7 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final String TIMESTAMP_FIELD_NAME_CONFIG = "timestamp.field";
   public static final String TIMESTAMP_FIELD_NAME_DOC =
       "The record field to be used as timestamp by the timestamp extractor.";
-  public static final String TIMESTAMP_FIELD_NAME_DEFAULT = "Timestamp";
+  public static final String TIMESTAMP_FIELD_NAME_DEFAULT = "timestamp";
   public static final String TIMESTAMP_FIELD_NAME_DISPLAY = "Record Field for Timestamp Extractor";
 
   // CHECKSTYLE:OFF
