@@ -40,8 +40,10 @@ public class TimeBasedSchemaGenerator implements SchemaGenerator<FieldSchema> {
     boolean hiveIntegration = (boolean) config.get(HiveConfig.HIVE_INTEGRATION_CONFIG);
     String delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
     if (hiveIntegration && !verifyDateTimeFormat(format, delim)) {
-      throw new IllegalArgumentException("Path format doesn't meet the requirements for Hive integration, "
-          + "which require prefixing each DateTime component with its name.");
+      throw new IllegalArgumentException(
+          "Path format doesn't meet the requirements for Hive integration, "
+          + "which require prefixing each DateTime component with its name."
+      );
     }
 
     List<FieldSchema> fields = new ArrayList<>();
@@ -58,11 +60,11 @@ public class TimeBasedSchemaGenerator implements SchemaGenerator<FieldSchema> {
 
   private boolean verifyDateTimeFormat(String pathFormat, String delim) {
     String patternString =
-        "'year'=Y{1,5}" + delim +
-            "('month'=M{1,5}" + delim +
-            ")?('day'=d{1,3}" + delim +
-            ")?('hour'=H{1,3}" + delim +
-            ")?('minute'=m{1,3}" + delim + ")?";
+        "'year'=Y{1,5}" + delim
+            + "('month'=M{1,5}" + delim
+            + ")?('day'=d{1,3}" + delim
+            + ")?('hour'=H{1,3}" + delim
+            + ")?('minute'=m{1,3}" + delim + ")?";
     return Pattern.compile(patternString).matcher(pathFormat).matches();
   }
 }

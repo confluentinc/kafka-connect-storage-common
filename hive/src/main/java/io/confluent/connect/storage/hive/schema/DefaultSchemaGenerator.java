@@ -28,6 +28,8 @@ public class DefaultSchemaGenerator implements SchemaGenerator<FieldSchema> {
 
   @Override
   public List<FieldSchema> newPartitionFields(String partitionField) {
-    return Collections.singletonList(new FieldSchema(partitionField, TypeInfoFactory.stringTypeInfo.toString(), ""));
+    return Collections.singletonList(
+        new FieldSchema(partitionField, TypeInfoFactory.stringTypeInfo.toString(), "")
+    );
   }
 }

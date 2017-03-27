@@ -16,7 +16,6 @@
 
 package io.confluent.connect.storage.hive;
 
-import io.confluent.connect.storage.errors.HiveMetaStoreException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -41,6 +40,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.confluent.connect.storage.errors.HiveMetaStoreException;
+
 public class HiveMetaStore {
 
   private static final Logger log = LoggerFactory.getLogger(HiveMetaStore.class);
@@ -54,22 +55,26 @@ public class HiveMetaStore {
       throws HiveMetaStoreException {
     HiveConf hiveConf = new HiveConf(conf, HiveConf.class);
     String hiveConfDir = connectorConfig.getString(HiveConfig.HIVE_CONF_DIR_CONFIG);
-    String hiveMetaStoreURIs =
-        connectorConfig.getString(HiveConfig.HIVE_METASTORE_URIS_CONFIG);
-    if (hiveMetaStoreURIs.isEmpty()) {
-      log.warn("hive.metastore.uris empty, an embedded Hive metastore will be "
-          + "created in the directory the connector is started. "
-          + "You need to start Hive in that specific directory to query the data.");
+    String hiveMetaStoreUris = connectorConfig.getString(HiveConfig.HIVE_METASTORE_URIS_CONFIG);
+    if (hiveMetaStoreUris.isEmpty()) {
+      log.warn(
+          "hive.metastore.uris empty, an embedded Hive metastore will be created in the directory"
+          + " the connector is started. You need to start Hive in that specific directory to "
+          + "query the data."
+      );
     }
     if (!hiveConfDir.equals("")) {
       String hiveSitePath = hiveConfDir + "/hive-site.xml";
       File hiveSite = new File(hiveSitePath);
       if (!hiveSite.exists()) {
-        log.warn("hive-site.xml does not exist in provided Hive configuration directory {}.", hiveConf);
+        log.warn(
+            "hive-site.xml does not exist in provided Hive configuration directory {}.",
+            hiveConf
+        );
       }
       hiveConf.addResource(new Path(hiveSitePath));
     }
-    hiveConf.set("hive.metastore.uris", hiveMetaStoreURIs);
+    hiveConf.set("hive.metastore.uris", hiveMetaStoreUris);
     try {
       client = HCatUtil.getHiveMetastoreClient(hiveConf);
     } catch (IOException | MetaException e) {
@@ -78,17 +83,17 @@ public class HiveMetaStore {
   }
 
   private interface ClientAction<R> {
+
     R call() throws TException;
   }
 
   private <R> R doAction(ClientAction<R> action) throws HiveMetaStoreException {
-    // No need to implement retries here. We use RetryingMetaStoreClient
-    // which creates a proxy for a IMetaStoreClient implementation and 
-    // retries calls to it on failure. The retrying client is conscious
-    // of the socket timeout and does not call reconnect on an open connection.
-    // Since HiveMetaStoreClient's reconnect method does not check the status 
-    // of the connection, blind retries may cause a huge spike in the number
-    // of connections to the Hive MetaStore.
+    // No need to implement retries here. We use RetryingMetaStoreClient which creates a proxy
+    // for a IMetaStoreClient implementation and retries calls to it on failure. The retrying
+    // client is conscious of the socket timeout and does not call reconnect on an open
+    // connection. Since HiveMetaStoreClient's reconnect method does not check the status of the
+    // connection, blind retries may cause a huge spike in the number of connections to the Hive
+    // MetaStore.
     try {
       return action.call();
     } catch (MetaException e) {
@@ -104,14 +109,17 @@ public class HiveMetaStore {
       @Override
       public Void call() throws TException {
         try {
-          // purposely don't check if the partition already exists because
-          // getPartition(db, table, path) will throw an exception to indicate the
-          // partition doesn't exist also. this way, it's only one call.
+          // purposely don't check if the partition already exists because getPartition(db,
+          // table, path) will throw an exception to indicate the partition doesn't exist also.
+          // this way, it's only one call.
           client.appendPartition(database, tableName, path);
         } catch (AlreadyExistsException e) {
           // this is okay
         } catch (InvalidObjectException e) {
-          throw new HiveMetaStoreException("Invalid partition for " + database + "." + tableName + ": " + path, e);
+          throw new HiveMetaStoreException(
+              "Invalid partition for " + database + "." + tableName + ": " + path,
+              e
+          );
         }
         return null;
       }
@@ -130,7 +138,10 @@ public class HiveMetaStore {
         } catch (NoSuchObjectException e) {
           // this is okay
         } catch (InvalidObjectException e) {
-          throw new HiveMetaStoreException("Invalid partition for " + database + "." + tableName + ": " + path, e);
+          throw new HiveMetaStoreException(
+              "Invalid partition for " + database + "." + tableName + ": " + path,
+              e
+          );
         }
         return null;
       }
@@ -145,7 +156,9 @@ public class HiveMetaStore {
       @Override
       public Void call() throws TException {
         try {
-          client.createDatabase(new Database(database, "Database created by Kafka Connect", null, null));
+          client.createDatabase(
+              new Database(database, "Database created by Kafka Connect", null, null)
+          );
         } catch (AlreadyExistsException e) {
           log.warn("Hive database already exists: {}", database);
         } catch (InvalidObjectException e) {
@@ -158,7 +171,10 @@ public class HiveMetaStore {
     doAction(create);
   }
 
-  public void dropDatabase(final String name, final boolean deleteData) throws HiveMetaStoreException {
+  public void dropDatabase(
+      final String name,
+      final boolean deleteData
+  ) throws HiveMetaStoreException {
     ClientAction<Void> drop = new ClientAction<Void>() {
       @Override
       public Void call() throws TException {
@@ -181,7 +197,9 @@ public class HiveMetaStore {
         try {
           client.createTable(table.getTTable());
         } catch (NoSuchObjectException e) {
-          throw new HiveMetaStoreException("Hive table not found: " + table.getDbName() + "." + table.getTableName());
+          throw new HiveMetaStoreException(
+              "Hive table not found: " + table.getDbName() + "." + table.getTableName()
+          );
         } catch (AlreadyExistsException e) {
           // this is ok
           log.warn("Hive table already exists: {}.{}", table.getDbName(), table.getTableName());
@@ -203,7 +221,9 @@ public class HiveMetaStore {
         try {
           client.alter_table(table.getDbName(), table.getTableName(), table.getTTable());
         } catch (NoSuchObjectException e) {
-          throw new HiveMetaStoreException("Hive table not found: " + table.getDbName() + "." + table.getTableName());
+          throw new HiveMetaStoreException(
+              "Hive table not found: " + table.getDbName() + "." + table.getTableName()
+          );
         } catch (InvalidObjectException e) {
           throw new HiveMetaStoreException("Invalid table", e);
         } catch (InvalidOperationException e) {
@@ -232,7 +252,10 @@ public class HiveMetaStore {
     doAction(drop);
   }
 
-  public boolean tableExists(final String database, final String tableName) throws HiveMetaStoreException {
+  public boolean tableExists(
+      final String database,
+      final String tableName
+  ) throws HiveMetaStoreException {
     ClientAction<Boolean> exists = new ClientAction<Boolean>() {
       @Override
       public Boolean call() throws TException {
@@ -247,7 +270,10 @@ public class HiveMetaStore {
     return doAction(exists);
   }
 
-  public Table getTable(final String database, final String tableName) throws HiveMetaStoreException {
+  public Table getTable(
+      final String database,
+      final String tableName
+  ) throws HiveMetaStoreException {
     ClientAction<Table> getTable = new ClientAction<Table>() {
       @Override
       public Table call() throws TException {

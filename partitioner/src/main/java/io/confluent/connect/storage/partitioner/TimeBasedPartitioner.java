@@ -35,8 +35,13 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
   private long partitionDurationMs;
   private DateTimeFormatter formatter;
 
-  protected void init(long partitionDurationMs, String pathFormat, Locale locale, DateTimeZone timeZone,
-                      Map<String, Object> config) {
+  protected void init(
+      long partitionDurationMs,
+      String pathFormat,
+      Locale locale,
+      DateTimeZone timeZone,
+      Map<String, Object> config
+  ) {
     delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
     this.partitionDurationMs = partitionDurationMs;
     this.formatter = getDateTimeFormatter(pathFormat, timeZone).withLocale(locale);
@@ -61,25 +66,37 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
   public void configure(Map<String, Object> config) {
     long partitionDurationMs = (long) config.get(PartitionerConfig.PARTITION_DURATION_MS_CONFIG);
     if (partitionDurationMs < 0) {
-      throw new ConfigException(PartitionerConfig.PARTITION_DURATION_MS_CONFIG,
-                                partitionDurationMs, "Partition duration needs to be a positive.");
+      throw new ConfigException(
+          PartitionerConfig.PARTITION_DURATION_MS_CONFIG,
+          partitionDurationMs,
+          "Partition duration needs to be a positive."
+      );
     }
 
     String pathFormat = (String) config.get(PartitionerConfig.PATH_FORMAT_CONFIG);
     if (pathFormat.equals("")) {
-      throw new ConfigException(PartitionerConfig.PATH_FORMAT_CONFIG,
-                                pathFormat, "Path format cannot be empty.");
+      throw new ConfigException(
+          PartitionerConfig.PATH_FORMAT_CONFIG,
+          pathFormat,
+          "Path format cannot be empty."
+      );
     }
 
     String localeString = (String) config.get(PartitionerConfig.LOCALE_CONFIG);
     if (localeString.equals("")) {
-      throw new ConfigException(PartitionerConfig.LOCALE_CONFIG,
-                                localeString, "Locale cannot be empty.");
+      throw new ConfigException(
+          PartitionerConfig.LOCALE_CONFIG,
+          localeString,
+          "Locale cannot be empty."
+      );
     }
     String timeZoneString = (String) config.get(PartitionerConfig.TIMEZONE_CONFIG);
     if (timeZoneString.equals("")) {
-      throw new ConfigException(PartitionerConfig.TIMEZONE_CONFIG,
-                                timeZoneString, "Timezone cannot be empty.");
+      throw new ConfigException(
+          PartitionerConfig.TIMEZONE_CONFIG,
+          timeZoneString,
+          "Timezone cannot be empty."
+      );
     }
 
     Locale locale = new Locale(localeString);
@@ -90,7 +107,9 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
   @Override
   public String encodePartition(SinkRecord sinkRecord) {
     long timestamp = System.currentTimeMillis();
-    DateTime bucket = new DateTime(getPartition(partitionDurationMs, timestamp, formatter.getZone()));
+    DateTime bucket = new DateTime(
+        getPartition(partitionDurationMs, timestamp, formatter.getZone())
+    );
     return bucket.toString(formatter);
   }
 
@@ -100,9 +119,14 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
     Class<? extends SchemaGenerator<T>> generatorClass = null;
     try {
       generatorClass =
-          (Class<? extends SchemaGenerator<T>>) config.get(PartitionerConfig.SCHEMA_GENERATOR_CLASS_CONFIG);
+          (Class<? extends SchemaGenerator<T>>) config.get(
+              PartitionerConfig.SCHEMA_GENERATOR_CLASS_CONFIG
+          );
       return generatorClass.getConstructor(Map.class).newInstance(config);
-    } catch (ClassCastException | IllegalAccessException | InstantiationException | InvocationTargetException
+    } catch (ClassCastException
+        | IllegalAccessException
+        | InstantiationException
+        | InvocationTargetException
         | NoSuchMethodException e) {
       throw new ConfigException("Invalid generator class: " + generatorClass);
     }

@@ -27,7 +27,6 @@ import java.util.Map;
 public class StorageCommonConfig extends AbstractConfig implements ComposableConfig {
 
   // Common group
-
   public static final String STORAGE_CLASS_CONFIG = "storage.class";
   public static final String STORAGE_CLASS_DOC = "The underlying storage layer.";
   public static final String STORAGE_CLASS_DISPLAY = "Storage Class";
@@ -38,7 +37,8 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
   public static final String STORE_URL_DISPLAY = "Store URL";
 
   public static final String TOPICS_DIR_CONFIG = "topics.dir";
-  public static final String TOPICS_DIR_DOC = "Top level directory to store the data ingested from Kafka.";
+  public static final String TOPICS_DIR_DOC =
+      "Top level directory to store the data ingested from Kafka.";
   public static final String TOPICS_DIR_DEFAULT = "topics";
   public static final String TOPICS_DIR_DISPLAY = "Topics directory";
 
@@ -60,16 +60,19 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
       final String group = "Storage";
       int orderInGroup = 0;
 
-      CONFIG_DEF.define(STORAGE_CLASS_CONFIG,
+      CONFIG_DEF.define(
+          STORAGE_CLASS_CONFIG,
           Type.CLASS,
           Importance.HIGH,
           STORAGE_CLASS_DOC,
           group,
           ++orderInGroup,
           Width.NONE,
-          STORAGE_CLASS_DISPLAY);
+          STORAGE_CLASS_DISPLAY
+      );
 
-      CONFIG_DEF.define(TOPICS_DIR_CONFIG,
+      CONFIG_DEF.define(
+          TOPICS_DIR_CONFIG,
           Type.STRING,
           TOPICS_DIR_DEFAULT,
           Importance.HIGH,
@@ -77,9 +80,11 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           group,
           ++orderInGroup,
           Width.NONE,
-          TOPICS_DIR_DISPLAY);
+          TOPICS_DIR_DISPLAY
+      );
 
-      CONFIG_DEF.define(STORE_URL_CONFIG,
+      CONFIG_DEF.define(
+          STORE_URL_CONFIG,
           Type.STRING,
           STORE_URL_DEFAULT,
           Importance.HIGH,
@@ -87,9 +92,11 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           group,
           ++orderInGroup,
           Width.NONE,
-          STORE_URL_DISPLAY);
+          STORE_URL_DISPLAY
+      );
 
-      CONFIG_DEF.define(DIRECTORY_DELIM_CONFIG,
+      CONFIG_DEF.define(
+          DIRECTORY_DELIM_CONFIG,
           Type.STRING,
           DIRECTORY_DELIM_DEFAULT,
           Importance.MEDIUM,
@@ -97,9 +104,11 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           group,
           ++orderInGroup,
           Width.LONG,
-          DIRECTORY_DELIM_DISPLAY);
+          DIRECTORY_DELIM_DISPLAY
+      );
 
-      CONFIG_DEF.define(FILE_DELIM_CONFIG,
+      CONFIG_DEF.define(
+          FILE_DELIM_CONFIG,
           Type.STRING,
           FILE_DELIM_DEFAULT,
           Importance.MEDIUM,
@@ -107,11 +116,15 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           group,
           ++orderInGroup,
           Width.LONG,
-          FILE_DELIM_DISPLAY);
+          FILE_DELIM_DISPLAY
+      );
     }
   }
 
-  private static boolean classNameEquals(String className, Class<?> clazz) {
+  private static boolean classNameEquals(
+      String className,
+      Class<?> clazz
+  ) {
     return className.equals(clazz.getSimpleName()) || className.equals(clazz.getCanonicalName());
   }
 

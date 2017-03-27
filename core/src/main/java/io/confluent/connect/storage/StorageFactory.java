@@ -25,8 +25,10 @@ import java.lang.reflect.InvocationTargetException;
  * A factory of storage instances.
  */
 public class StorageFactory {
+
   /**
-   * Instantiate a specific storage type, given a configuration and its class along with the storage address.
+   * Instantiate a specific storage type, given a configuration
+   * and its class along with the storage address.
    *
    * @param storageClass the class of the storage.
    * @param confClass the class of the configuration.
@@ -37,13 +39,20 @@ public class StorageFactory {
    * @return the storage instance upon success.
    * @throws ConnectException on error.
    */
-  public static <S extends Storage<C, ?>, C> S createStorage(Class<S> storageClass, Class<C> confClass, C conf,
-                                                             String url) {
+  public static <S extends Storage<C, ?>, C> S createStorage(
+      Class<S> storageClass,
+      Class<C> confClass,
+      C conf,
+      String url
+  ) {
     try {
       Constructor<S> constructor =
           storageClass.getConstructor(confClass, String.class);
       return constructor.newInstance(conf, url);
-    } catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+    } catch (NoSuchMethodException
+        | InvocationTargetException
+        | InstantiationException
+        | IllegalAccessException e) {
       throw new ConnectException(e);
     }
   }

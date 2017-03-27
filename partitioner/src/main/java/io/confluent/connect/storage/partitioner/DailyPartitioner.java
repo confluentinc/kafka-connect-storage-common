@@ -30,20 +30,26 @@ public class DailyPartitioner<T> extends TimeBasedPartitioner<T> {
 
   @Override
   public void configure(Map<String, Object> config) {
-    long partitionDurationMs = TimeUnit.HOURS.toMillis(24);
+    final long partitionDurationMs = TimeUnit.HOURS.toMillis(24);
     String delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
     pathFormat = "'year'=YYYY" + delim + "'month'=MM" + delim + "'day'=dd" + delim;
 
     String localeString = (String) config.get(PartitionerConfig.LOCALE_CONFIG);
     if (localeString.equals("")) {
-      throw new ConfigException(PartitionerConfig.LOCALE_CONFIG,
-                                localeString, "Locale cannot be empty.");
+      throw new ConfigException(
+          PartitionerConfig.LOCALE_CONFIG,
+          localeString,
+          "Locale cannot be empty."
+      );
     }
 
     String timeZoneString = (String) config.get(PartitionerConfig.TIMEZONE_CONFIG);
     if (timeZoneString.equals("")) {
-      throw new ConfigException(PartitionerConfig.TIMEZONE_CONFIG,
-                                timeZoneString, "Timezone cannot be empty.");
+      throw new ConfigException(
+          PartitionerConfig.TIMEZONE_CONFIG,
+          timeZoneString,
+          "Timezone cannot be empty."
+      );
     }
 
     Locale locale = new Locale(localeString);

@@ -61,7 +61,9 @@ public class DefaultPartitioner<T> implements Partitioner<T> {
     Class<? extends SchemaGenerator<T>> generatorClass = null;
     try {
       generatorClass =
-          (Class<? extends SchemaGenerator<T>>) config.get(PartitionerConfig.SCHEMA_GENERATOR_CLASS_CONFIG);
+          (Class<? extends SchemaGenerator<T>>) config.get(
+              PartitionerConfig.SCHEMA_GENERATOR_CLASS_CONFIG
+          );
       return generatorClass.newInstance();
     } catch (ClassCastException | IllegalAccessException | InstantiationException e) {
       throw new ConfigException("Invalid generator class: " + generatorClass);

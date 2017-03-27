@@ -22,7 +22,12 @@ import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.source.SourceRecord;
 
 public interface SchemaCompatibility {
-  boolean shouldChangeSchema(ConnectRecord<?> record, Schema currentkeySchema, Schema currentValueSchema);
+
+  boolean shouldChangeSchema(
+      ConnectRecord<?> record,
+      Schema currentkeySchema,
+      Schema currentValueSchema
+  );
 
   SinkRecord project(SinkRecord record, Schema currentKeySchema, Schema currentValueSchema);
 
