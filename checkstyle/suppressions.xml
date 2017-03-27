@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+        "-//Puppy Crawl//DTD Suppressions 1.1//EN"
+        "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
+
+<suppressions>
+
+    <!-- TODO -->
+    <suppress
+            checks="(AbbreviationAsWordInName)"
+            files="WAL.java"
+    />
+
+    <suppress
+            checks="(CyclomaticComplexity)"
+            files="PartitionerConfig.java"
+    />
+
+    <suppress
+            checks="(ClassDataAbstractionCoupling|ClassFanOutComplexity)"
+            files="HiveMetaStore.java"
+    />
+
+</suppressions>
