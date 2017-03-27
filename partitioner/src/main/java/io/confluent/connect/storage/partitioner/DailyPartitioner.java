@@ -30,7 +30,6 @@ public class DailyPartitioner<T> extends TimeBasedPartitioner<T> {
 
   @Override
   public void configure(Map<String, Object> config) {
-    final long partitionDurationMs = TimeUnit.HOURS.toMillis(24);
     String delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
     pathFormat = "'year'=YYYY" + delim + "'month'=MM" + delim + "'day'=dd" + delim;
 
@@ -54,7 +53,8 @@ public class DailyPartitioner<T> extends TimeBasedPartitioner<T> {
 
     Locale locale = new Locale(localeString);
     DateTimeZone timeZone = DateTimeZone.forID(timeZoneString);
-    init(partitionDurationMs, pathFormat, locale, timeZone, config);
+
+    init(TimeUnit.HOURS.toMillis(24), pathFormat, locale, timeZone, config);
   }
 
   public String getPathFormat() {
