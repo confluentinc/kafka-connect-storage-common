@@ -30,6 +30,7 @@ import java.util.Map;
 import io.confluent.connect.storage.common.ComposableConfig;
 
 public class HiveConfig extends AbstractConfig implements ComposableConfig {
+
   // Hive group
   public static final String HIVE_INTEGRATION_CONFIG = "hive.integration";
   public static final String HIVE_INTEGRATION_DOC =
@@ -38,9 +39,10 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
   public static final String HIVE_INTEGRATION_DISPLAY = "Hive Integration";
 
   public static final String HIVE_METASTORE_URIS_CONFIG = "hive.metastore.uris";
-  public static final String HIVE_METASTORE_URIS_DOC =
-      "The Hive metastore URIs, can be IP address or fully-qualified domain name "
-      + "and port of the metastore host.";
+  public static final String
+      HIVE_METASTORE_URIS_DOC =
+      "The Hive metastore URIs, can be IP address or fully-qualified domain name and port of the "
+      + "metastore host.";
   public static final String HIVE_METASTORE_URIS_DEFAULT = "";
   public static final String HIVE_METASTORE_URIS_DISPLAY = "Hive Metastore URIs";
 
@@ -83,7 +85,8 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
       final String group = "Hive";
       int orderInGroup = 0;
 
-      CONFIG_DEF.define(HIVE_INTEGRATION_CONFIG,
+      CONFIG_DEF.define(
+          HIVE_INTEGRATION_CONFIG,
           Type.BOOLEAN,
           HIVE_INTEGRATION_DEFAULT,
           Importance.HIGH,
@@ -92,9 +95,17 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
           ++orderInGroup,
           Width.SHORT,
           HIVE_INTEGRATION_DISPLAY,
-          Arrays.asList(HIVE_METASTORE_URIS_CONFIG, HIVE_CONF_DIR_CONFIG, HIVE_HOME_CONFIG, HIVE_DATABASE_CONFIG, SCHEMA_COMPATIBILITY_CONFIG));
+          Arrays.asList(
+              HIVE_METASTORE_URIS_CONFIG,
+              HIVE_CONF_DIR_CONFIG,
+              HIVE_HOME_CONFIG,
+              HIVE_DATABASE_CONFIG,
+              SCHEMA_COMPATIBILITY_CONFIG
+          )
+      );
 
-      CONFIG_DEF.define(HIVE_METASTORE_URIS_CONFIG,
+      CONFIG_DEF.define(
+          HIVE_METASTORE_URIS_CONFIG,
           Type.STRING,
           HIVE_METASTORE_URIS_DEFAULT,
           Importance.HIGH,
@@ -103,9 +114,11 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
           ++orderInGroup,
           Width.MEDIUM,
           HIVE_METASTORE_URIS_DISPLAY,
-          hiveIntegrationDependentsRecommender);
+          hiveIntegrationDependentsRecommender
+      );
 
-      CONFIG_DEF.define(HIVE_CONF_DIR_CONFIG,
+      CONFIG_DEF.define(
+          HIVE_CONF_DIR_CONFIG,
           Type.STRING,
           HIVE_CONF_DIR_DEFAULT,
           Importance.HIGH,
@@ -114,9 +127,11 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
           ++orderInGroup,
           Width.MEDIUM,
           HIVE_CONF_DIR_DISPLAY,
-          hiveIntegrationDependentsRecommender);
+          hiveIntegrationDependentsRecommender
+      );
 
-      CONFIG_DEF.define(HIVE_HOME_CONFIG,
+      CONFIG_DEF.define(
+          HIVE_HOME_CONFIG,
           Type.STRING,
           HIVE_HOME_DEFAULT,
           Importance.HIGH,
@@ -125,9 +140,11 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
           ++orderInGroup,
           Width.MEDIUM,
           HIVE_HOME_DISPLAY,
-          hiveIntegrationDependentsRecommender);
+          hiveIntegrationDependentsRecommender
+      );
 
-      CONFIG_DEF.define(HIVE_DATABASE_CONFIG,
+      CONFIG_DEF.define(
+          HIVE_DATABASE_CONFIG,
           Type.STRING,
           HIVE_DATABASE_DEFAULT,
           Importance.HIGH,
@@ -136,7 +153,8 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
           ++orderInGroup,
           Width.SHORT,
           HIVE_DATABASE_DISPLAY,
-          hiveIntegrationDependentsRecommender);
+          hiveIntegrationDependentsRecommender
+      );
     }
 
     {
@@ -145,7 +163,8 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
       int orderInGroup = 0;
 
       // Define Schema configuration group
-      CONFIG_DEF.define(SCHEMA_COMPATIBILITY_CONFIG,
+      CONFIG_DEF.define(
+          SCHEMA_COMPATIBILITY_CONFIG,
           Type.STRING,
           SCHEMA_COMPATIBILITY_DEFAULT,
           Importance.HIGH,
@@ -154,11 +173,13 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
           ++orderInGroup,
           Width.SHORT,
           SCHEMA_COMPATIBILITY_DISPLAY,
-          schemaCompatibilityRecommender);
+          schemaCompatibilityRecommender
+      );
     }
   }
 
   public static class SchemaCompatibilityRecommender extends BooleanParentRecommender {
+
     public SchemaCompatibilityRecommender() {
       super(HIVE_INTEGRATION_CONFIG);
     }
@@ -180,6 +201,7 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
   }
 
   public static class BooleanParentRecommender implements ConfigDef.Recommender {
+
     protected final String parentConfigName;
 
     public BooleanParentRecommender(String parentConfigName) {

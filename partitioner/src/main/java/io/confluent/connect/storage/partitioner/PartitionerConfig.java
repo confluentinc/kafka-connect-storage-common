@@ -59,8 +59,8 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final String PATH_FORMAT_CONFIG = "path.format";
   public static final String PATH_FORMAT_DOC =
       "This configuration is used to set the format of the data directories when partitioning with "
-      + "``TimeBasedPartitioner``. The format set in this configuration converts the Unix timestamp "
-      + "to proper directories strings. For example, if you set "
+      + "``TimeBasedPartitioner``. The format set in this configuration converts the Unix timestamp"
+      + " to proper directories strings. For example, if you set "
       + "``path.format='year'=YYYY/'month'=MM/'day'=dd/'hour'=HH/``, the data directories will have"
       + " the format ``/year=2015/month=12/day=07/hour=15``.";
   public static final String PATH_FORMAT_DEFAULT = "";
@@ -80,7 +80,8 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
 
   // Schema group
   public static final String SCHEMA_GENERATOR_CLASS_CONFIG = "schema.generator.class";
-  public static final String SCHEMA_GENERATOR_CLASS_DOC = "The schema generator to use with partitioners.";
+  public static final String SCHEMA_GENERATOR_CLASS_DOC =
+      "The schema generator to use with partitioners.";
   public static final String SCHEMA_GENERATOR_CLASS_DISPLAY = "Schema Generator Class";
 
   // CHECKSTYLE:OFF
@@ -105,7 +106,14 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           ++orderInGroup,
           Width.LONG,
           PARTITIONER_CLASS_DISPLAY,
-          Arrays.asList(PARTITION_FIELD_NAME_CONFIG, PARTITION_DURATION_MS_CONFIG, PATH_FORMAT_CONFIG, LOCALE_CONFIG, TIMEZONE_CONFIG, SCHEMA_GENERATOR_CLASS_CONFIG));
+          Arrays.asList(
+              PARTITION_FIELD_NAME_CONFIG,
+              PARTITION_DURATION_MS_CONFIG,
+              PATH_FORMAT_CONFIG,
+              LOCALE_CONFIG,
+              TIMEZONE_CONFIG,
+              SCHEMA_GENERATOR_CLASS_CONFIG
+          ));
 
       CONFIG_DEF.define(SCHEMA_GENERATOR_CLASS_CONFIG,
           Type.CLASS,
@@ -207,11 +215,14 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           return name.equals(PARTITION_FIELD_NAME_CONFIG);
         } else if (TimeBasedPartitioner.class.isAssignableFrom(partitioner)) {
           // subclass of TimeBasedPartitioner
-          if (DailyPartitioner.class.isInstance(partitioner) ||
-              HourlyPartitioner.class.isInstance(partitioner)) {
+          if (DailyPartitioner.class.isInstance(partitioner)
+              || HourlyPartitioner.class.isInstance(partitioner)) {
             return name.equals(LOCALE_CONFIG) || name.equals(TIMEZONE_CONFIG);
           } else {
-            return name.equals(PARTITION_DURATION_MS_CONFIG) || name.equals(PATH_FORMAT_CONFIG) || name.equals(LOCALE_CONFIG) || name.equals(TIMEZONE_CONFIG);
+            return name.equals(PARTITION_DURATION_MS_CONFIG)
+                   || name.equals(PATH_FORMAT_CONFIG)
+                   || name.equals(LOCALE_CONFIG)
+                   || name.equals(TIMEZONE_CONFIG);
           }
         } else {
           throw new ConfigException("Not a valid partitioner class: " + partitioner);
