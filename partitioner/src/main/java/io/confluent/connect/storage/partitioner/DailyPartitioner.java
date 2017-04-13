@@ -16,39 +16,32 @@
 
 package io.confluent.connect.storage.partitioner;
 
+import io.confluent.connect.storage.common.SchemaGenerator;
 import org.apache.kafka.common.config.ConfigException;
-import org.joda.time.DateTimeZone;
 
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.confluent.connect.storage.common.StorageCommonConfig;
 
 public class DailyPartitioner<T> extends TimeBasedPartitioner<T> {
+  private static final long PARTITION_DURATION_MS = TimeUnit.HOURS.toMillis(24);
+
   private String pathFormat;
 
   @Override
   public void configure(Map<String, Object> config) {
-    long partitionDurationMs = TimeUnit.HOURS.toMillis(24);
-    String delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
-    pathFormat = "'year'=YYYY" + delim + "'month'=MM" + delim + "'day'=dd" + delim;
+    this.partitionDurationMs = PARTITION_DURATION_MS;
+    this.delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
+    this.pathFormat = "'year'=YYYY" + delim + "'month'=MM" + delim + "'day'=dd" + delim;
+    this.formatter = PartitioningCommon.loadDateTimeFormatterFromConfiguration(config, pathFormat);
 
-    String localeString = (String) config.get(PartitionerConfig.LOCALE_CONFIG);
-    if (localeString.equals("")) {
-      throw new ConfigException(PartitionerConfig.LOCALE_CONFIG,
-                                localeString, "Locale cannot be empty.");
+    SchemaGenerator<T> schemaGenerator = newSchemaGenerator(config);
+    try {
+      this.partitionFields = schemaGenerator.newPartitionFields(pathFormat);
+    } catch (IllegalArgumentException e) {
+      throw new ConfigException(PartitionerConfig.PATH_FORMAT_CONFIG, pathFormat, e.getMessage());
     }
-
-    String timeZoneString = (String) config.get(PartitionerConfig.TIMEZONE_CONFIG);
-    if (timeZoneString.equals("")) {
-      throw new ConfigException(PartitionerConfig.TIMEZONE_CONFIG,
-                                timeZoneString, "Timezone cannot be empty.");
-    }
-
-    Locale locale = new Locale(localeString);
-    DateTimeZone timeZone = DateTimeZone.forID(timeZoneString);
-    init(partitionDurationMs, pathFormat, locale, timeZone, config);
   }
 
   public String getPathFormat() {
