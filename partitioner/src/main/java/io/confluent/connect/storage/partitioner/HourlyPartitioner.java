@@ -16,36 +16,34 @@
 
 package io.confluent.connect.storage.partitioner;
 
+import io.confluent.connect.storage.common.SchemaGenerator;
+import io.confluent.connect.storage.common.StorageCommonConfig;
 import org.apache.kafka.common.config.ConfigException;
-import org.joda.time.DateTimeZone;
 
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class HourlyPartitioner<T> extends TimeBasedPartitioner<T> {
-
   private static final long PARTITION_DURATION_MS = TimeUnit.HOURS.toMillis(1);
-  private static final String PATH_FORMAT = "'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH/";
+
+  private String pathFormat;
 
   @Override
   public void configure(Map<String, Object> config) {
-    String localeString = (String) config.get(PartitionerConfig.LOCALE_CONFIG);
-    if (localeString.equals("")) {
-      throw new ConfigException(PartitionerConfig.LOCALE_CONFIG,
-                                localeString, "Locale cannot be empty.");
+    this.partitionDurationMs = PARTITION_DURATION_MS;
+    this.delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
+    this.pathFormat = "'year'=YYYY" + delim + "'month'=MM" + delim + "'day'=dd" + delim + "'hour'=HH" + delim;
+    this.formatter = PartitioningCommon.loadDateTimeFormatterFromConfiguration(config, pathFormat);
+
+    SchemaGenerator<T> schemaGenerator = newSchemaGenerator(config);
+    try {
+      this.partitionFields = schemaGenerator.newPartitionFields(pathFormat);
+    } catch (IllegalArgumentException e) {
+      throw new ConfigException(PartitionerConfig.PATH_FORMAT_CONFIG, pathFormat, e.getMessage());
     }
-    String timeZoneString = (String) config.get(PartitionerConfig.TIMEZONE_CONFIG);
-    if (timeZoneString.equals("")) {
-      throw new ConfigException(PartitionerConfig.TIMEZONE_CONFIG,
-                                timeZoneString, "Timezone cannot be empty.");
-    }
-    Locale locale = new Locale(localeString);
-    DateTimeZone timeZone = DateTimeZone.forID(timeZoneString);
-    init(PARTITION_DURATION_MS, PATH_FORMAT, locale, timeZone, config);
   }
 
   public String getPathFormat() {
-    return PATH_FORMAT;
+    return pathFormat;
   }
 }
