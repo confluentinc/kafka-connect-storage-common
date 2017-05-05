@@ -109,15 +109,20 @@ public class HiveMetaStore {
       @Override
       public Void call() throws TException {
         try {
-          // purposely don't check if the partition already exists because getPartition(db,
-          // table, path) will throw an exception to indicate the partition doesn't exist also.
-          // this way, it's only one call.
-          client.appendPartition(database, tableName, path);
+          // purposely don't check if the partition already exists because
+          // getPartition(db, table, path) will throw an exception to indicate the
+          // partition doesn't exist also. this way, it's only one call.
+          client.appendPartition(database, tableNameConverter(tableName), path);
         } catch (AlreadyExistsException e) {
           // this is okay
         } catch (InvalidObjectException e) {
           throw new HiveMetaStoreException(
-              "Invalid partition for " + database + "." + tableName + ": " + path,
+              "Invalid partition for "
+                  + database
+                  + "."
+                  + tableNameConverter(tableName)
+                  + ": "
+                  + path,
               e
           );
         }
@@ -134,12 +139,17 @@ public class HiveMetaStore {
       @Override
       public Void call() throws TException {
         try {
-          client.dropPartition(database, tableName, path, false);
+          client.dropPartition(database, tableNameConverter(tableName), path, false);
         } catch (NoSuchObjectException e) {
           // this is okay
         } catch (InvalidObjectException e) {
           throw new HiveMetaStoreException(
-              "Invalid partition for " + database + "." + tableName + ": " + path,
+              "Invalid partition for "
+                  + database
+                  + "."
+                  + tableNameConverter(tableName)
+                  + ": "
+                  + path,
               e
           );
         }
@@ -241,7 +251,7 @@ public class HiveMetaStore {
       @Override
       public Void call() throws TException {
         try {
-          client.dropTable(database, tableName, false, true);
+          client.dropTable(database, tableNameConverter(tableName), false, true);
         } catch (NoSuchObjectException e) {
           // this is okay
         }
@@ -260,7 +270,7 @@ public class HiveMetaStore {
       @Override
       public Boolean call() throws TException {
         try {
-          return client.tableExists(database, tableName);
+          return client.tableExists(database, tableNameConverter(tableName));
         } catch (UnknownDBException e) {
           return false;
         }
@@ -278,16 +288,20 @@ public class HiveMetaStore {
       @Override
       public Table call() throws TException {
         try {
-          return new Table(client.getTable(database, tableName));
+          return new Table(client.getTable(database, tableNameConverter(tableName)));
         } catch (NoSuchObjectException e) {
-          throw new HiveMetaStoreException("Hive table not found: " + database + "." + tableName);
+          throw new HiveMetaStoreException(
+              "Hive table not found: " + database + "." + tableNameConverter(tableName)
+          );
         }
       }
     };
 
     Table table = doAction(getTable);
     if (table == null) {
-      throw new HiveMetaStoreException("Could not find info for table: " + tableName);
+      throw new HiveMetaStoreException(
+          "Could not find info for table: " + tableNameConverter(tableName)
+      );
     }
     return table;
   }
@@ -298,7 +312,11 @@ public class HiveMetaStore {
       @Override
       public List<String> call() throws TException {
         try {
-          List<Partition> partitions = client.listPartitions(database, tableName, max);
+          List<Partition> partitions = client.listPartitions(
+              database,
+              tableNameConverter(tableName),
+              max
+          );
           List<String> paths = new ArrayList<>();
           for (Partition partition : partitions) {
             paths.add(partition.getSd().getLocation());
@@ -341,5 +359,9 @@ public class HiveMetaStore {
     };
 
     return doAction(create);
+  }
+
+  public String tableNameConverter(String table) {
+    return table == null ? table : table.replaceAll("\\.", "_");
   }
 }
