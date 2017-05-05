@@ -23,13 +23,16 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import io.confluent.connect.storage.common.StorageCommonConfig;
+
 public class HourlyPartitioner<T> extends TimeBasedPartitioner<T> {
-
-  private static final long PARTITION_DURATION_MS = TimeUnit.HOURS.toMillis(1);
-  private static final String PATH_FORMAT = "'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH/";
-
   @Override
   public void configure(Map<String, Object> config) {
+    long partitionDurationMs = TimeUnit.HOURS.toMillis(1);
+    String delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
+    String pathFormat =
+        "'year'=YYYY" + delim + "'month'=MM" + delim + "'day'=dd" + delim + "'hour'=HH";
+
     String localeString = (String) config.get(PartitionerConfig.LOCALE_CONFIG);
     if (localeString.equals("")) {
       throw new ConfigException(PartitionerConfig.LOCALE_CONFIG,
@@ -42,10 +45,6 @@ public class HourlyPartitioner<T> extends TimeBasedPartitioner<T> {
     }
     Locale locale = new Locale(localeString);
     DateTimeZone timeZone = DateTimeZone.forID(timeZoneString);
-    init(PARTITION_DURATION_MS, PATH_FORMAT, locale, timeZone, config);
-  }
-
-  public String getPathFormat() {
-    return PATH_FORMAT;
+    init(partitionDurationMs, pathFormat, locale, timeZone, config);
   }
 }

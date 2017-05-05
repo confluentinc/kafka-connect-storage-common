@@ -26,12 +26,10 @@ import java.util.concurrent.TimeUnit;
 import io.confluent.connect.storage.common.StorageCommonConfig;
 
 public class DailyPartitioner<T> extends TimeBasedPartitioner<T> {
-  private String pathFormat;
-
   @Override
   public void configure(Map<String, Object> config) {
     String delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
-    pathFormat = "'year'=YYYY" + delim + "'month'=MM" + delim + "'day'=dd" + delim;
+    String pathFormat = "'year'=YYYY" + delim + "'month'=MM" + delim + "'day'=dd";
 
     String localeString = (String) config.get(PartitionerConfig.LOCALE_CONFIG);
     if (localeString.equals("")) {
@@ -54,10 +52,6 @@ public class DailyPartitioner<T> extends TimeBasedPartitioner<T> {
     Locale locale = new Locale(localeString);
     DateTimeZone timeZone = DateTimeZone.forID(timeZoneString);
 
-    init(TimeUnit.HOURS.toMillis(24), pathFormat, locale, timeZone, config);
-  }
-
-  public String getPathFormat() {
-    return pathFormat;
+    init(TimeUnit.DAYS.toMillis(1), pathFormat, locale, timeZone, config);
   }
 }

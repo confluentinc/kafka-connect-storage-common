@@ -43,6 +43,11 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final Class<?> PARTITIONER_CLASS_DEFAULT = DefaultPartitioner.class;
   public static final String PARTITIONER_CLASS_DISPLAY = "Partitioner Class";
 
+  public static final String SCHEMA_GENERATOR_CLASS_CONFIG = "schema.generator.class";
+  public static final String SCHEMA_GENERATOR_CLASS_DOC =
+      "The schema generator to use with partitioners.";
+  public static final String SCHEMA_GENERATOR_CLASS_DISPLAY = "Schema Generator Class";
+
   public static final String PARTITION_FIELD_NAME_CONFIG = "partition.field.name";
   public static final String PARTITION_FIELD_NAME_DOC =
       "The name of the partitioning field when FieldPartitioner is used.";
@@ -61,8 +66,8 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
       "This configuration is used to set the format of the data directories when partitioning with "
       + "``TimeBasedPartitioner``. The format set in this configuration converts the Unix timestamp"
       + " to proper directories strings. For example, if you set "
-      + "``path.format='year'=YYYY/'month'=MM/'day'=dd/'hour'=HH/``, the data directories will have"
-      + " the format ``/year=2015/month=12/day=07/hour=15``.";
+      + "``path.format='year'=YYYY/'month'=MM/'day'=dd/'hour'=HH``, the data directories will have"
+      + " the format ``/year=2015/month=12/day=07/hour=15/``.";
   public static final String PATH_FORMAT_DEFAULT = "";
   public static final String PATH_FORMAT_DISPLAY = "Path Format";
 
@@ -78,11 +83,20 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final String TIMEZONE_DEFAULT = "";
   public static final String TIMEZONE_DISPLAY = "Timezone";
 
-  // Schema group
-  public static final String SCHEMA_GENERATOR_CLASS_CONFIG = "schema.generator.class";
-  public static final String SCHEMA_GENERATOR_CLASS_DOC =
-      "The schema generator to use with partitioners.";
-  public static final String SCHEMA_GENERATOR_CLASS_DISPLAY = "Schema Generator Class";
+  public static final String TIMESTAMP_EXTRACTOR_CLASS_CONFIG = "timestamp.extractor";
+  public static final String TIMESTAMP_EXTRACTOR_CLASS_DOC = "The extractor that gets the "
+      + "timestamp for records when partitioning with ``TimeBasedPartitioner``. It can be set to "
+      + "``Wallclock``, ``Record`` or ``RecordField`` in order to use one of the built-in "
+      + "timestamp extractors or be given the fully-qualified class name of a user-defined class "
+      + "that extends the ``TimestampExtractor`` interface.";
+  public static final String TIMESTAMP_EXTRACTOR_CLASS_DEFAULT = "Wallclock";
+  public static final String TIMESTAMP_EXTRACTOR_CLASS_DISPLAY = "Timestamp Extractor";
+
+  public static final String TIMESTAMP_FIELD_NAME_CONFIG = "timestamp.field";
+  public static final String TIMESTAMP_FIELD_NAME_DOC =
+      "The record field to be used as timestamp by the timestamp extractor.";
+  public static final String TIMESTAMP_FIELD_NAME_DEFAULT = "timestamp";
+  public static final String TIMESTAMP_FIELD_NAME_DISPLAY = "Record Field for Timestamp Extractor";
 
   // CHECKSTYLE:OFF
   public static final ConfigDef.Recommender partitionerClassDependentsRecommender =
@@ -174,6 +188,25 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           Width.LONG,
           TIMEZONE_DISPLAY);
 
+      CONFIG_DEF.define(TIMESTAMP_EXTRACTOR_CLASS_CONFIG,
+          Type.STRING,
+          TIMESTAMP_EXTRACTOR_CLASS_DEFAULT,
+          Importance.MEDIUM,
+          TIMESTAMP_EXTRACTOR_CLASS_DOC,
+          group,
+          ++orderInGroup,
+          Width.LONG,
+          TIMESTAMP_EXTRACTOR_CLASS_DISPLAY);
+
+      CONFIG_DEF.define(TIMESTAMP_FIELD_NAME_CONFIG,
+          Type.STRING,
+          TIMESTAMP_FIELD_NAME_DEFAULT,
+          Importance.MEDIUM,
+          TIMESTAMP_FIELD_NAME_DOC,
+          group,
+          ++orderInGroup,
+          Width.LONG,
+          TIMESTAMP_FIELD_NAME_DISPLAY);
     }
   }
 
