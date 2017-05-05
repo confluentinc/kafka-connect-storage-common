@@ -30,7 +30,7 @@ import io.confluent.connect.storage.errors.PartitionException;
 
 public class FieldPartitioner<T> extends DefaultPartitioner<T> {
   private static final Logger log = LoggerFactory.getLogger(FieldPartitioner.class);
-  private static String fieldName;
+  private String fieldName;
 
   @Override
   public void configure(Map<String, Object> config) {

@@ -32,7 +32,7 @@ import io.confluent.connect.storage.common.StorageCommonConfig;
  */
 public class DefaultPartitioner<T> implements Partitioner<T> {
   private static final String PARTITION_FIELD = "partition";
-  protected List<T> partitionFields =  new ArrayList<>();
+  protected List<T> partitionFields = new ArrayList<>();
   protected String delim;
 
   @Override
