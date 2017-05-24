@@ -235,7 +235,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
         Schema valueSchema = record.valueSchema();
         Schema fieldSchema = valueSchema.field(fieldName).schema();
 
-        if (fieldSchema.name().equals(Timestamp.LOGICAL_NAME)) {
+        if (Timestamp.LOGICAL_NAME.equals(fieldSchema.name())) {
           return ((Date) timestampValue).getTime();
         }
 

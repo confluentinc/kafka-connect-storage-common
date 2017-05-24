@@ -100,6 +100,29 @@ public class StorageSinkTestBase {
         .build();
   }
 
+  protected Schema createSchemaWithTimestampField() {
+    return SchemaBuilder.struct().name("record").version(1)
+        .field("boolean", Schema.BOOLEAN_SCHEMA)
+        .field("int", Schema.INT32_SCHEMA)
+        .field("long", Schema.INT64_SCHEMA)
+        .field("float", Schema.FLOAT32_SCHEMA)
+        .field("double", Schema.FLOAT64_SCHEMA)
+        .field("string", SchemaBuilder.string().defaultValue("abc").build())
+        .field("timestamp", Schema.INT64_SCHEMA)
+        .build();
+  }
+
+  protected Struct createRecordWithTimestampField(Schema newSchema, long timestamp) {
+    return new Struct(newSchema)
+        .put("boolean", true)
+        .put("int", 12)
+        .put("long", 12L)
+        .put("float", 12.2f)
+        .put("double", 12.2)
+        .put("string", "def")
+        .put("timestamp", timestamp);
+  }
+
   public void setUp() throws Exception {
     properties = createProps();
     Set<TopicPartition> assignment = new HashSet<>();
