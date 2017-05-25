@@ -66,7 +66,9 @@ public class DefaultPartitioner<T> implements Partitioner<T> {
           );
       return generatorClass.newInstance();
     } catch (ClassCastException | IllegalAccessException | InstantiationException e) {
-      throw new ConfigException("Invalid generator class: " + generatorClass);
+      ConfigException ce = new ConfigException("Invalid generator class: " + generatorClass);
+      ce.initCause(e);
+      throw ce;
     }
   }
 }

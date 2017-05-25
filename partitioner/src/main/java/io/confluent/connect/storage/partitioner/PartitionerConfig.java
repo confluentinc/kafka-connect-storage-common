@@ -261,7 +261,12 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           throw new ConfigException("Not a valid partitioner class: " + partitioner);
         }
       } catch (ClassCastException e) {
-        throw new ConfigException("Partitioner class not found: " + PARTITIONER_CLASS_CONFIG);
+        ConfigException ce = new ConfigException(
+            "Partitioner class not found: "
+            + PARTITIONER_CLASS_CONFIG
+        );
+        ce.initCause(e);
+        throw ce;
       }
     }
   }
