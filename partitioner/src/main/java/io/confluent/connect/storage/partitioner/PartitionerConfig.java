@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.confluent.connect.storage.common.ComposableConfig;
+import io.confluent.connect.storage.common.SchemaGenerator;
 
 public class PartitionerConfig extends AbstractConfig implements ComposableConfig {
 
@@ -46,6 +47,9 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final String SCHEMA_GENERATOR_CLASS_CONFIG = "schema.generator.class";
   public static final String SCHEMA_GENERATOR_CLASS_DOC =
       "The schema generator to use with partitioners.";
+  // This is a no-op default using an interface to avoid ConfigException during static
+  // initialization.
+  public static final Class<?> SCHEMA_GENERATOR_CLASS_DEFAULT = SchemaGenerator.class;
   public static final String SCHEMA_GENERATOR_CLASS_DISPLAY = "Schema Generator Class";
 
   public static final String PARTITION_FIELD_NAME_CONFIG = "partition.field.name";
@@ -131,6 +135,7 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
 
       CONFIG_DEF.define(SCHEMA_GENERATOR_CLASS_CONFIG,
           Type.CLASS,
+          SCHEMA_GENERATOR_CLASS_DEFAULT,
           Importance.HIGH,
           SCHEMA_GENERATOR_CLASS_DOC,
           group,
