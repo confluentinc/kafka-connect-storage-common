@@ -66,7 +66,13 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
           (String) config.get(PartitionerConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG));
       timestampExtractor.configure(config);
     } catch (IllegalArgumentException e) {
-      throw new ConfigException(PartitionerConfig.PATH_FORMAT_CONFIG, pathFormat, e.getMessage());
+      ConfigException ce = new ConfigException(
+          PartitionerConfig.PATH_FORMAT_CONFIG,
+          pathFormat,
+          e.getMessage()
+      );
+      ce.initCause(e);
+      throw ce;
     }
   }
 
@@ -165,7 +171,9 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
         | InstantiationException
         | InvocationTargetException
         | NoSuchMethodException e) {
-      throw new ConfigException("Invalid generator class: " + generatorClass);
+      ConfigException ce = new ConfigException("Invalid generator class: " + generatorClass);
+      ce.initCause(e);
+      throw ce;
     }
   }
 
@@ -192,7 +200,11 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
         | ClassCastException
         | IllegalAccessException
         | InstantiationException e) {
-      throw new ConfigException("Invalid timestamp extractor: " + extractorClassName, e);
+      ConfigException ce = new ConfigException(
+          "Invalid timestamp extractor: " + extractorClassName
+      );
+      ce.initCause(e);
+      throw ce;
     }
   }
 
