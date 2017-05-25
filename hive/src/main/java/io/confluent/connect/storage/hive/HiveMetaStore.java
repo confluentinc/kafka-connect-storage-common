@@ -362,6 +362,6 @@ public class HiveMetaStore {
   }
 
   public String tableNameConverter(String table) {
-    return table == null ? table : table.replaceAll("\\.", "_");
+    return table == null ? table : table.replaceAll("[.-]", "_");
   }
 }
