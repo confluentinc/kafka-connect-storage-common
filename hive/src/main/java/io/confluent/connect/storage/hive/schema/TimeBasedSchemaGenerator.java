@@ -20,6 +20,7 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -30,6 +31,15 @@ import io.confluent.connect.storage.hive.HiveConfig;
 
 public class TimeBasedSchemaGenerator implements SchemaGenerator<FieldSchema> {
   private final Map<String, Object> config;
+
+  public TimeBasedSchemaGenerator() {
+    config = new HashMap<>();
+    config.put(HiveConfig.HIVE_INTEGRATION_CONFIG, HiveConfig.HIVE_INTEGRATION_DEFAULT);
+    config.put(
+        StorageCommonConfig.DIRECTORY_DELIM_CONFIG,
+        StorageCommonConfig.DIRECTORY_DELIM_DEFAULT
+    );
+  }
 
   public TimeBasedSchemaGenerator(Map<String, Object> config) {
     this.config = config;
