@@ -69,12 +69,16 @@ public class TimeBasedSchemaGenerator implements SchemaGenerator<FieldSchema> {
   }
 
   private boolean verifyDateTimeFormat(String pathFormat, String delim) {
+    // Path format does not require a trailing delimeter at the end of the path anymore.
+    // But since we don't know what's the final component here, a delimiter is artificially added
+    // to the pathFormat if needed.
+    String extendedPathFormat = pathFormat.endsWith(delim) ? pathFormat : pathFormat + delim;
     String patternString =
         "'year'=Y{1,5}" + delim
             + "('month'=M{1,5}" + delim
             + ")?('day'=d{1,3}" + delim
             + ")?('hour'=H{1,3}" + delim
             + ")?('minute'=m{1,3}" + delim + ")?";
-    return Pattern.compile(patternString).matcher(pathFormat).matches();
+    return Pattern.compile(patternString).matcher(extendedPathFormat).matches();
   }
 }
