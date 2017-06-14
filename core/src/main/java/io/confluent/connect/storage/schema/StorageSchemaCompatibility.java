@@ -108,7 +108,7 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
     return projected.getKey() == record.key() && projected.getValue() == record.value() ?
         record :
         new SinkRecord(record.topic(), record.kafkaPartition(), currentKeySchema, projected.getKey(),
-            currentValueSchema, projected.getValue(), record.kafkaOffset());
+            currentValueSchema, projected.getValue(), record.kafkaOffset(), record.timestamp(), record.timestampType());
   }
 
   private static Map.Entry<Object, Object> projectInternal(ConnectRecord<?> record, Schema currentKeySchema,
