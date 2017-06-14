@@ -169,7 +169,9 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
                projected.getKey(),
                currentValueSchema,
                projected.getValue(),
-               record.kafkaOffset()
+               record.kafkaOffset(),
+               record.timestamp(),
+               record.timestampType()
            );
   }
 
