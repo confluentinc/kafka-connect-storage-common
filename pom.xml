@@ -61,7 +61,7 @@
     </modules>
 
     <properties>
-        <confluent.version>3.2.2-SNAPSHOT</confluent.version>
+        <confluent.version>3.2.3-SNAPSHOT</confluent.version>
         <kafka.version>0.10.2.2-SNAPSHOT</kafka.version>
         <junit.version>4.12</junit.version>
         <hadoop.version>2.7.3</hadoop.version>
@@ -70,7 +70,7 @@
         <commons-io.version>2.4</commons-io.version>
         <joda.version>2.9.6</joda.version>
         <confluent.maven.repo>http://packages.confluent.io/maven/</confluent.maven.repo>
-        <licenses.version>3.2.2-SNAPSHOT</licenses.version>
+        <licenses.version>3.2.3-SNAPSHOT</licenses.version>
         <maven-assembly.version>2.6</maven-assembly.version>
     </properties>
 
