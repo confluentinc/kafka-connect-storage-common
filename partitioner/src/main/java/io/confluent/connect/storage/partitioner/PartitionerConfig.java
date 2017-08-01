@@ -48,11 +48,11 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
       "The schema generator to use with partitioners.";
   public static final String SCHEMA_GENERATOR_CLASS_DISPLAY = "Schema Generator Class";
 
-  public static final String PARTITION_FIELD_NAME_CONFIG = "partition.field.name";
+  public static final String PARTITION_FIELD_NAME_CONFIG = "partition.field.names";
   public static final String PARTITION_FIELD_NAME_DOC =
-      "The name of the partitioning field when FieldPartitioner is used.";
+      "The names of the partitioning fields when FieldPartitioner is used.";
   public static final String PARTITION_FIELD_NAME_DEFAULT = "";
-  public static final String PARTITION_FIELD_NAME_DISPLAY = "Partition Field Name";
+  public static final String PARTITION_FIELD_NAME_DISPLAY = "Partition Field Names";
 
   public static final String PARTITION_DURATION_MS_CONFIG = "partition.duration.ms";
   public static final String PARTITION_DURATION_MS_DOC =
@@ -139,7 +139,7 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           SCHEMA_GENERATOR_CLASS_DISPLAY);
 
       CONFIG_DEF.define(PARTITION_FIELD_NAME_CONFIG,
-          Type.STRING,
+          Type.LIST,
           PARTITION_FIELD_NAME_DEFAULT,
           Importance.MEDIUM,
           PARTITION_FIELD_NAME_DOC,
@@ -212,11 +212,11 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
 
   public static class BooleanParentRecommender implements ConfigDef.Recommender {
     protected final String parentConfigName;
-    
+
     public BooleanParentRecommender(String parentConfigName) {
       this.parentConfigName = parentConfigName;
     }
-    
+
     @Override
     public List<Object> validValues(String name, Map<String, Object> connectorConfigs) {
       return new LinkedList<>();
