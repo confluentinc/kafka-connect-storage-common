@@ -43,11 +43,6 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final Class<?> PARTITIONER_CLASS_DEFAULT = DefaultPartitioner.class;
   public static final String PARTITIONER_CLASS_DISPLAY = "Partitioner Class";
 
-  public static final String SCHEMA_GENERATOR_CLASS_CONFIG = "schema.generator.class";
-  public static final String SCHEMA_GENERATOR_CLASS_DOC =
-      "The schema generator to use with partitioners.";
-  public static final String SCHEMA_GENERATOR_CLASS_DISPLAY = "Schema Generator Class";
-
   public static final String PARTITION_FIELD_NAME_CONFIG = "partition.field.name";
   public static final String PARTITION_FIELD_NAME_DOC =
       "The name of the partitioning field when FieldPartitioner is used.";
@@ -125,18 +120,8 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
               PARTITION_DURATION_MS_CONFIG,
               PATH_FORMAT_CONFIG,
               LOCALE_CONFIG,
-              TIMEZONE_CONFIG,
-              SCHEMA_GENERATOR_CLASS_CONFIG
+              TIMEZONE_CONFIG
           ));
-
-      CONFIG_DEF.define(SCHEMA_GENERATOR_CLASS_CONFIG,
-          Type.CLASS,
-          Importance.HIGH,
-          SCHEMA_GENERATOR_CLASS_DOC,
-          group,
-          ++orderInGroup,
-          Width.LONG,
-          SCHEMA_GENERATOR_CLASS_DISPLAY);
 
       CONFIG_DEF.define(PARTITION_FIELD_NAME_CONFIG,
           Type.STRING,
