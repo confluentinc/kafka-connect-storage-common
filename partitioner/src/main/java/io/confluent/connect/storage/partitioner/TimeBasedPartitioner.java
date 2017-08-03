@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -44,6 +45,10 @@ import io.confluent.connect.storage.errors.PartitionException;
 public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
   // Duration of a partition in milliseconds.
   private static final Logger log = LoggerFactory.getLogger(TimeBasedPartitioner.class);
+
+  private static final String SCHEMA_GENERATOR_CLASS =
+      "io.confluent.connect.storage.hive.schema.TimeBasedSchemaGenerator";
+
   private long partitionDurationMs;
   private String pathFormat;
   private DateTimeFormatter formatter;
@@ -61,7 +66,6 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
     this.pathFormat = pathFormat;
     this.formatter = getDateTimeFormatter(pathFormat, timeZone).withLocale(locale);
     try {
-      partitionFields = newSchemaGenerator(config).newPartitionFields(pathFormat);
       timestampExtractor = newTimestampExtractor(
           (String) config.get(PartitionerConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG));
       timestampExtractor.configure(config);
@@ -157,24 +161,17 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  public SchemaGenerator<T> newSchemaGenerator(Map<String, Object> config) {
-    Class<? extends SchemaGenerator<T>> generatorClass = null;
-    try {
-      generatorClass =
-          (Class<? extends SchemaGenerator<T>>) config.get(
-              PartitionerConfig.SCHEMA_GENERATOR_CLASS_CONFIG
-          );
-      return generatorClass.getConstructor(Map.class).newInstance(config);
-    } catch (ClassCastException
-        | IllegalAccessException
-        | InstantiationException
-        | InvocationTargetException
-        | NoSuchMethodException e) {
-      ConfigException ce = new ConfigException("Invalid generator class: " + generatorClass);
-      ce.initCause(e);
-      throw ce;
+  public List<T> partitionFields() {
+    if (partitionFields == null) {
+      partitionFields = newSchemaGenerator(config).newPartitionFields(pathFormat);
     }
+    return partitionFields;
+  }
+
+  @Override
+  protected Class<? extends SchemaGenerator<T>> getSchemaGeneratorClass()
+      throws ClassNotFoundException {
+    return (Class<? extends SchemaGenerator<T>>) Class.forName(SCHEMA_GENERATOR_CLASS);
   }
 
   public TimestampExtractor newTimestampExtractor(String extractorClassName) {

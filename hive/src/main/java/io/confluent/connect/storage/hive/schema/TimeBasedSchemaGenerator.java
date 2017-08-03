@@ -20,6 +20,7 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,13 +43,17 @@ public class TimeBasedSchemaGenerator implements SchemaGenerator<FieldSchema> {
   }
 
   public TimeBasedSchemaGenerator(Map<String, Object> config) {
-    this.config = config;
+    this.config = config == null ? Collections.<String, Object>emptyMap() : config;
   }
 
   @Override
   public List<FieldSchema> newPartitionFields(String format) {
-    boolean hiveIntegration = (boolean) config.get(HiveConfig.HIVE_INTEGRATION_CONFIG);
+    Boolean hiveIntegration = (Boolean) config.get(HiveConfig.HIVE_INTEGRATION_CONFIG);
+    hiveIntegration = hiveIntegration == null
+                      ? HiveConfig.HIVE_INTEGRATION_DEFAULT
+                      : hiveIntegration;
     String delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
+    delim = delim == null ? StorageCommonConfig.DIRECTORY_DELIM_DEFAULT : delim;
     if (hiveIntegration && !verifyDateTimeFormat(format, delim)) {
       throw new IllegalArgumentException(
           "Path format doesn't meet the requirements for Hive integration, "

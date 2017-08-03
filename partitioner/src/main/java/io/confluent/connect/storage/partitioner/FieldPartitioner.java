@@ -23,6 +23,7 @@ import org.apache.kafka.connect.sink.SinkRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 
 import io.confluent.connect.storage.common.StorageCommonConfig;
@@ -35,7 +36,6 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
   @Override
   public void configure(Map<String, Object> config) {
     fieldName = (String) config.get(PartitionerConfig.PARTITION_FIELD_NAME_CONFIG);
-    partitionFields = newSchemaGenerator(config).newPartitionFields(fieldName);
     delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
   }
 
@@ -67,5 +67,13 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
       log.error("Value is not Struct type.");
       throw new PartitionException("Error encoding partition.");
     }
+  }
+
+  @Override
+  public List<T> partitionFields() {
+    if (partitionFields == null) {
+      partitionFields = newSchemaGenerator(config).newPartitionFields(fieldName);
+    }
+    return partitionFields;
   }
 }
