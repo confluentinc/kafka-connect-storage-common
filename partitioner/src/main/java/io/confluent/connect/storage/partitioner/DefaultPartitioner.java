@@ -32,12 +32,17 @@ import io.confluent.connect.storage.common.StorageCommonConfig;
  */
 public class DefaultPartitioner<T> implements Partitioner<T> {
   private static final String PARTITION_FIELD = "partition";
-  protected List<T> partitionFields = new ArrayList<>();
+
+  private static final String SCHEMA_GENERATOR_CLASS =
+      "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator";
+
+  protected Map<String, Object> config;
+  protected List<T> partitionFields = null;
   protected String delim;
 
   @Override
   public void configure(Map<String, Object> config) {
-    partitionFields = newSchemaGenerator(config).newPartitionFields(PARTITION_FIELD);
+    this.config = config;
     delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
   }
 
@@ -53,6 +58,9 @@ public class DefaultPartitioner<T> implements Partitioner<T> {
 
   @Override
   public List<T> partitionFields() {
+    if (partitionFields == null) {
+      partitionFields = newSchemaGenerator(config).newPartitionFields(PARTITION_FIELD);
+    }
     return partitionFields;
   }
 
@@ -60,15 +68,22 @@ public class DefaultPartitioner<T> implements Partitioner<T> {
   public SchemaGenerator<T> newSchemaGenerator(Map<String, Object> config) {
     Class<? extends SchemaGenerator<T>> generatorClass = null;
     try {
-      generatorClass =
-          (Class<? extends SchemaGenerator<T>>) config.get(
-              PartitionerConfig.SCHEMA_GENERATOR_CLASS_CONFIG
-          );
+      generatorClass = getSchemaGeneratorClass();
       return generatorClass.newInstance();
-    } catch (ClassCastException | IllegalAccessException | InstantiationException e) {
+    } catch (
+        ClassNotFoundException
+            | ClassCastException
+            | IllegalAccessException
+            | InstantiationException e) {
       ConfigException ce = new ConfigException("Invalid generator class: " + generatorClass);
       ce.initCause(e);
       throw ce;
     }
   }
+
+  protected Class<? extends SchemaGenerator<T>> getSchemaGeneratorClass()
+      throws ClassNotFoundException {
+    return (Class<? extends SchemaGenerator<T>>) Class.forName(SCHEMA_GENERATOR_CLASS);
+  }
+
 }
