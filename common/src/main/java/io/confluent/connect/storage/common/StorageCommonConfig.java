@@ -53,6 +53,8 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
   public static final String FILE_DELIM_DISPLAY = "File Delimiter";
 
   protected static final ConfigDef CONFIG_DEF = new ConfigDef();
+  public static final GenericClassRecommender STORAGE_CLASS_RECOMMENDER =
+      new GenericClassRecommender();
 
   static {
     {
@@ -68,7 +70,8 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           group,
           ++orderInGroup,
           Width.NONE,
-          STORAGE_CLASS_DISPLAY
+          STORAGE_CLASS_DISPLAY,
+          STORAGE_CLASS_RECOMMENDER
       );
 
       CONFIG_DEF.define(

@@ -25,6 +25,7 @@ import org.apache.kafka.common.config.ConfigDef.Width;
 import java.util.Map;
 
 import io.confluent.connect.storage.common.ComposableConfig;
+import io.confluent.connect.storage.common.GenericClassRecommender;
 
 public class StorageSinkConnectorConfig extends AbstractConfig implements ComposableConfig {
 
@@ -93,6 +94,8 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final String SCHEMA_CACHE_SIZE_DISPLAY = "Schema Cache Size";
 
   protected static final ConfigDef CONFIG_DEF = new ConfigDef();
+  public static final GenericClassRecommender FORMAT_CLASS_RECOMMENDER =
+      new GenericClassRecommender();
 
   static {
     {
@@ -108,7 +111,8 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           group,
           ++orderInGroup,
           Width.NONE,
-          FORMAT_CLASS_DISPLAY
+          FORMAT_CLASS_DISPLAY,
+          FORMAT_CLASS_RECOMMENDER
       );
 
       CONFIG_DEF.define(
