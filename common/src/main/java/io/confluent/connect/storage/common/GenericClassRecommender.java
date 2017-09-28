@@ -22,21 +22,24 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public class GenericClassRecommender implements ConfigDef.Recommender {
-  private final List<Object> validValues = new ArrayList<>();
+  // We need a set to avoid duplicates
+  private final Set<Object> validValues = new CopyOnWriteArraySet<>();
 
-  public synchronized void addValidValues(Collection<Object> values) {
+  public void addValidValues(Collection<Object> values) {
     validValues.addAll(values);
   }
 
   @Override
-  public synchronized List<Object> validValues(String name, Map<String, Object> connectorConfigs) {
-    return validValues;
+  public List<Object> validValues(String name, Map<String, Object> connectorConfigs) {
+    return new ArrayList<>(validValues);
   }
 
   @Override
-  public synchronized boolean visible(String name, Map<String, Object> connectorConfigs) {
+  public boolean visible(String name, Map<String, Object> connectorConfigs) {
     return true;
   }
 }
