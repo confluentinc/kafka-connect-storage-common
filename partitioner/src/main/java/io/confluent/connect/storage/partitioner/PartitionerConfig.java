@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.confluent.connect.storage.common.ComposableConfig;
+import io.confluent.connect.storage.common.GenericRecommender;
 
 public class PartitionerConfig extends AbstractConfig implements ComposableConfig {
 
@@ -98,12 +99,9 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final String TIMESTAMP_FIELD_NAME_DEFAULT = "timestamp";
   public static final String TIMESTAMP_FIELD_NAME_DISPLAY = "Record Field for Timestamp Extractor";
 
-  // CHECKSTYLE:OFF
-  public static final ConfigDef.Recommender partitionerClassDependentsRecommender =
-      new PartitionerClassDependentsRecommender();
-  // CHECKSTYLE:ON
-
   protected static final ConfigDef CONFIG_DEF = new ConfigDef();
+  public static final GenericRecommender PARTITIONER_CLASS_RECOMMENDER =
+      new GenericRecommender();
 
   static {
     {
@@ -127,7 +125,8 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
               LOCALE_CONFIG,
               TIMEZONE_CONFIG,
               SCHEMA_GENERATOR_CLASS_CONFIG
-          ));
+          ),
+          PARTITIONER_CLASS_RECOMMENDER);
 
       CONFIG_DEF.define(SCHEMA_GENERATOR_CLASS_CONFIG,
           Type.CLASS,
