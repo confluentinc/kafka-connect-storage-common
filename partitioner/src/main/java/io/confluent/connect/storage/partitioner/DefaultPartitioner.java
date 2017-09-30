@@ -19,7 +19,6 @@ package io.confluent.connect.storage.partitioner;
 import org.apache.kafka.common.config.ConfigException;
 import org.apache.kafka.connect.sink.SinkRecord;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
