@@ -21,10 +21,14 @@ import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigDef.Importance;
 import org.apache.kafka.common.config.ConfigDef.Type;
 import org.apache.kafka.common.config.ConfigDef.Width;
+import org.apache.kafka.common.config.ConfigException;
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 
 public class StorageCommonConfig extends AbstractConfig implements ComposableConfig {
+  private static final int REQUIRED_RECOMMENDERS = 1;
 
   // Common group
   public static final String STORAGE_CLASS_CONFIG = "storage.class";
@@ -52,17 +56,23 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
   public static final String FILE_DELIM_DEFAULT = "+";
   public static final String FILE_DELIM_DISPLAY = "File Delimiter";
 
-  protected static final ConfigDef CONFIG_DEF = new ConfigDef();
-  public static final GenericRecommender STORAGE_CLASS_RECOMMENDER =
-      new GenericRecommender();
+  public static ConfigDef newConfigDef(Collection<GenericRecommender> recommenders) {
+    if (recommenders.size() != REQUIRED_RECOMMENDERS) {
+      throw new ConfigException(String.format(
+          "Number of supplied recommenders '{}' does not match required recommenders '{}'",
+          recommenders.size(),
+          REQUIRED_RECOMMENDERS
+      ));
+    }
 
-  static {
+    Iterator<GenericRecommender> recommenderIterator = recommenders.iterator();
+    ConfigDef configDef = new ConfigDef();
     {
       // Define Store's basic configuration group
       final String group = "Storage";
       int orderInGroup = 0;
 
-      CONFIG_DEF.define(
+      configDef.define(
           STORAGE_CLASS_CONFIG,
           Type.CLASS,
           Importance.HIGH,
@@ -71,10 +81,10 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           ++orderInGroup,
           Width.NONE,
           STORAGE_CLASS_DISPLAY,
-          STORAGE_CLASS_RECOMMENDER
+          recommenderIterator.next()
       );
 
-      CONFIG_DEF.define(
+      configDef.define(
           TOPICS_DIR_CONFIG,
           Type.STRING,
           TOPICS_DIR_DEFAULT,
@@ -86,7 +96,7 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           TOPICS_DIR_DISPLAY
       );
 
-      CONFIG_DEF.define(
+      configDef.define(
           STORE_URL_CONFIG,
           Type.STRING,
           STORE_URL_DEFAULT,
@@ -98,7 +108,7 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           STORE_URL_DISPLAY
       );
 
-      CONFIG_DEF.define(
+      configDef.define(
           DIRECTORY_DELIM_CONFIG,
           Type.STRING,
           DIRECTORY_DELIM_DEFAULT,
@@ -110,7 +120,7 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           DIRECTORY_DELIM_DISPLAY
       );
 
-      CONFIG_DEF.define(
+      configDef.define(
           FILE_DELIM_CONFIG,
           Type.STRING,
           FILE_DELIM_DEFAULT,
@@ -122,6 +132,7 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           FILE_DELIM_DISPLAY
       );
     }
+    return configDef;
   }
 
   private static boolean classNameEquals(
@@ -136,15 +147,7 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
     return super.get(key);
   }
 
-  public static ConfigDef getConfig() {
-    return CONFIG_DEF;
-  }
-
-  public StorageCommonConfig(Map<String, String> props) {
-    super(CONFIG_DEF, props);
-  }
-
-  public static void main(String[] args) {
-    System.out.println(CONFIG_DEF.toRst());
+  public StorageCommonConfig(ConfigDef configDef, Map<String, String> props) {
+    super(configDef, props);
   }
 }

@@ -21,13 +21,17 @@ import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigDef.Importance;
 import org.apache.kafka.common.config.ConfigDef.Type;
 import org.apache.kafka.common.config.ConfigDef.Width;
+import org.apache.kafka.common.config.ConfigException;
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 
 import io.confluent.connect.storage.common.ComposableConfig;
 import io.confluent.connect.storage.common.GenericRecommender;
 
 public class StorageSinkConnectorConfig extends AbstractConfig implements ComposableConfig {
+  private static final int REQUIRED_RECOMMENDERS = 1;
 
   // Connector group
   public static final String FORMAT_CLASS_CONFIG = "format.class";
@@ -93,17 +97,23 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final int SCHEMA_CACHE_SIZE_DEFAULT = 1000;
   public static final String SCHEMA_CACHE_SIZE_DISPLAY = "Schema Cache Size";
 
-  protected static final ConfigDef CONFIG_DEF = new ConfigDef();
-  public static final GenericRecommender FORMAT_CLASS_RECOMMENDER =
-      new GenericRecommender();
+  public static ConfigDef newConfigDef(Collection<GenericRecommender> recommenders) {
+    if (recommenders.size() != REQUIRED_RECOMMENDERS) {
+      throw new ConfigException(String.format(
+          "Number of supplied recommenders '{}' does not match required recommenders '{}'",
+          recommenders.size(),
+          REQUIRED_RECOMMENDERS
+      ));
+    }
 
-  static {
+    Iterator<GenericRecommender> recommenderIterator = recommenders.iterator();
+    ConfigDef configDef = new ConfigDef();
     {
       // Define Store's basic configuration group
       final String group = "Connector";
       int orderInGroup = 0;
 
-      CONFIG_DEF.define(
+      configDef.define(
           FORMAT_CLASS_CONFIG,
           Type.CLASS,
           Importance.HIGH,
@@ -112,10 +122,10 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           ++orderInGroup,
           Width.NONE,
           FORMAT_CLASS_DISPLAY,
-          FORMAT_CLASS_RECOMMENDER
+          recommenderIterator.next()
       );
 
-      CONFIG_DEF.define(
+      configDef.define(
           FLUSH_SIZE_CONFIG,
           Type.INT,
           Importance.HIGH,
@@ -126,7 +136,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           FLUSH_SIZE_DISPLAY
       );
 
-      CONFIG_DEF.define(
+      configDef.define(
           ROTATE_INTERVAL_MS_CONFIG,
           Type.LONG,
           ROTATE_INTERVAL_MS_DEFAULT,
@@ -138,7 +148,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           ROTATE_INTERVAL_MS_DISPLAY
       );
 
-      CONFIG_DEF.define(
+      configDef.define(
           ROTATE_SCHEDULE_INTERVAL_MS_CONFIG,
           Type.LONG,
           ROTATE_SCHEDULE_INTERVAL_MS_DEFAULT,
@@ -150,7 +160,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           ROTATE_SCHEDULE_INTERVAL_MS_DISPLAY
       );
 
-      CONFIG_DEF.define(
+      configDef.define(
           SCHEMA_CACHE_SIZE_CONFIG,
           Type.INT,
           SCHEMA_CACHE_SIZE_DEFAULT,
@@ -162,7 +172,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           SCHEMA_CACHE_SIZE_DISPLAY
       );
 
-      CONFIG_DEF.define(
+      configDef.define(
           RETRY_BACKOFF_CONFIG,
           Type.LONG,
           RETRY_BACKOFF_DEFAULT,
@@ -174,7 +184,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           RETRY_BACKOFF_DISPLAY
       );
 
-      CONFIG_DEF.define(
+      configDef.define(
           SHUTDOWN_TIMEOUT_CONFIG,
           Type.LONG,
           SHUTDOWN_TIMEOUT_DEFAULT,
@@ -186,7 +196,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           SHUTDOWN_TIMEOUT_DISPLAY
       );
 
-      CONFIG_DEF.define(
+      configDef.define(
           FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG,
           Type.INT,
           FILENAME_OFFSET_ZERO_PAD_WIDTH_DEFAULT,
@@ -198,8 +208,8 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           Width.LONG,
           FILENAME_OFFSET_ZERO_PAD_WIDTH_DISPLAY
       );
-
     }
+    return configDef;
   }
 
   @Override
@@ -207,22 +217,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
     return super.get(key);
   }
 
-  public static ConfigDef getConfig() {
-    return CONFIG_DEF;
-  }
-
-  public StorageSinkConnectorConfig(Map<String, String> props) {
-    this(CONFIG_DEF, props);
-  }
-
-  protected StorageSinkConnectorConfig(
-      ConfigDef configDef,
-      Map<String, String> props
-  ) {
+  public StorageSinkConnectorConfig(ConfigDef configDef, Map<String, String> props) {
     super(configDef, props);
-  }
-
-  public static void main(String[] args) {
-    System.out.println(CONFIG_DEF.toRst());
   }
 }
