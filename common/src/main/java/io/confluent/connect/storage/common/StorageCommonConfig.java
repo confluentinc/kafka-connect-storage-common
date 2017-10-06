@@ -56,7 +56,7 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
   public static final String FILE_DELIM_DEFAULT = "+";
   public static final String FILE_DELIM_DISPLAY = "File Delimiter";
 
-  public static ConfigDef newConfigDef(Collection<GenericRecommender> recommenders) {
+  public static ConfigDef newConfigDef(Collection<ConfigDef.Recommender> recommenders) {
     if (recommenders.size() != REQUIRED_RECOMMENDERS) {
       throw new ConfigException(String.format(
           "Number of supplied recommenders '{}' does not match required recommenders '{}'",
@@ -65,7 +65,7 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
       ));
     }
 
-    Iterator<GenericRecommender> recommenderIterator = recommenders.iterator();
+    Iterator<ConfigDef.Recommender> recommenderIterator = recommenders.iterator();
     ConfigDef configDef = new ConfigDef();
     {
       // Define Store's basic configuration group

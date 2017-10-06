@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 
 import io.confluent.connect.storage.common.ComposableConfig;
-import io.confluent.connect.storage.common.GenericRecommender;
 
 public class PartitionerConfig extends AbstractConfig implements ComposableConfig {
   private static final int REQUIRED_RECOMMENDERS = 1;
@@ -102,7 +101,7 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final String TIMESTAMP_FIELD_NAME_DEFAULT = "timestamp";
   public static final String TIMESTAMP_FIELD_NAME_DISPLAY = "Record Field for Timestamp Extractor";
 
-  public static ConfigDef newConfigDef(Collection<GenericRecommender> recommenders) {
+  public static ConfigDef newConfigDef(Collection<ConfigDef.Recommender> recommenders) {
     if (recommenders.size() != REQUIRED_RECOMMENDERS) {
       throw new ConfigException(String.format(
           "Number of supplied recommenders '{}' does not match required recommenders '{}'",
@@ -111,7 +110,7 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
       ));
     }
 
-    Iterator<GenericRecommender> recommenderIterator = recommenders.iterator();
+    Iterator<ConfigDef.Recommender> recommenderIterator = recommenders.iterator();
     ConfigDef configDef = new ConfigDef();
     {
       // Define Partitioner configuration group

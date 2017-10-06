@@ -28,7 +28,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import io.confluent.connect.storage.common.ComposableConfig;
-import io.confluent.connect.storage.common.GenericRecommender;
 
 public class StorageSinkConnectorConfig extends AbstractConfig implements ComposableConfig {
   private static final int REQUIRED_RECOMMENDERS = 1;
@@ -97,7 +96,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final int SCHEMA_CACHE_SIZE_DEFAULT = 1000;
   public static final String SCHEMA_CACHE_SIZE_DISPLAY = "Schema Cache Size";
 
-  public static ConfigDef newConfigDef(Collection<GenericRecommender> recommenders) {
+  public static ConfigDef newConfigDef(Collection<ConfigDef.Recommender> recommenders) {
     if (recommenders.size() != REQUIRED_RECOMMENDERS) {
       throw new ConfigException(String.format(
           "Number of supplied recommenders '{}' does not match required recommenders '{}'",
@@ -106,7 +105,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
       ));
     }
 
-    Iterator<GenericRecommender> recommenderIterator = recommenders.iterator();
+    Iterator<ConfigDef.Recommender> recommenderIterator = recommenders.iterator();
     ConfigDef configDef = new ConfigDef();
     {
       // Define Store's basic configuration group
