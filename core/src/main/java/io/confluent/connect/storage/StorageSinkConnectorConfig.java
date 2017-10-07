@@ -21,16 +21,12 @@ import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigDef.Importance;
 import org.apache.kafka.common.config.ConfigDef.Type;
 import org.apache.kafka.common.config.ConfigDef.Width;
-import org.apache.kafka.common.config.ConfigException;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 
 import io.confluent.connect.storage.common.ComposableConfig;
 
 public class StorageSinkConnectorConfig extends AbstractConfig implements ComposableConfig {
-  private static final int REQUIRED_RECOMMENDERS = 1;
 
   // Connector group
   public static final String FORMAT_CLASS_CONFIG = "format.class";
@@ -96,16 +92,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final int SCHEMA_CACHE_SIZE_DEFAULT = 1000;
   public static final String SCHEMA_CACHE_SIZE_DISPLAY = "Schema Cache Size";
 
-  public static ConfigDef newConfigDef(Collection<ConfigDef.Recommender> recommenders) {
-    if (recommenders.size() != REQUIRED_RECOMMENDERS) {
-      throw new ConfigException(String.format(
-          "Number of supplied recommenders '{}' does not match required recommenders '{}'",
-          recommenders.size(),
-          REQUIRED_RECOMMENDERS
-      ));
-    }
-
-    Iterator<ConfigDef.Recommender> recommenderIterator = recommenders.iterator();
+  public static ConfigDef newConfigDef(ConfigDef.Recommender recommender) {
     ConfigDef configDef = new ConfigDef();
     {
       // Define Store's basic configuration group
@@ -121,7 +108,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           ++orderInGroup,
           Width.NONE,
           FORMAT_CLASS_DISPLAY,
-          recommenderIterator.next()
+          recommender
       );
 
       configDef.define(

@@ -24,8 +24,6 @@ import org.apache.kafka.common.config.ConfigDef.Width;
 import org.apache.kafka.common.config.ConfigException;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +31,6 @@ import java.util.Map;
 import io.confluent.connect.storage.common.ComposableConfig;
 
 public class PartitionerConfig extends AbstractConfig implements ComposableConfig {
-  private static final int REQUIRED_RECOMMENDERS = 1;
 
   // Partitioner group
   public static final String PARTITIONER_CLASS_CONFIG = "partitioner.class";
@@ -101,16 +98,7 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final String TIMESTAMP_FIELD_NAME_DEFAULT = "timestamp";
   public static final String TIMESTAMP_FIELD_NAME_DISPLAY = "Record Field for Timestamp Extractor";
 
-  public static ConfigDef newConfigDef(Collection<ConfigDef.Recommender> recommenders) {
-    if (recommenders.size() != REQUIRED_RECOMMENDERS) {
-      throw new ConfigException(String.format(
-          "Number of supplied recommenders '{}' does not match required recommenders '{}'",
-          recommenders.size(),
-          REQUIRED_RECOMMENDERS
-      ));
-    }
-
-    Iterator<ConfigDef.Recommender> recommenderIterator = recommenders.iterator();
+  public static ConfigDef newConfigDef(ConfigDef.Recommender recommender) {
     ConfigDef configDef = new ConfigDef();
     {
       // Define Partitioner configuration group
@@ -134,7 +122,7 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
               TIMEZONE_CONFIG,
               SCHEMA_GENERATOR_CLASS_CONFIG
           ),
-          recommenderIterator.next());
+          recommender);
 
       configDef.define(SCHEMA_GENERATOR_CLASS_CONFIG,
           Type.CLASS,
