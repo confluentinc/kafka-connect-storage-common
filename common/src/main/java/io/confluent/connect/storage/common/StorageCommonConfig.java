@@ -52,17 +52,22 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
   public static final String FILE_DELIM_DEFAULT = "+";
   public static final String FILE_DELIM_DISPLAY = "File Delimiter";
 
-  protected static final ConfigDef CONFIG_DEF = new ConfigDef();
-  public static final GenericRecommender STORAGE_CLASS_RECOMMENDER =
-      new GenericRecommender();
-
-  static {
+  /**
+   * Create a new configuration definition.
+   *
+   * @param storageClassRecommender A recommender for storage classes shipping out-of-the-box
+   *     with a connector. The recommender should not prevent additional custom classes from being
+   *     added during runtime.
+   * @return the newly created configuration definition.
+   */
+  public static ConfigDef newConfigDef(ConfigDef.Recommender storageClassRecommender) {
+    ConfigDef configDef = new ConfigDef();
     {
       // Define Store's basic configuration group
       final String group = "Storage";
       int orderInGroup = 0;
 
-      CONFIG_DEF.define(
+      configDef.define(
           STORAGE_CLASS_CONFIG,
           Type.CLASS,
           Importance.HIGH,
@@ -71,10 +76,10 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           ++orderInGroup,
           Width.NONE,
           STORAGE_CLASS_DISPLAY,
-          STORAGE_CLASS_RECOMMENDER
+          storageClassRecommender
       );
 
-      CONFIG_DEF.define(
+      configDef.define(
           TOPICS_DIR_CONFIG,
           Type.STRING,
           TOPICS_DIR_DEFAULT,
@@ -86,7 +91,7 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           TOPICS_DIR_DISPLAY
       );
 
-      CONFIG_DEF.define(
+      configDef.define(
           STORE_URL_CONFIG,
           Type.STRING,
           STORE_URL_DEFAULT,
@@ -98,7 +103,7 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           STORE_URL_DISPLAY
       );
 
-      CONFIG_DEF.define(
+      configDef.define(
           DIRECTORY_DELIM_CONFIG,
           Type.STRING,
           DIRECTORY_DELIM_DEFAULT,
@@ -110,7 +115,7 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           DIRECTORY_DELIM_DISPLAY
       );
 
-      CONFIG_DEF.define(
+      configDef.define(
           FILE_DELIM_CONFIG,
           Type.STRING,
           FILE_DELIM_DEFAULT,
@@ -122,6 +127,7 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           FILE_DELIM_DISPLAY
       );
     }
+    return configDef;
   }
 
   private static boolean classNameEquals(
@@ -136,15 +142,7 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
     return super.get(key);
   }
 
-  public static ConfigDef getConfig() {
-    return CONFIG_DEF;
-  }
-
-  public StorageCommonConfig(Map<String, String> props) {
-    super(CONFIG_DEF, props);
-  }
-
-  public static void main(String[] args) {
-    System.out.println(CONFIG_DEF.toRst());
+  public StorageCommonConfig(ConfigDef configDef, Map<String, String> props) {
+    super(configDef, props);
   }
 }
