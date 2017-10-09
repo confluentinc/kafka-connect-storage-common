@@ -267,7 +267,8 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
                    || name.equals(TIMEZONE_CONFIG);
           }
         } else {
-          throw new ConfigException("Not a valid partitioner class: " + partitioner);
+          // Custom partitioner. Allow all the dependent configs.
+          return true;
         }
       } catch (ClassCastException e) {
         ConfigException ce = new ConfigException(
