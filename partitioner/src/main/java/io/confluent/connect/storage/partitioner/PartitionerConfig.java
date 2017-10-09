@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 
 import io.confluent.connect.storage.common.ComposableConfig;
-import io.confluent.connect.storage.common.GenericRecommender;
 
 public class PartitionerConfig extends AbstractConfig implements ComposableConfig {
 
@@ -94,17 +93,22 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final String TIMESTAMP_FIELD_NAME_DEFAULT = "timestamp";
   public static final String TIMESTAMP_FIELD_NAME_DISPLAY = "Record Field for Timestamp Extractor";
 
-  protected static final ConfigDef CONFIG_DEF = new ConfigDef();
-  public static final GenericRecommender PARTITIONER_CLASS_RECOMMENDER =
-      new GenericRecommender();
-
-  static {
+  /**
+   * Create a new configuration definition.
+   *
+   * @param partitionerClassRecommender A recommender for partitioner classes shipping
+   *     out-of-the-box with a connector. The recommender should not prevent additional custom
+   *     classes from being added during runtime.
+   * @return the newly created configuration definition.
+   */
+  public static ConfigDef newConfigDef(ConfigDef.Recommender partitionerClassRecommender) {
+    ConfigDef configDef = new ConfigDef();
     {
       // Define Partitioner configuration group
       final String group = "Partitioner";
       int orderInGroup = 0;
 
-      CONFIG_DEF.define(PARTITIONER_CLASS_CONFIG,
+      configDef.define(PARTITIONER_CLASS_CONFIG,
           Type.CLASS,
           PARTITIONER_CLASS_DEFAULT,
           Importance.HIGH,
@@ -120,9 +124,9 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
               LOCALE_CONFIG,
               TIMEZONE_CONFIG
           ),
-          PARTITIONER_CLASS_RECOMMENDER);
+          partitionerClassRecommender);
 
-      CONFIG_DEF.define(PARTITION_FIELD_NAME_CONFIG,
+      configDef.define(PARTITION_FIELD_NAME_CONFIG,
           Type.STRING,
           PARTITION_FIELD_NAME_DEFAULT,
           Importance.MEDIUM,
@@ -130,9 +134,10 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           group,
           ++orderInGroup,
           Width.NONE,
-          PARTITION_FIELD_NAME_DISPLAY);
+          PARTITION_FIELD_NAME_DISPLAY,
+          new PartitionerClassDependentsRecommender());
 
-      CONFIG_DEF.define(PARTITION_DURATION_MS_CONFIG,
+      configDef.define(PARTITION_DURATION_MS_CONFIG,
           Type.LONG,
           PARTITION_DURATION_MS_DEFAULT,
           Importance.MEDIUM,
@@ -140,9 +145,10 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           group,
           ++orderInGroup,
           Width.LONG,
-          PARTITION_DURATION_MS_DISPLAY);
+          PARTITION_DURATION_MS_DISPLAY,
+          new PartitionerClassDependentsRecommender());
 
-      CONFIG_DEF.define(PATH_FORMAT_CONFIG,
+      configDef.define(PATH_FORMAT_CONFIG,
           Type.STRING,
           PATH_FORMAT_DEFAULT,
           Importance.MEDIUM,
@@ -150,9 +156,10 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           group,
           ++orderInGroup,
           Width.LONG,
-          PATH_FORMAT_DISPLAY);
+          PATH_FORMAT_DISPLAY,
+          new PartitionerClassDependentsRecommender());
 
-      CONFIG_DEF.define(LOCALE_CONFIG,
+      configDef.define(LOCALE_CONFIG,
           Type.STRING,
           LOCALE_DEFAULT,
           Importance.MEDIUM,
@@ -160,9 +167,10 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           group,
           ++orderInGroup,
           Width.LONG,
-          LOCALE_DISPLAY);
+          LOCALE_DISPLAY,
+          new PartitionerClassDependentsRecommender());
 
-      CONFIG_DEF.define(TIMEZONE_CONFIG,
+      configDef.define(TIMEZONE_CONFIG,
           Type.STRING,
           TIMEZONE_DEFAULT,
           Importance.MEDIUM,
@@ -170,9 +178,10 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           group,
           ++orderInGroup,
           Width.LONG,
-          TIMEZONE_DISPLAY);
+          TIMEZONE_DISPLAY,
+          new PartitionerClassDependentsRecommender());
 
-      CONFIG_DEF.define(TIMESTAMP_EXTRACTOR_CLASS_CONFIG,
+      configDef.define(TIMESTAMP_EXTRACTOR_CLASS_CONFIG,
           Type.STRING,
           TIMESTAMP_EXTRACTOR_CLASS_DEFAULT,
           Importance.MEDIUM,
@@ -182,7 +191,7 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           Width.LONG,
           TIMESTAMP_EXTRACTOR_CLASS_DISPLAY);
 
-      CONFIG_DEF.define(TIMESTAMP_FIELD_NAME_CONFIG,
+      configDef.define(TIMESTAMP_FIELD_NAME_CONFIG,
           Type.STRING,
           TIMESTAMP_FIELD_NAME_DEFAULT,
           Importance.MEDIUM,
@@ -192,6 +201,8 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           Width.LONG,
           TIMESTAMP_FIELD_NAME_DISPLAY);
     }
+
+    return configDef;
   }
 
   public static class BooleanParentRecommender implements ConfigDef.Recommender {
@@ -213,7 +224,6 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   }
 
   public static class PartitionerClassDependentsRecommender implements ConfigDef.Recommender {
-
     @Override
     public List<Object> validValues(String name, Map<String, Object> props) {
       return new LinkedList<>();
@@ -225,15 +235,15 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
         @SuppressWarnings("unchecked")
         Class<? extends Partitioner<?>> partitioner =
             (Class<? extends Partitioner<?>>) connectorConfigs.get(PARTITIONER_CLASS_CONFIG);
-        if (DefaultPartitioner.class.isInstance(partitioner)) {
+        if (DefaultPartitioner.class.equals(partitioner)) {
           return false;
         } else if (FieldPartitioner.class.isAssignableFrom(partitioner)) {
           // subclass of FieldPartitioner
           return name.equals(PARTITION_FIELD_NAME_CONFIG);
         } else if (TimeBasedPartitioner.class.isAssignableFrom(partitioner)) {
           // subclass of TimeBasedPartitioner
-          if (DailyPartitioner.class.isInstance(partitioner)
-              || HourlyPartitioner.class.isInstance(partitioner)) {
+          if (DailyPartitioner.class.equals(partitioner)
+              || HourlyPartitioner.class.equals(partitioner)) {
             return name.equals(LOCALE_CONFIG) || name.equals(TIMEZONE_CONFIG);
           } else {
             return name.equals(PARTITION_DURATION_MS_CONFIG)
@@ -260,19 +270,7 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
     return super.get(key);
   }
 
-  private static boolean classNameEquals(String className, Class<?> clazz) {
-    return className.equals(clazz.getSimpleName()) || className.equals(clazz.getCanonicalName());
-  }
-
-  public static ConfigDef getConfig() {
-    return CONFIG_DEF;
-  }
-
-  public PartitionerConfig(Map<String, String> props) {
-    super(CONFIG_DEF, props);
-  }
-
-  public static void main(String[] args) {
-    System.out.println(CONFIG_DEF.toRst());
+  public PartitionerConfig(ConfigDef configDef, Map<String, String> props) {
+    super(configDef, props);
   }
 }
