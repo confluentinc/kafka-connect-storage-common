@@ -149,7 +149,8 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           group,
           ++orderInGroup,
           Width.NONE,
-          PARTITION_FIELD_NAME_DISPLAY);
+          PARTITION_FIELD_NAME_DISPLAY,
+          new PartitionerClassDependentsRecommender());
 
       configDef.define(PARTITION_DURATION_MS_CONFIG,
           Type.LONG,
@@ -159,7 +160,8 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           group,
           ++orderInGroup,
           Width.LONG,
-          PARTITION_DURATION_MS_DISPLAY);
+          PARTITION_DURATION_MS_DISPLAY,
+          new PartitionerClassDependentsRecommender());
 
       configDef.define(PATH_FORMAT_CONFIG,
           Type.STRING,
@@ -169,7 +171,8 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           group,
           ++orderInGroup,
           Width.LONG,
-          PATH_FORMAT_DISPLAY);
+          PATH_FORMAT_DISPLAY,
+          new PartitionerClassDependentsRecommender());
 
       configDef.define(LOCALE_CONFIG,
           Type.STRING,
@@ -179,7 +182,8 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           group,
           ++orderInGroup,
           Width.LONG,
-          LOCALE_DISPLAY);
+          LOCALE_DISPLAY,
+          new PartitionerClassDependentsRecommender());
 
       configDef.define(TIMEZONE_CONFIG,
           Type.STRING,
@@ -189,7 +193,8 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           group,
           ++orderInGroup,
           Width.LONG,
-          TIMEZONE_DISPLAY);
+          TIMEZONE_DISPLAY,
+          new PartitionerClassDependentsRecommender());
 
       configDef.define(TIMESTAMP_EXTRACTOR_CLASS_CONFIG,
           Type.STRING,
@@ -234,7 +239,6 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   }
 
   public static class PartitionerClassDependentsRecommender implements ConfigDef.Recommender {
-
     @Override
     public List<Object> validValues(String name, Map<String, Object> props) {
       return new LinkedList<>();
@@ -246,15 +250,15 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
         @SuppressWarnings("unchecked")
         Class<? extends Partitioner<?>> partitioner =
             (Class<? extends Partitioner<?>>) connectorConfigs.get(PARTITIONER_CLASS_CONFIG);
-        if (DefaultPartitioner.class.isInstance(partitioner)) {
+        if (DefaultPartitioner.class.equals(partitioner)) {
           return false;
         } else if (FieldPartitioner.class.isAssignableFrom(partitioner)) {
           // subclass of FieldPartitioner
           return name.equals(PARTITION_FIELD_NAME_CONFIG);
         } else if (TimeBasedPartitioner.class.isAssignableFrom(partitioner)) {
           // subclass of TimeBasedPartitioner
-          if (DailyPartitioner.class.isInstance(partitioner)
-              || HourlyPartitioner.class.isInstance(partitioner)) {
+          if (DailyPartitioner.class.equals(partitioner)
+              || HourlyPartitioner.class.equals(partitioner)) {
             return name.equals(LOCALE_CONFIG) || name.equals(TIMEZONE_CONFIG);
           } else {
             return name.equals(PARTITION_DURATION_MS_CONFIG)
@@ -279,10 +283,6 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   @Override
   public Object get(String key) {
     return super.get(key);
-  }
-
-  private static boolean classNameEquals(String className, Class<?> clazz) {
-    return className.equals(clazz.getSimpleName()) || className.equals(clazz.getCanonicalName());
   }
 
   public PartitionerConfig(ConfigDef configDef, Map<String, String> props) {
