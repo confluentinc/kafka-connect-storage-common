@@ -235,15 +235,15 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
         @SuppressWarnings("unchecked")
         Class<? extends Partitioner<?>> partitioner =
             (Class<? extends Partitioner<?>>) connectorConfigs.get(PARTITIONER_CLASS_CONFIG);
-        if (DefaultPartitioner.class.equals(partitioner)) {
+        if (classNameEquals(DefaultPartitioner.class, partitioner)) {
           return false;
         } else if (FieldPartitioner.class.isAssignableFrom(partitioner)) {
           // subclass of FieldPartitioner
           return name.equals(PARTITION_FIELD_NAME_CONFIG);
         } else if (TimeBasedPartitioner.class.isAssignableFrom(partitioner)) {
           // subclass of TimeBasedPartitioner
-          if (DailyPartitioner.class.equals(partitioner)
-              || HourlyPartitioner.class.equals(partitioner)) {
+          if (classNameEquals(DailyPartitioner.class, partitioner)
+              || classNameEquals(HourlyPartitioner.class, partitioner)) {
             return name.equals(LOCALE_CONFIG) || name.equals(TIMEZONE_CONFIG);
           } else {
             return name.equals(PARTITION_DURATION_MS_CONFIG)
@@ -252,7 +252,8 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
                    || name.equals(TIMEZONE_CONFIG);
           }
         } else {
-          throw new ConfigException("Not a valid partitioner class: " + partitioner);
+          // Custom partitioner. Allow all the dependent configs.
+          return true;
         }
       } catch (ClassCastException e) {
         ConfigException ce = new ConfigException(
@@ -263,6 +264,11 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
         throw ce;
       }
     }
+  }
+
+  private static boolean classNameEquals(Class<?> left, Class<?> right) {
+    return left.getName().equals(right.getName())
+        || left.getSimpleName().equals(right.getSimpleName());
   }
 
   @Override
