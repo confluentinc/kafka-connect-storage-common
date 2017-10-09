@@ -52,7 +52,15 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
   public static final String FILE_DELIM_DEFAULT = "+";
   public static final String FILE_DELIM_DISPLAY = "File Delimiter";
 
-  public static ConfigDef newConfigDef(ConfigDef.Recommender recommender) {
+  /**
+   * Create a new configuration definition.
+   *
+   * @param storageClassRecommender A recommender for storage classes shipping out-of-the-box
+   *     with a connector. The recommender should not prevent additional custom classes from being
+   *     added during runtime.
+   * @return the newly created configuration definition.
+   */
+  public static ConfigDef newConfigDef(ConfigDef.Recommender storageClassRecommender) {
     ConfigDef configDef = new ConfigDef();
     {
       // Define Store's basic configuration group
@@ -68,7 +76,7 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           ++orderInGroup,
           Width.NONE,
           STORAGE_CLASS_DISPLAY,
-          recommender
+          storageClassRecommender
       );
 
       configDef.define(

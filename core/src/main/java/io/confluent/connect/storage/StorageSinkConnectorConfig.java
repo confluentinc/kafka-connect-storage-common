@@ -92,7 +92,15 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final int SCHEMA_CACHE_SIZE_DEFAULT = 1000;
   public static final String SCHEMA_CACHE_SIZE_DISPLAY = "Schema Cache Size";
 
-  public static ConfigDef newConfigDef(ConfigDef.Recommender recommender) {
+  /**
+   * Create a new configuration definition.
+   *
+   * @param formatClassRecommender A recommender for format classes shipping out-of-the-box with
+   *     a connector. The recommender should not prevent additional custom classes from being
+   *     added during runtime.
+   * @return the newly created configuration definition.
+   */
+  public static ConfigDef newConfigDef(ConfigDef.Recommender formatClassRecommender) {
     ConfigDef configDef = new ConfigDef();
     {
       // Define Store's basic configuration group
@@ -108,7 +116,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           ++orderInGroup,
           Width.NONE,
           FORMAT_CLASS_DISPLAY,
-          recommender
+          formatClassRecommender
       );
 
       configDef.define(

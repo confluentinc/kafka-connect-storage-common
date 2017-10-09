@@ -98,7 +98,15 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final String TIMESTAMP_FIELD_NAME_DEFAULT = "timestamp";
   public static final String TIMESTAMP_FIELD_NAME_DISPLAY = "Record Field for Timestamp Extractor";
 
-  public static ConfigDef newConfigDef(ConfigDef.Recommender recommender) {
+  /**
+   * Create a new configuration definition.
+   *
+   * @param partitionerClassRecommender A recommender for partitioner classes shipping
+   *     out-of-the-box with a connector. The recommender should not prevent additional custom
+   *     classes from being added during runtime.
+   * @return the newly created configuration definition.
+   */
+  public static ConfigDef newConfigDef(ConfigDef.Recommender partitionerClassRecommender) {
     ConfigDef configDef = new ConfigDef();
     {
       // Define Partitioner configuration group
@@ -122,7 +130,7 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
               TIMEZONE_CONFIG,
               SCHEMA_GENERATOR_CLASS_CONFIG
           ),
-          recommender);
+          partitionerClassRecommender);
 
       configDef.define(SCHEMA_GENERATOR_CLASS_CONFIG,
           Type.CLASS,
