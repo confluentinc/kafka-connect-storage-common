@@ -130,13 +130,6 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
     return configDef;
   }
 
-  private static boolean classNameEquals(
-      String className,
-      Class<?> clazz
-  ) {
-    return className.equals(clazz.getSimpleName()) || className.equals(clazz.getCanonicalName());
-  }
-
   @Override
   public Object get(String key) {
     return super.get(key);
