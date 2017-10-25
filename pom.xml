@@ -69,10 +69,10 @@
         <confluent.maven.repo>http://packages.confluent.io/maven/</confluent.maven.repo>
         <confluent.version>4.1.0-SNAPSHOT</confluent.version>
         <hadoop.version>2.7.3</hadoop.version>
-        <hive.version>1.2.1</hive.version>
+        <hive.version>1.2.2</hive.version>
         <joda.version>2.9.6</joda.version>
         <licenses.version>4.1.0-SNAPSHOT</licenses.version>
-        <parquet.version>1.7.0</parquet.version>
+        <parquet.version>1.8.2</parquet.version>
         <httpclient.version>4.5.2</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
         <jline.version>2.12.1</jline.version>
