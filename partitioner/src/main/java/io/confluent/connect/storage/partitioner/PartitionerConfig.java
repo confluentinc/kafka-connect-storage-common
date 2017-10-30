@@ -101,7 +101,10 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
    *     classes from being added during runtime.
    * @return the newly created configuration definition.
    */
-  public static ConfigDef newConfigDef(ConfigDef.Recommender partitionerClassRecommender) {
+  public static ConfigDef newConfigDef(
+      ConfigDef.Recommender partitionerClassRecommender,
+      ConfigDef.Recommender schemaGeneratorClassRecommender
+  ) {
     ConfigDef configDef = new ConfigDef();
     {
       // Define Partitioner configuration group
