@@ -106,7 +106,10 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
    *     classes from being added during runtime.
    * @return the newly created configuration definition.
    */
-  public static ConfigDef newConfigDef(ConfigDef.Recommender partitionerClassRecommender) {
+  public static ConfigDef newConfigDef(
+      ConfigDef.Recommender partitionerClassRecommender,
+      ConfigDef.Recommender schemaGeneratorClassRecommender
+  ) {
     ConfigDef configDef = new ConfigDef();
     {
       // Define Partitioner configuration group
@@ -139,7 +142,8 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           group,
           ++orderInGroup,
           Width.LONG,
-          SCHEMA_GENERATOR_CLASS_DISPLAY);
+          SCHEMA_GENERATOR_CLASS_DISPLAY,
+          schemaGeneratorClassRecommender);
 
       configDef.define(PARTITION_FIELD_NAME_CONFIG,
           Type.STRING,
