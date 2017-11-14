@@ -92,15 +92,26 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final int SCHEMA_CACHE_SIZE_DEFAULT = 1000;
   public static final String SCHEMA_CACHE_SIZE_DISPLAY = "Schema Cache Size";
 
+  public static final String AVRO_CODEC_CONFIG = "avro.codec";
+  public static final String AVRO_CODEC_DEFAULT = "null";
+  public static final String AVRO_CODEC_DISPLAY = "Avro Compression Codec";
+  public static final String AVRO_CODEC_DOC = "The Avro compression codec to be used for output  "
+      + "files. Available values: null, deflate, snappy and bzip2 (CodecSource is org.apache"
+      + ".avro.file.CodecFactory)";
+  public static final String[] AVRO_SUPPORTED_CODECS = new String[]{"null", "deflate", "snappy",
+      "bzip2"};
+
   /**
    * Create a new configuration definition.
    *
    * @param formatClassRecommender A recommender for format classes shipping out-of-the-box with
    *     a connector. The recommender should not prevent additional custom classes from being
    *     added during runtime.
+   * @param  avroRecommender A recommender for avro compression codecs.
    * @return the newly created configuration definition.
    */
-  public static ConfigDef newConfigDef(ConfigDef.Recommender formatClassRecommender) {
+  public static ConfigDef newConfigDef(ConfigDef.Recommender formatClassRecommender,
+                                       ConfigDef.Recommender avroRecommender) {
     ConfigDef configDef = new ConfigDef();
     {
       // Define Store's basic configuration group
@@ -117,6 +128,20 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           Width.NONE,
           FORMAT_CLASS_DISPLAY,
           formatClassRecommender
+      );
+
+      configDef.define(
+          AVRO_CODEC_CONFIG,
+          Type.STRING,
+          AVRO_CODEC_DEFAULT,
+          ConfigDef.ValidString.in(AVRO_SUPPORTED_CODECS),
+          Importance.LOW,
+          AVRO_CODEC_DOC,
+          group,
+          ++orderInGroup,
+          Width.MEDIUM,
+          AVRO_CODEC_DISPLAY,
+          avroRecommender
       );
 
       configDef.define(
@@ -204,6 +229,10 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
       );
     }
     return configDef;
+  }
+
+  public String getAvroCodec() {
+    return getString(AVRO_CODEC_CONFIG);
   }
 
   @Override
