@@ -21,6 +21,7 @@ import org.apache.kafka.common.config.ConfigDef;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * A recommender which decides visibility based on the value of a parent config.
@@ -30,7 +31,18 @@ public class ParentValueRecommender implements ConfigDef.Recommender {
   protected String parentConfigName;
   protected Object parentConfigValue;
 
+  /**
+   * Construct a recommender with the name of parent config and its value for which {@link #visible}
+   * returns true.
+   *
+   * @param parentConfigName the name of the parent config
+   * @param parentConfigValue the value of the parent config for which this config
+   *        will be visible (can be null).
+   */
   public ParentValueRecommender(String parentConfigName, Object parentConfigValue) {
+    if (parentConfigName == null) {
+      throw new NullPointerException("parentConfigName cannot be null.");
+    }
     this.parentConfigName = parentConfigName;
     this.parentConfigValue = parentConfigValue;
   }
@@ -42,8 +54,6 @@ public class ParentValueRecommender implements ConfigDef.Recommender {
 
   @Override
   public boolean visible(String name, Map<String, Object> connectorConfigs) {
-    Object object = connectorConfigs.get(parentConfigName);
-    return object == parentConfigValue
-        || (object != null && object.equals(parentConfigValue));
+    return Objects.equals(connectorConfigs.get(parentConfigName), parentConfigValue);
   }
 }
