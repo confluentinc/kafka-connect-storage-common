@@ -16,17 +16,15 @@
 
 package io.confluent.connect.storage.common;
 
-import org.apache.kafka.common.config.ConfigDef;
-
-import java.util.Collections;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
 /**
  * A recommender which decides visibility based on the value of a parent config.
  */
-public class ParentValueRecommender implements ConfigDef.Recommender {
+public class ParentValueRecommender extends GenericRecommender {
 
   protected String parentConfigName;
   protected Object parentConfigValue;
@@ -36,20 +34,32 @@ public class ParentValueRecommender implements ConfigDef.Recommender {
    * returns true.
    *
    * @param parentConfigName the name of the parent config
-   * @param parentConfigValue the value of the parent config for which this config
-   *        will be visible (can be null).
+   * @param parentConfigValue the value of the parent config for which this config will be
+   *     visible (can be null).
+   * @param validValues a non-null array of valid values for this ConfigKey (can be empty).
    */
-  public ParentValueRecommender(String parentConfigName, Object parentConfigValue) {
+  public ParentValueRecommender(String parentConfigName, Object parentConfigValue,
+                                Object[] validValues) {
+    this(parentConfigName, parentConfigValue, Arrays.asList(validValues));
+  }
+
+  /**
+   * Construct a recommender with the name of parent config and its value for which {@link #visible}
+   * returns true.
+   *
+   * @param parentConfigName the name of the parent config
+   * @param parentConfigValue the value of the parent config for which this config will be
+   *     visible (can be null).
+   * @param validValues a non-null collection of valid values for this ConfigKey (can be empty).
+   */
+  public ParentValueRecommender(String parentConfigName, Object parentConfigValue,
+                                Collection<Object> validValues) {
     if (parentConfigName == null) {
       throw new NullPointerException("parentConfigName cannot be null.");
     }
     this.parentConfigName = parentConfigName;
     this.parentConfigValue = parentConfigValue;
-  }
-
-  @Override
-  public List<Object> validValues(String name, Map<String, Object> connectorConfigs) {
-    return Collections.emptyList();
+    addValidValues(validValues);
   }
 
   @Override
