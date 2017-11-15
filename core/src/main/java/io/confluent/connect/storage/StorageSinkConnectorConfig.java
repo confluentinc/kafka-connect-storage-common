@@ -110,8 +110,10 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
    * @param  avroRecommender A recommender for avro compression codecs.
    * @return the newly created configuration definition.
    */
-  public static ConfigDef newConfigDef(ConfigDef.Recommender formatClassRecommender,
-                                       ConfigDef.Recommender avroRecommender) {
+  public static ConfigDef newConfigDef(
+      ConfigDef.Recommender formatClassRecommender,
+      ConfigDef.Recommender avroRecommender
+  ) {
     ConfigDef configDef = new ConfigDef();
     {
       // Define Store's basic configuration group
@@ -128,20 +130,6 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           Width.NONE,
           FORMAT_CLASS_DISPLAY,
           formatClassRecommender
-      );
-
-      configDef.define(
-          AVRO_CODEC_CONFIG,
-          Type.STRING,
-          AVRO_CODEC_DEFAULT,
-          ConfigDef.ValidString.in(AVRO_SUPPORTED_CODECS),
-          Importance.LOW,
-          AVRO_CODEC_DOC,
-          group,
-          ++orderInGroup,
-          Width.MEDIUM,
-          AVRO_CODEC_DISPLAY,
-          avroRecommender
       );
 
       configDef.define(
@@ -227,6 +215,21 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           Width.LONG,
           FILENAME_OFFSET_ZERO_PAD_WIDTH_DISPLAY
       );
+
+      configDef.define(
+          AVRO_CODEC_CONFIG,
+          Type.STRING,
+          AVRO_CODEC_DEFAULT,
+          ConfigDef.ValidString.in(AVRO_SUPPORTED_CODECS),
+          Importance.LOW,
+          AVRO_CODEC_DOC,
+          group,
+          ++orderInGroup,
+          Width.MEDIUM,
+          AVRO_CODEC_DISPLAY,
+          avroRecommender
+      );
+
     }
     return configDef;
   }

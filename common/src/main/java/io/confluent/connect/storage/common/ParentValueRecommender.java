@@ -38,8 +38,11 @@ public class ParentValueRecommender extends GenericRecommender {
    *     visible (can be null).
    * @param validValues a non-null array of valid values for this ConfigKey (can be empty).
    */
-  public ParentValueRecommender(String parentConfigName, Object parentConfigValue,
-                                Object[] validValues) {
+  public ParentValueRecommender(
+      String parentConfigName,
+      Object parentConfigValue,
+      Object[] validValues
+  ) {
     this(parentConfigName, parentConfigValue, Arrays.asList(validValues));
   }
 
@@ -50,13 +53,15 @@ public class ParentValueRecommender extends GenericRecommender {
    * @param parentConfigName the name of the parent config
    * @param parentConfigValue the value of the parent config for which this config will be
    *     visible (can be null).
-   * @param validValues a non-null collection of valid values for this ConfigKey (can be empty).
+   * @param validValues a non-null collection of valid values for this ConfigKey (can be
+   *     empty).
    */
-  public ParentValueRecommender(String parentConfigName, Object parentConfigValue,
-                                Collection<Object> validValues) {
-    if (parentConfigName == null) {
-      throw new NullPointerException("parentConfigName cannot be null.");
-    }
+  public ParentValueRecommender(
+      String parentConfigName,
+      Object parentConfigValue,
+      Collection<Object> validValues
+  ) {
+    Objects.requireNonNull(parentConfigName, "parentConfigName cannot be null.");
     this.parentConfigName = parentConfigName;
     this.parentConfigValue = parentConfigValue;
     addValidValues(validValues);
