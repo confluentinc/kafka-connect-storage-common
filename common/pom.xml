@@ -29,4 +29,13 @@
     <artifactId>kafka-connect-storage-common</artifactId>
     <packaging>jar</packaging>
     <name>kafka-connect-storage-common</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-connect-avro-converter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
 </project>
