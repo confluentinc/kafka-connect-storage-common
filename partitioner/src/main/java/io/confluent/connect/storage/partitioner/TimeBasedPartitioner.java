@@ -132,7 +132,15 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
 
   @Override
   public String encodePartition(SinkRecord sinkRecord) {
-    long timestamp = timestampExtractor.extract(sinkRecord);
+    Long timestamp = timestampExtractor.extract(sinkRecord);
+    if (timestamp == null) {
+      String msg = "Unable to determine timestamp using timestamp.extractor "
+          + timestampExtractor.getClass().getName()
+          + " for record: "
+          + sinkRecord;
+      log.error(msg);
+      throw new ConnectException(msg);
+    }
     DateTime bucket = new DateTime(
         getPartition(partitionDurationMs, timestamp, formatter.getZone())
     );
