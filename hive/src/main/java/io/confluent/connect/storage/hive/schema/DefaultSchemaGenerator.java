@@ -16,14 +16,14 @@
 
 package io.confluent.connect.storage.hive.schema;
 
+import io.confluent.connect.storage.common.SchemaGenerator;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import io.confluent.connect.storage.common.SchemaGenerator;
 
 public class DefaultSchemaGenerator implements SchemaGenerator<FieldSchema> {
 
@@ -36,9 +36,16 @@ public class DefaultSchemaGenerator implements SchemaGenerator<FieldSchema> {
   }
 
   @Override
-  public List<FieldSchema> newPartitionFields(String partitionField) {
-    return Collections.singletonList(
-        new FieldSchema(partitionField, TypeInfoFactory.stringTypeInfo.toString(), "")
-    );
+  public List<FieldSchema> newPartitionFields(String format) {
+    String[] fields = format.split(",");
+    final List<FieldSchema> result = new ArrayList<>();
+
+    for (String field : fields) {
+      result.add(
+          new FieldSchema(field, TypeInfoFactory.stringTypeInfo.toString(), "")
+      );
+    }
+
+    return Collections.unmodifiableList(result);
   }
 }
