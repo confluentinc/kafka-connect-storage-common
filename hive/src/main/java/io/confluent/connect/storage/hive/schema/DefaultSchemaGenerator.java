@@ -36,9 +36,9 @@ public class DefaultSchemaGenerator implements SchemaGenerator<FieldSchema> {
   }
 
   @Override
-  public List<FieldSchema> newPartitionFields(String format) {
-    String[] fields = format.split(",");
-    final List<FieldSchema> result = new ArrayList<>();
+  public List<FieldSchema> newPartitionFields(String partitionFields) {
+    String[] fields = partitionFields.split(",");
+    List<FieldSchema> result = new ArrayList<>();
 
     for (String field : fields) {
       result.add(

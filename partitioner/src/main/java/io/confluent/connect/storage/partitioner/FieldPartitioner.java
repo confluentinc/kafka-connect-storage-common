@@ -35,7 +35,7 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
 
   @Override
   public void configure(Map<String, Object> config) {
-    this.fieldNames = (List<String>) config.get(PartitionerConfig.PARTITION_FIELD_NAME_CONFIG);
+    fieldNames = (List<String>) config.get(PartitionerConfig.PARTITION_FIELD_NAME_CONFIG);
     delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
   }
 
@@ -47,7 +47,7 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
       final Struct struct = (Struct) value;
 
       StringBuilder builder = new StringBuilder();
-      for (String fieldName : this.fieldNames) {
+      for (String fieldName : fieldNames) {
         if (builder.length() > 0) {
           builder.append(this.delim);
         }
@@ -85,7 +85,7 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
   public List<T> partitionFields() {
     if (partitionFields == null) {
       StringBuilder builder = new StringBuilder();
-      for (String f : this.fieldNames) {
+      for (String f : fieldNames) {
         if (builder.length() > 0) {
           builder.append(',');
         }
