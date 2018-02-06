@@ -127,7 +127,7 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           partitionerClassRecommender);
 
       configDef.define(PARTITION_FIELD_NAME_CONFIG,
-          Type.STRING,
+          Type.LIST,
           PARTITION_FIELD_NAME_DEFAULT,
           Importance.MEDIUM,
           PARTITION_FIELD_NAME_DOC,
