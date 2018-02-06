@@ -16,8 +16,6 @@
 
 package io.confluent.connect.storage.partitioner;
 
-import io.confluent.connect.storage.common.StorageCommonConfig;
-import io.confluent.connect.storage.errors.PartitionException;
 import org.apache.kafka.common.utils.Utils;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Schema.Type;
@@ -28,6 +26,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+
+import io.confluent.connect.storage.common.StorageCommonConfig;
+import io.confluent.connect.storage.errors.PartitionException;
 
 public class FieldPartitioner<T> extends DefaultPartitioner<T> {
   private static final Logger log = LoggerFactory.getLogger(FieldPartitioner.class);

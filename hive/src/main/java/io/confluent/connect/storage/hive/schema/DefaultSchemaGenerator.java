@@ -16,7 +16,6 @@
 
 package io.confluent.connect.storage.hive.schema;
 
-import io.confluent.connect.storage.common.SchemaGenerator;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
@@ -24,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import io.confluent.connect.storage.common.SchemaGenerator;
 
 public class DefaultSchemaGenerator implements SchemaGenerator<FieldSchema> {
 
