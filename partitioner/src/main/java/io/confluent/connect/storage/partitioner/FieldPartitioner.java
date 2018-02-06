@@ -18,6 +18,7 @@ package io.confluent.connect.storage.partitioner;
 
 import io.confluent.connect.storage.common.StorageCommonConfig;
 import io.confluent.connect.storage.errors.PartitionException;
+import org.apache.kafka.common.utils.Utils;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Schema.Type;
 import org.apache.kafka.connect.data.Struct;
@@ -84,14 +85,9 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
   @Override
   public List<T> partitionFields() {
     if (partitionFields == null) {
-      StringBuilder builder = new StringBuilder();
-      for (String f : fieldNames) {
-        if (builder.length() > 0) {
-          builder.append(',');
-        }
-        builder.append(f);
-      }
-      partitionFields = newSchemaGenerator(config).newPartitionFields(builder.toString());
+      partitionFields = newSchemaGenerator(config).newPartitionFields(
+          Utils.join(fieldNames, ",")
+      );
     }
     return partitionFields;
   }
