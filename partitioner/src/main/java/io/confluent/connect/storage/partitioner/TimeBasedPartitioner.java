@@ -244,98 +244,53 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
       dateTime = ISODateTimeFormat.dateTime();
     }
 
-    private Object getField(Struct struct, String fieldName) {
-      Object field;
-      try {
-        field = struct.get(fieldName);
-      } catch (DataException e) {
-        throw new DataException(
-                String.format("The field named '%s' does not exist.", fieldName), e);
+    private Object getField(Object structOrMap, String fieldName) {
+      if (structOrMap instanceof Struct) {
+        return ((Struct) structOrMap).get(fieldName);
+      } else if (structOrMap instanceof Map) {
+        Object field = ((Map<?, ?>) structOrMap).get(fieldName);
+        if (field == null) {
+          throw new DataException(String.format("Unable to find nested field '%s'", fieldName));
+        }
       }
-      return field;
+      throw new DataException(String.format(
+          "Argument not a Struct or Map. Cannot get field '%s' from: %s",
+          fieldName,
+          structOrMap
+      ));
     }
 
-    private Object getNestedFieldValue(Struct struct) {
-      final String[] fieldNames = fieldName.split("\\.");
-      Struct tmpStruct = struct;
-      Object tmpObject;
+    private Object getNestedFieldValue(Object structOrMap) {
       try {
+        Object innermost = structOrMap;
         // Iterate down to final struct
-        int i = 0;
-        while (i < fieldNames.length - 1) {
-          try {
-            tmpObject = getField(tmpStruct, fieldNames[i]);
-          } catch (DataException e) {
-            throw new DataException(
-                    String.format("Unable to find nested field '%s'", fieldNames[i]));
-          }
-          tmpStruct = (Struct) tmpObject;
-          i++;
+        for (String name : fieldName.split("\\.")) {
+          innermost = getField(innermost, name);
         }
-        // Extract from final struct
-        tmpObject = getField(tmpStruct, fieldNames[i]);
+        return innermost;
       } catch (DataException e) {
         throw new DataException(
-                String.format("The nested field named '%s' does not exist.", fieldName), e);
+            String.format("The nested field named '%s' does not exist.", fieldName),
+            e
+        );
       }
-      return tmpObject;
-    }
-
-    private Object getNestedFieldValue(Map<?, ?> valueMap) {
-      final String[] fieldNames = fieldName.split("\\.");
-      Map<?, ?> tmpMap = valueMap;
-      Object tmpObject;
-      try {
-        // Iterate down to final map
-        int i = 0;
-        while (i < fieldNames.length - 1) {
-          tmpObject = tmpMap.get(fieldNames[i]);
-          if (tmpObject == null) {
-            throw new DataException(
-                    String.format("Unable to find nested field '%s'", fieldNames[i]));
-          }
-          tmpMap = (Map<?, ?>) tmpObject;
-          i++;
-        }
-        // Extract from final map
-        tmpObject = tmpMap.get(fieldNames[i]);
-        if (tmpObject == null) {
-          throw new DataException(
-                  String.format("Unable to find nested field '%s'", fieldNames[i]));
-        }
-      } catch (DataException e) {
-        throw new DataException(
-                String.format("The nested field named '%s' does not exist.", fieldName), e);
-      }
-      return tmpObject;
     }
 
     private Field getNestedField(Schema schema) {
       final String[] fieldNames = fieldName.split("\\.");
-      if (fieldNames.length == 1) {
-        return schema.field(fieldName);
-      }
-      int i = 0;
-      Field tmpField = schema.field(fieldNames[i++]);
       try {
+        Field innermost = schema.field(fieldNames[0]);
         // Iterate down to final schema
-        while (i < fieldNames.length - 1) {
-          final String nestedFieldName = fieldNames[i];
-          try {
-            tmpField = tmpField.schema().field(nestedFieldName);
-          } catch (DataException e) {
-            throw new DataException(
-                    String.format("Unable to find nested field '%s'", nestedFieldName));
-          }
-          i++;
+        for (int i = 1; i < fieldNames.length; ++i) {
+          innermost = innermost.schema().field(fieldNames[i]);
         }
-        // Extract from final schema
-        tmpField = tmpField.schema().field(fieldNames[i]);
+        return innermost;
       } catch (DataException e) {
         throw new DataException(
-                String.format("The nested field named '%s' does not exist.", fieldName), e);
+            String.format("The nested field named '%s' does not exist.", fieldName),
+            e
+        );
       }
-      return tmpField;
     }
 
     @Override
