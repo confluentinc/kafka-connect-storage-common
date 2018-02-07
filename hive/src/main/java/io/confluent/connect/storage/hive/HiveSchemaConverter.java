@@ -65,6 +65,20 @@ public class HiveSchemaConverter {
         return convertArray(schema);
       case MAP:
         return convertMap(schema);
+      case INT32:
+        if (org.apache.kafka.connect.data.Date.LOGICAL_NAME.equals(schema.name())) {
+          return TypeInfoFactory.dateTypeInfo;
+        } else if (org.apache.kafka.connect.data.Time.LOGICAL_NAME.equals(schema.name())) {
+          return TypeInfoFactory.timestampTypeInfo;
+        } else {
+          return convertPrimitive(schema);
+        }
+      case INT64:
+        if (org.apache.kafka.connect.data.Timestamp.LOGICAL_NAME.equals(schema.name())) {
+          return TypeInfoFactory.timestampTypeInfo;
+        } else {
+          return convertPrimitive(schema);
+        }
       default:
         return convertPrimitive(schema);
     }
