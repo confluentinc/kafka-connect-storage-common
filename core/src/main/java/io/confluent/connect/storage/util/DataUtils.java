@@ -19,30 +19,44 @@ package io.confluent.connect.storage.util;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
+import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.errors.DataException;
 
 import java.util.Map;
 
+import io.confluent.connect.storage.common.util.StringUtils;
+
 public class DataUtils {
 
   public static Object getField(Object structOrMap, String fieldName) {
+    validate(structOrMap, fieldName);
+
+    Object field;
     if (structOrMap instanceof Struct) {
-      return ((Struct) structOrMap).get(fieldName);
+      field = ((Struct) structOrMap).get(fieldName);
     } else if (structOrMap instanceof Map) {
-      Object field = ((Map<?, ?>) structOrMap).get(fieldName);
+      field = ((Map<?, ?>) structOrMap).get(fieldName);
       if (field == null) {
         throw new DataException(String.format("Unable to find nested field '%s'", fieldName));
       }
       return field;
+    } else {
+      throw new DataException(String.format(
+            "Argument not a Struct or Map. Cannot get field '%s' from %s.",
+            fieldName,
+            structOrMap
+      ));
     }
-    throw new DataException(String.format(
-          "Argument not a Struct or Map. Cannot get field '%s' from: %s",
-          fieldName,
-          structOrMap
-    ));
+    if (field == null) {
+      throw new DataException(
+            String.format("The field '%s' does not exist in %s.", fieldName, structOrMap));
+    }
+    return field;
   }
 
   public static Object getNestedFieldValue(Object structOrMap, String fieldName) {
+    validate(structOrMap, fieldName);
+
     try {
       Object innermost = structOrMap;
       // Iterate down to final struct
@@ -52,13 +66,15 @@ public class DataUtils {
       return innermost;
     } catch (DataException e) {
       throw new DataException(
-            String.format("The nested field named '%s' does not exist.", fieldName),
+            String.format("The field '%s' does not exist in %s.", fieldName, structOrMap),
             e
       );
     }
   }
 
   public static Field getNestedField(Schema schema, String fieldName) {
+    validate(schema, fieldName);
+
     final String[] fieldNames = fieldName.split("\\.");
     try {
       Field innermost = schema.field(fieldNames[0]);
@@ -69,9 +85,18 @@ public class DataUtils {
       return innermost;
     } catch (DataException e) {
       throw new DataException(
-            String.format("The nested field named '%s' does not exist.", fieldName),
+            String.format("Unable to get field '%s' from schema %s.", fieldName, schema),
             e
       );
+    }
+  }
+
+  private static void validate(Object o, String fieldName) {
+    if (o == null) {
+      throw new ConnectException("Attempted to extract a field from a null object.");
+    }
+    if (StringUtils.isBlank(fieldName)) {
+      throw new ConnectException("The field to extract cannot be null or empty.");
     }
   }
 }
