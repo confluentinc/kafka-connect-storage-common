@@ -4,6 +4,8 @@ import org.joda.time.DateTime;
 import org.junit.Test;
 
 
+import java.util.concurrent.TimeUnit;
+
 import static org.junit.Assert.assertEquals;
 
 public class DateTimeUtilsTest {
@@ -18,7 +20,7 @@ public class DateTimeUtilsTest {
     }
 
     private DateTime calcHourPeriod(DateTime current) {
-        return calc(current, 1000 * 60 * 60);
+        return calc(current, TimeUnit.HOURS.toMillis(1));
     }
 
     @Test
@@ -33,7 +35,7 @@ public class DateTimeUtilsTest {
     @Test
     public void testGetNextTimeAdjustedByDayPeriodDoesNotFitIntoDay() {
         DateTime midnight = DateTime.now().withTimeAtStartOfDay();
-        long sevenHoursMs = 7 * 60 * 60 * 1000;
+        long sevenHoursMs = TimeUnit.HOURS.toMillis(7);
         assertEquals(calc(midnight, sevenHoursMs), midnight.plusHours(7));
         assertEquals(calc(midnight.plusSeconds(1), sevenHoursMs), midnight.plusHours(7));
         assertEquals(calc(midnight.plusSeconds(1), sevenHoursMs), midnight.plusHours(7));
