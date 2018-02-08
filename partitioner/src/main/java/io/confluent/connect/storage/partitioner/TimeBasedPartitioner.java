@@ -16,15 +16,14 @@
 
 package io.confluent.connect.storage.partitioner;
 
+import io.confluent.connect.storage.util.DataUtils;
 import org.apache.kafka.common.config.ConfigException;
 import org.apache.kafka.common.utils.Time;
 import org.apache.kafka.connect.connector.ConnectRecord;
-import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.data.Timestamp;
 import org.apache.kafka.connect.errors.ConnectException;
-import org.apache.kafka.connect.errors.DataException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -244,62 +243,13 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
       dateTime = ISODateTimeFormat.dateTime();
     }
 
-    private Object getField(Object structOrMap, String fieldName) {
-      if (structOrMap instanceof Struct) {
-        return ((Struct) structOrMap).get(fieldName);
-      } else if (structOrMap instanceof Map) {
-        Object field = ((Map<?, ?>) structOrMap).get(fieldName);
-        if (field == null) {
-          throw new DataException(String.format("Unable to find nested field '%s'", fieldName));
-        }
-      }
-      throw new DataException(String.format(
-          "Argument not a Struct or Map. Cannot get field '%s' from: %s",
-          fieldName,
-          structOrMap
-      ));
-    }
-
-    private Object getNestedFieldValue(Object structOrMap) {
-      try {
-        Object innermost = structOrMap;
-        // Iterate down to final struct
-        for (String name : fieldName.split("\\.")) {
-          innermost = getField(innermost, name);
-        }
-        return innermost;
-      } catch (DataException e) {
-        throw new DataException(
-            String.format("The nested field named '%s' does not exist.", fieldName),
-            e
-        );
-      }
-    }
-
-    private Field getNestedField(Schema schema) {
-      final String[] fieldNames = fieldName.split("\\.");
-      try {
-        Field innermost = schema.field(fieldNames[0]);
-        // Iterate down to final schema
-        for (int i = 1; i < fieldNames.length; ++i) {
-          innermost = innermost.schema().field(fieldNames[i]);
-        }
-        return innermost;
-      } catch (DataException e) {
-        throw new DataException(
-            String.format("The nested field named '%s' does not exist.", fieldName),
-            e
-        );
-      }
-    }
-
     @Override
     public Long extract(ConnectRecord<?> record) {
       Object value = record.value();
       if (value instanceof Struct) {
         Struct struct = (Struct) value;
-        Object timestampValue = getNestedFieldValue(struct);
-        Schema fieldSchema = getNestedField(record.valueSchema()).schema();
+        Object timestampValue = DataUtils.getNestedFieldValue(struct, fieldName);
+        Schema fieldSchema = DataUtils.getNestedField(record.valueSchema(), fieldName).schema();
 
         if (Timestamp.LOGICAL_NAME.equals(fieldSchema.name())) {
           return ((Date) timestampValue).getTime();
@@ -322,7 +272,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
         }
       } else if (value instanceof Map) {
         Map<?, ?> map = (Map<?, ?>) value;
-        Object timestampValue = getNestedFieldValue(map);
+        Object timestampValue = DataUtils.getNestedFieldValue(map, fieldName);
         if (timestampValue instanceof Number) {
           return ((Number) timestampValue).longValue();
         } else if (timestampValue instanceof String) {
