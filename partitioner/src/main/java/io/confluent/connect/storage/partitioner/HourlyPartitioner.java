@@ -16,10 +16,6 @@
 
 package io.confluent.connect.storage.partitioner;
 
-import org.apache.kafka.common.config.ConfigException;
-import org.joda.time.DateTimeZone;
-
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -29,22 +25,14 @@ public class HourlyPartitioner<T> extends TimeBasedPartitioner<T> {
   @Override
   public void configure(Map<String, Object> config) {
     long partitionDurationMs = TimeUnit.HOURS.toMillis(1);
+
     String delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
     String pathFormat =
         "'year'=YYYY" + delim + "'month'=MM" + delim + "'day'=dd" + delim + "'hour'=HH";
 
-    String localeString = (String) config.get(PartitionerConfig.LOCALE_CONFIG);
-    if (localeString.equals("")) {
-      throw new ConfigException(PartitionerConfig.LOCALE_CONFIG,
-                                localeString, "Locale cannot be empty.");
-    }
-    String timeZoneString = (String) config.get(PartitionerConfig.TIMEZONE_CONFIG);
-    if (timeZoneString.equals("")) {
-      throw new ConfigException(PartitionerConfig.TIMEZONE_CONFIG,
-                                timeZoneString, "Timezone cannot be empty.");
-    }
-    Locale locale = new Locale(localeString);
-    DateTimeZone timeZone = DateTimeZone.forID(timeZoneString);
-    init(partitionDurationMs, pathFormat, locale, timeZone, config);
+    config.put(PartitionerConfig.PARTITION_DURATION_MS_CONFIG, partitionDurationMs);
+    config.put(PartitionerConfig.PATH_FORMAT_CONFIG, pathFormat);
+
+    super.configure(config);
   }
 }

@@ -18,9 +18,11 @@ package io.confluent.connect.storage.util;
 
 import org.joda.time.DateTimeZone;
 
+import java.util.concurrent.TimeUnit;
+
 public class DateTimeUtils {
 
-  private static final long DAY_IN_MS = 24 * 60 * 60 * 1000;
+  private static final long DAY_IN_MS = TimeUnit.DAYS.toMillis(1);
 
   /**
    * Calculates next period of periodMs after currentTimeMs

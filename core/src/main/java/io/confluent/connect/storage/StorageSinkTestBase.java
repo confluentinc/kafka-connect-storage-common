@@ -123,6 +123,13 @@ public class StorageSinkTestBase {
         .put("timestamp", timestamp);
   }
 
+  protected Struct createRecordWithNestedTimeField(long timestamp) {
+    Schema nestedChildSchema = createSchemaWithTimestampField();
+    Schema nestedSchema = SchemaBuilder.struct().field("nested", nestedChildSchema);
+    return new Struct(nestedSchema)
+            .put("nested", createRecordWithTimestampField(nestedChildSchema, timestamp));
+  }
+
   public void setUp() throws Exception {
     properties = createProps();
     Set<TopicPartition> assignment = new HashSet<>();
