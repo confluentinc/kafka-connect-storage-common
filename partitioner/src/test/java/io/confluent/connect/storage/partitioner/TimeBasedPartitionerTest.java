@@ -22,6 +22,7 @@ import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Instant;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.Test;
@@ -103,6 +104,28 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     assertEquals("year=2015/month=4/day=2/hour=1/", encodedPartition);
   }
 
+  @Test
+  public void testRecordTimeExtractorToleratesStringsWithoutMilliseconds() throws Exception {
+    testTimestampStringExtractedToPartition("2015-04-02T01:00:00Z", "year=2015/month=4/day=1/hour=18/");
+  }
+
+  @Test
+  public void testRecordTimeExtractorToleratesStringsWithMilliseconds() throws Exception {
+    testTimestampStringExtractedToPartition("2015-04-02T01:00:00.0000Z", "year=2015/month=4/day=1/hour=18/");
+  }
+
+  private void testTimestampStringExtractedToPartition(String timestamp, String partition) {
+    TimeBasedPartitioner<String> partitioner = new TimeBasedPartitioner<>();
+    Map<String, Object> config = createConfig("timestamp");
+    partitioner.configure(config);
+
+    SinkRecord sinkRecord = createSinkRecord(timestamp);
+
+    String encodedPartition = partitioner.encodePartition(sinkRecord);
+
+    assertEquals(partition, encodedPartition);
+  }
+
   private static class BiHourlyPartitioner extends TimeBasedPartitioner<String> {
     private static long partitionDurationMs = TimeUnit.HOURS.toMillis(2);
 
@@ -139,6 +162,13 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     Struct record = createRecordWithTimestampField(schema, timestamp);
     return new SinkRecord(TOPIC, PARTITION, Schema.STRING_SCHEMA, null, schema, record, 0L,
             timestamp, TimestampType.CREATE_TIME);
+  }
+
+  private SinkRecord createSinkRecord(String timestamp) {
+    Schema schema = createSchemaWithStringTimestampField();
+    Struct record = createRecordWithTimestampField(schema, timestamp);
+    return new SinkRecord(TOPIC, PARTITION, Schema.STRING_SCHEMA, null, schema, record, 0L,
+            Instant.parse(timestamp).getMillis(), TimestampType.CREATE_TIME);
   }
 
   private SinkRecord createSinkRecordWithNestedTimeField(long timestamp) {
