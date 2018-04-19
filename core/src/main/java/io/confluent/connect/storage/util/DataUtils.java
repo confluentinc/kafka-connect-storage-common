@@ -33,6 +33,7 @@ public class DataUtils {
       if (field == null) {
         throw new DataException(String.format("Unable to find nested field '%s'", fieldName));
       }
+      return field;
     }
     throw new DataException(String.format(
           "Argument not a Struct or Map. Cannot get field '%s' from: %s",
