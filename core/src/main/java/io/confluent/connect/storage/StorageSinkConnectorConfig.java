@@ -288,9 +288,10 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
 
   public AvroDataConfig avroDataConfig() {
     Map<String, Object> props = new HashMap<>();
-    props.put(SCHEMA_CACHE_SIZE_CONFIG, get(SCHEMA_CACHE_SIZE_CONFIG));
-    props.put(ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG, get(ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG));
-    props.put(CONNECT_META_DATA_CONFIG, get(CONNECT_META_DATA_CONFIG));
+    props.put(AvroDataConfig.SCHEMAS_CACHE_SIZE_CONFIG, get(SCHEMA_CACHE_SIZE_CONFIG));
+    props.put(AvroDataConfig.ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG,
+        get(ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG));
+    props.put(AvroDataConfig.CONNECT_META_DATA_CONFIG, get(CONNECT_META_DATA_CONFIG));
     return new AvroDataConfig(props);
   }
 }
