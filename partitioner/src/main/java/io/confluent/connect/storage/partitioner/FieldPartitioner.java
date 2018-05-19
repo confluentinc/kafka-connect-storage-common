@@ -71,7 +71,8 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
 
   private String getStructField(Schema valueSchema, Struct struct, String fieldName) {
     Object partitionKey = DataUtils.getNestedFieldValue(struct, fieldName);
-    Type type = valueSchema.field(fieldName).schema().type();
+    Schema fieldSchema = DataUtils.getNestedField(valueSchema, fieldName).schema();
+    Type type = fieldSchema.type();
     switch (type) {
       case INT8:
       case INT16:

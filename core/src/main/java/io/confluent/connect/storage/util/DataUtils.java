@@ -25,6 +25,14 @@ import java.util.Map;
 
 public class DataUtils {
 
+  /**
+   * Regex pattern that respects fields with periods within them.
+   * Used to handle a field extraction of <code>"foo.bar"</code> differently than
+   * <code>foo.bar</code>, with the later being the <code>bar</code> field within the
+   * <code>foo</code> {@link Struct}
+   */
+  private static final String QUOTED_DOT_PATTERN = "\\.(?=(?:[^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)";
+
   public static Object getField(Object structOrMap, String fieldName) {
     if (structOrMap instanceof Struct) {
       return ((Struct) structOrMap).get(fieldName);
@@ -45,8 +53,16 @@ public class DataUtils {
   public static Object getNestedFieldValue(Object structOrMap, String fieldName) {
     try {
       Object innermost = structOrMap;
+      String[] tokens;
+      // Structs cannot contain fields with periods
+      if (structOrMap instanceof Struct) {
+        tokens = fieldName.split("\\.");
+      } else {
+        tokens = fieldName.split(QUOTED_DOT_PATTERN);
+      }
       // Iterate down to final struct
-      for (String name : fieldName.split("\\.")) {
+      for (String name : tokens) {
+        name = name.replaceAll("\"", "");
         innermost = getField(innermost, name);
       }
       return innermost;
