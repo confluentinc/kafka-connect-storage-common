@@ -178,25 +178,10 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <inherited>true</inherited>
                 <configuration>
-                    <compilerArguments>
-                        <Xlint:all/>
-                        <!-- bootstrap class path not set in conjunction with -source 1.7 -->
-                        <Xlint:-options/>
-                        <!-- serializable class ... has no definition of serialVersionUID -->
-                        <Xlint:-serial/>
-                        <!-- bad path element ".../repository/org/apache/derby/derby/10.10.2.0/derbyLocale_*.jar": no such file or directory -->
-                        <Xlint:-path/>
-                        <!--
-                        WALFile.java:[333,16] [deprecation] sync() in Syncable has been deprecated
-                        Apparently SuppressWarnings("deprecation") doesn't cover this on JDK 7
-                        -->
-                        <Xlint:-deprecation/>
-                        <!-- Needed for DataWriter.java because @SuppressWarnings("unchecked") doesn't cover this on JDK 7 -->
-                        <Xlint:-unchecked/>
-                        <Werror/>
-                    </compilerArguments>
-                    <showWarnings>true</showWarnings>
-                    <showDeprecation>false</showDeprecation>
+                    <compilerArgs>
+                        <arg>-Xlint:all</arg>
+                        <arg>-Werror</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
             <plugin>

@@ -177,6 +177,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
     return partitionFields;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   protected Class<? extends SchemaGenerator<T>> getSchemaGeneratorClass()
       throws ClassNotFoundException {
