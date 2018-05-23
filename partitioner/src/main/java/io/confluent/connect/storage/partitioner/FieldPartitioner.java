@@ -35,6 +35,7 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
   private List<String> fieldNames;
 
 
+  @SuppressWarnings("unchecked")
   @Override
   public void configure(Map<String, Object> config) {
     fieldNames = (List<String>) config.get(PartitionerConfig.PARTITION_FIELD_NAME_CONFIG);

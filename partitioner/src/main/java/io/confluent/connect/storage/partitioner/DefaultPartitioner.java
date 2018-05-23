@@ -80,6 +80,7 @@ public class DefaultPartitioner<T> implements Partitioner<T> {
     }
   }
 
+  @SuppressWarnings("unchecked")
   protected Class<? extends SchemaGenerator<T>> getSchemaGeneratorClass()
       throws ClassNotFoundException {
     return (Class<? extends SchemaGenerator<T>>) Class.forName(SCHEMA_GENERATOR_CLASS);
