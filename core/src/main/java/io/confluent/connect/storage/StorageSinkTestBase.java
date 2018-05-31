@@ -154,6 +154,11 @@ public class StorageSinkTestBase {
     }
 
     @Override
+    public Map<String, String> configs() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void offset(Map<TopicPartition, Long> offsets) {
       this.offsets.putAll(offsets);
     }
