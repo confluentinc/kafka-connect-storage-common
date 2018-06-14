@@ -224,12 +224,12 @@ public class HiveMetaStore {
     doAction(create);
   }
 
-  public void alterTable(final Table table) throws HiveMetaStoreException {
+  public void alterTable(final Table table, final boolean cascade) throws HiveMetaStoreException {
     ClientAction<Void> alter = new ClientAction<Void>() {
       @Override
       public Void call() throws TException {
         try {
-          client.alter_table(table.getDbName(), table.getTableName(), table.getTTable());
+          client.alter_table(table.getDbName(), table.getTableName(), table.getTTable(), cascade);
         } catch (NoSuchObjectException e) {
           throw new HiveMetaStoreException(
               "Hive table not found: " + table.getDbName() + "." + table.getTableName()
@@ -244,6 +244,10 @@ public class HiveMetaStore {
     };
 
     doAction(alter);
+  }
+
+  public void alterTable(final Table table) throws HiveMetaStoreException {
+    alterTable(table, false);
   }
 
   public void dropTable(final String database, final String tableName) {
