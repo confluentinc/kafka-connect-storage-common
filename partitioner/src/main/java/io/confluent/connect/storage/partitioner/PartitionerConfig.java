@@ -251,6 +251,19 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
                    || name.equals(LOCALE_CONFIG)
                    || name.equals(TIMEZONE_CONFIG);
           }
+        } else if (FieldAndTimeBasedPartitioner.class.isAssignableFrom(partitioner)) {
+          // subclass of TimeBasedPartitioner
+          if (classNameEquals(DailyPartitioner.class, partitioner)
+                  || classNameEquals(HourlyPartitioner.class, partitioner)) {
+            return name.equals(LOCALE_CONFIG) || name.equals(TIMEZONE_CONFIG);
+          } else {
+            return name.equals(PARTITION_DURATION_MS_CONFIG)
+                    || name.equals(PATH_FORMAT_CONFIG)
+                    || name.equals(LOCALE_CONFIG)
+                    || name.equals(TIMEZONE_CONFIG)
+                    || name.equals(PARTITION_FIELD_NAME_CONFIG);
+
+          }
         } else {
           // Custom partitioner. Allow all the dependent configs.
           return true;
