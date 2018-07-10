@@ -39,7 +39,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import io.confluent.connect.storage.common.SchemaGenerator;
-import io.confluent.connect.storage.common.StorageCommonConfig;
 import io.confluent.connect.storage.common.util.StringUtils;
 import io.confluent.connect.storage.errors.PartitionException;
 
@@ -60,16 +59,15 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
       String pathFormat,
       Locale locale,
       DateTimeZone timeZone,
-      Map<String, Object> config
+      Map<String, String> props
   ) {
-    delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
     this.partitionDurationMs = partitionDurationMs;
     this.pathFormat = pathFormat;
     this.formatter = getDateTimeFormatter(pathFormat, timeZone).withLocale(locale);
     try {
       timestampExtractor = newTimestampExtractor(
-          (String) config.get(PartitionerConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG));
-      timestampExtractor.configure(config);
+          config.getString(PartitionerConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG));
+      timestampExtractor.configure(props);
     } catch (IllegalArgumentException e) {
       ConfigException ce = new ConfigException(
           PartitionerConfig.PATH_FORMAT_CONFIG,
@@ -105,10 +103,10 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
   }
 
   @Override
-  public void configure(Map<String, Object> config) {
-    super.configure(config);
+  public void configure(Map<String, String> props) {
+    super.configure(props);
     long partitionDurationMsProp =
-        (long) config.get(PartitionerConfig.PARTITION_DURATION_MS_CONFIG);
+        config.getLong(PartitionerConfig.PARTITION_DURATION_MS_CONFIG);
     if (partitionDurationMsProp < 0) {
       throw new ConfigException(
           PartitionerConfig.PARTITION_DURATION_MS_CONFIG,
@@ -117,7 +115,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
       );
     }
 
-    String pathFormat = (String) config.get(PartitionerConfig.PATH_FORMAT_CONFIG);
+    String pathFormat = config.getString(PartitionerConfig.PATH_FORMAT_CONFIG);
     if (StringUtils.isBlank(pathFormat) || pathFormat.equals(delim)) {
       throw new ConfigException(
           PartitionerConfig.PATH_FORMAT_CONFIG,
@@ -129,7 +127,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
       pathFormat = pathFormat.substring(0, pathFormat.length() - delim.length());
     }
 
-    String localeString = (String) config.get(PartitionerConfig.LOCALE_CONFIG);
+    String localeString = config.getString(PartitionerConfig.LOCALE_CONFIG);
     if (StringUtils.isBlank(localeString)) {
       throw new ConfigException(
           PartitionerConfig.LOCALE_CONFIG,
@@ -138,7 +136,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
       );
     }
 
-    String timeZoneString = (String) config.get(PartitionerConfig.TIMEZONE_CONFIG);
+    String timeZoneString = config.getString(PartitionerConfig.TIMEZONE_CONFIG);
     if (StringUtils.isBlank(timeZoneString)) {
       throw new ConfigException(
           PartitionerConfig.TIMEZONE_CONFIG,
@@ -149,7 +147,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
 
     Locale locale = new Locale(localeString);
     DateTimeZone timeZone = DateTimeZone.forID(timeZoneString);
-    init(partitionDurationMsProp, pathFormat, locale, timeZone, config);
+    init(partitionDurationMsProp, pathFormat, locale, timeZone, props);
   }
 
   @Override
@@ -172,7 +170,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
   @Override
   public List<T> partitionFields() {
     if (partitionFields == null) {
-      partitionFields = newSchemaGenerator(config).newPartitionFields(pathFormat);
+      partitionFields = newSchemaGenerator(props).newPartitionFields(pathFormat);
     }
     return partitionFields;
   }
@@ -217,7 +215,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
 
   public static class WallclockTimestampExtractor implements TimestampExtractor {
     @Override
-    public void configure(Map<String, Object> config) {}
+    public void configure(Map<String, String> props) {}
 
     @Override
     public Long extract(ConnectRecord<?> record) {
@@ -227,7 +225,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
 
   public static class RecordTimestampExtractor implements TimestampExtractor {
     @Override
-    public void configure(Map<String, Object> config) {}
+    public void configure(Map<String, String> props) {}
 
     @Override
     public Long extract(ConnectRecord<?> record) {
@@ -240,8 +238,11 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
     private DateTimeFormatter dateTime;
 
     @Override
-    public void configure(Map<String, Object> config) {
-      fieldName = (String) config.get(PartitionerConfig.TIMESTAMP_FIELD_NAME_CONFIG);
+    public void configure(Map<String, String> props) {
+      PartitionerConfig config = new PartitionerConfig(
+          PartitionerConfig.getConfig(getPartitionerRecommender(), getStorageRecommender()),
+          props);
+      fieldName = config.getString(PartitionerConfig.TIMESTAMP_FIELD_NAME_CONFIG);
       dateTime = ISODateTimeFormat.dateTime();
     }
 

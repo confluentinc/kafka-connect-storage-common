@@ -35,14 +35,18 @@ public class DefaultPartitioner<T> implements Partitioner<T> {
   private static final String SCHEMA_GENERATOR_CLASS =
       "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator";
 
-  protected Map<String, Object> config;
+  protected PartitionerConfig config;
+  protected Map<String, String> props;
   protected List<T> partitionFields = null;
   protected String delim;
 
   @Override
-  public void configure(Map<String, Object> config) {
-    this.config = config;
-    delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
+  public void configure(Map<String, String> props) {
+    this.props = props;
+    config = new PartitionerConfig(
+        PartitionerConfig.getConfig(getPartitionerRecommender(), getStorageRecommender()),
+        props);
+    delim = config.getString(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
   }
 
   @Override
@@ -58,13 +62,14 @@ public class DefaultPartitioner<T> implements Partitioner<T> {
   @Override
   public List<T> partitionFields() {
     if (partitionFields == null) {
-      partitionFields = newSchemaGenerator(config).newPartitionFields(PARTITION_FIELD);
+      partitionFields = newSchemaGenerator(props)
+          .newPartitionFields(PARTITION_FIELD);
     }
     return partitionFields;
   }
 
   @SuppressWarnings("unchecked")
-  public SchemaGenerator<T> newSchemaGenerator(Map<String, Object> config) {
+  public SchemaGenerator<T> newSchemaGenerator(Map<String, String> config) {
     Class<? extends SchemaGenerator<T>> generatorClass = null;
     try {
       generatorClass = getSchemaGeneratorClass();
