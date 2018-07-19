@@ -82,8 +82,8 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
       "filename.offset.zero.pad.width";
   public static final String
       FILENAME_OFFSET_ZERO_PAD_WIDTH_DOC =
-      "Width to zero pad offsets in store's filenames if offsets are too short in order to "
-      + "provide fixed width filenames that can be ordered by simple lexicographic sorting.";
+      "Width to zero-pad offsets in store's filenames if offsets are too short in order to "
+      + "provide fixed-width filenames that can be ordered by simple lexicographic sorting.";
   public static final int FILENAME_OFFSET_ZERO_PAD_WIDTH_DEFAULT = 10;
   public static final String FILENAME_OFFSET_ZERO_PAD_WIDTH_DISPLAY =
       "Filename Offset Zero Pad Width";
