@@ -21,4 +21,12 @@
             files="HiveMetaStore.java"
     />
 
+<<<<<<< HEAD
+=======
+    <suppress
+            checks="(MethodLength)"
+            files="StorageSinkConnectorConfig.java"
+    />
+
+>>>>>>> upstream/3.2.x
 </suppressions>
