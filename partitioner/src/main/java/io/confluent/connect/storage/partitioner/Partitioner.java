@@ -16,10 +16,13 @@
 
 package io.confluent.connect.storage.partitioner;
 
+import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.connect.sink.SinkRecord;
 
 import java.util.List;
 import java.util.Map;
+
+import io.confluent.connect.storage.common.GenericRecommender;
 
 /**
  * Partition incoming records, and generates directories and file names in which to store the
@@ -28,7 +31,15 @@ import java.util.Map;
  * @param <T> The type representing the field schemas.
  */
 public interface Partitioner<T> {
-  void configure(Map<String, Object> config);
+  default ConfigDef.Recommender getPartitionerRecommender() {
+    return new GenericRecommender();
+  }
+
+  default ConfigDef.Recommender getStorageRecommender() {
+    return new GenericRecommender();
+  }
+
+  void configure(Map<String, String> props);
 
   String encodePartition(SinkRecord sinkRecord);
 

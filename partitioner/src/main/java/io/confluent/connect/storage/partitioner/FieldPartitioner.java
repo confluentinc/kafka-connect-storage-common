@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
-import io.confluent.connect.storage.common.StorageCommonConfig;
 import io.confluent.connect.storage.errors.PartitionException;
 
 public class FieldPartitioner<T> extends DefaultPartitioner<T> {
@@ -35,11 +34,10 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
   private List<String> fieldNames;
 
 
-  @SuppressWarnings("unchecked")
   @Override
-  public void configure(Map<String, Object> config) {
-    fieldNames = (List<String>) config.get(PartitionerConfig.PARTITION_FIELD_NAME_CONFIG);
-    delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
+  public void configure(Map<String, String> props) {
+    super.configure(props);
+    fieldNames = config.getList(PartitionerConfig.PARTITION_FIELD_NAME_CONFIG);
   }
 
   @Override
@@ -87,7 +85,7 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
   @Override
   public List<T> partitionFields() {
     if (partitionFields == null) {
-      partitionFields = newSchemaGenerator(config).newPartitionFields(
+      partitionFields = newSchemaGenerator(props).newPartitionFields(
           Utils.join(fieldNames, ",")
       );
     }

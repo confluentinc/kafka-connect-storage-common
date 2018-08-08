@@ -23,15 +23,18 @@ import io.confluent.connect.storage.common.StorageCommonConfig;
 
 public class DailyPartitioner<T> extends TimeBasedPartitioner<T> {
   @Override
-  public void configure(Map<String, Object> config) {
-    long partitionDurationMs = TimeUnit.DAYS.toMillis(1);
+  public void configure(Map<String, String> props) {
+    String partitionDurationMs = String.valueOf(TimeUnit.DAYS.toMillis(1));
 
-    String delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
+    PartitionerConfig localConf = new PartitionerConfig(
+        PartitionerConfig.getConfig(getPartitionerRecommender(), getStorageRecommender()),
+        props);
+    String delim = localConf.getString(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
     String pathFormat = "'year'=YYYY" + delim + "'month'=MM" + delim + "'day'=dd";
 
-    config.put(PartitionerConfig.PARTITION_DURATION_MS_CONFIG, partitionDurationMs);
-    config.put(PartitionerConfig.PATH_FORMAT_CONFIG, pathFormat);
+    props.put(PartitionerConfig.PARTITION_DURATION_MS_CONFIG, partitionDurationMs);
+    props.put(PartitionerConfig.PATH_FORMAT_CONFIG, pathFormat);
 
-    super.configure(config);
+    super.configure(props);
   }
 }

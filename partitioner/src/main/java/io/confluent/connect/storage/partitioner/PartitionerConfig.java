@@ -24,11 +24,14 @@ import org.apache.kafka.common.config.ConfigDef.Width;
 import org.apache.kafka.common.config.ConfigException;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import io.confluent.connect.storage.common.ComposableConfig;
+import io.confluent.connect.storage.common.StorageCommonConfig;
 
 public class PartitionerConfig extends AbstractConfig implements ComposableConfig {
 
@@ -203,6 +206,29 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
     }
 
     return configDef;
+  }
+
+  public static ConfigDef getConfig(ConfigDef.Recommender partitionerClassRecommender,
+                                    ConfigDef.Recommender storageClassRecommender) {
+    // Define the names of the configurations we're going to override
+    Set<String> skip = new HashSet<>();
+
+    // Order added is important, so that group order is maintained
+    ConfigDef visible = new ConfigDef();
+    addAllConfigKeys(visible, newConfigDef(partitionerClassRecommender), skip);
+    addAllConfigKeys(visible, StorageCommonConfig.newConfigDef(storageClassRecommender), skip);
+
+    // Add overridden configurations here, if you add them
+
+    return visible;
+  }
+
+  private static void addAllConfigKeys(ConfigDef container, ConfigDef other, Set<String> skip) {
+    for (ConfigDef.ConfigKey key : other.configKeys().values()) {
+      if (skip != null && !skip.contains(key.name)) {
+        container.define(key);
+      }
+    }
   }
 
   public static class BooleanParentRecommender implements ConfigDef.Recommender {

@@ -16,12 +16,23 @@
 
 package io.confluent.connect.storage.partitioner;
 
+import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.connect.connector.ConnectRecord;
 
 import java.util.Map;
 
+import io.confluent.connect.storage.common.GenericRecommender;
+
 public interface TimestampExtractor {
-  void configure(Map<String, Object> config);
+  default ConfigDef.Recommender getPartitionerRecommender() {
+    return new GenericRecommender();
+  }
+
+  default ConfigDef.Recommender getStorageRecommender() {
+    return new GenericRecommender();
+  }
+
+  void configure(Map<String, String> props);
 
   Long extract(ConnectRecord<?> record);
 }

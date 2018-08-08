@@ -38,7 +38,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
 
   @Test
   public void testGeneratePartitionedPath() throws Exception {
-    Map<String, Object> config = createConfig(null);
+    Map<String, String> config = createConfig(null);
     partitioner.configure(config);
 
     long timestamp = new DateTime(2015, 1, 1, 3, 0, 0, 0, DateTimeZone.forID(timeZoneString)).getMillis();
@@ -64,7 +64,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
   @Test
   public void testRecordFieldTimeExtractor() throws Exception {
     TimeBasedPartitioner<String> partitioner = new TimeBasedPartitioner<>();
-    Map<String, Object> config = createConfig("timestamp");
+    Map<String, String> config = createConfig("timestamp");
     partitioner.configure(config);
 
     long timestamp = new DateTime(2015, 4, 2, 1, 0, 0, 0, DateTimeZone.forID(timeZoneString)).getMillis();
@@ -78,7 +78,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
   @Test
   public void testNestedRecordFieldTimeExtractor() throws Exception {
     TimeBasedPartitioner<String> partitioner = new TimeBasedPartitioner<>();
-    Map<String, Object> config = createConfig("nested.timestamp");
+    Map<String, String> config = createConfig("nested.timestamp");
     partitioner.configure(config);
 
     long timestamp = new DateTime(2015, 4, 2, 1, 0, 0, 0, DateTimeZone.forID(timeZoneString)).getMillis();
@@ -92,7 +92,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
   @Test
   public void testRecordTimeExtractor() throws Exception {
     TimeBasedPartitioner<String> partitioner = new TimeBasedPartitioner<>();
-    Map<String, Object> config = createConfig(null);
+    Map<String, String> config = createConfig(null);
     partitioner.configure(config);
 
     long timestamp = new DateTime(2015, 4, 2, 1, 0, 0, 0, DateTimeZone.forID(timeZoneString)).getMillis();
@@ -112,19 +112,25 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     }
 
     @Override
-    public void configure(Map<String, Object> config) {
-        init(partitionDurationMs, getPathFormat(), Locale.ENGLISH, DATE_TIME_ZONE, config);
-        super.configure(config);
+    @SuppressWarnings("unchecked")
+    public void configure(Map<String, String> props) {
+        config = new PartitionerConfig(
+            PartitionerConfig.getConfig(getPartitionerRecommender(), getStorageRecommender()),
+            props);
+        init(partitionDurationMs, getPathFormat(), Locale.ENGLISH, DATE_TIME_ZONE, props);
+        super.configure(props);
     }
   }
 
-  private Map<String, Object> createConfig(String timeFieldName) {
-    Map<String, Object> config = new HashMap<>();
+  private Map<String, String> createConfig(String timeFieldName) {
+    Map<String, String> config = new HashMap<>();
 
     config.put(StorageCommonConfig.DIRECTORY_DELIM_CONFIG, StorageCommonConfig.DIRECTORY_DELIM_DEFAULT);
+    config.put(StorageCommonConfig.STORAGE_CLASS_CONFIG, "io.confluent.connect.storage.Storage");
     config.put(PartitionerConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG, "Record" +
             (timeFieldName == null ? "" : "Field"));
-    config.put(PartitionerConfig.PARTITION_DURATION_MS_CONFIG, TimeUnit.HOURS.toMillis(1));
+    config.put(PartitionerConfig.PARTITION_DURATION_MS_CONFIG,
+            String.valueOf(TimeUnit.HOURS.toMillis(1)));
     config.put(PartitionerConfig.PATH_FORMAT_CONFIG, "'year'=YYYY/'month'=M/'day'=d/'hour'=H/");
     config.put(PartitionerConfig.LOCALE_CONFIG, Locale.US.toString());
     config.put(PartitionerConfig.TIMEZONE_CONFIG, DATE_TIME_ZONE.toString());
