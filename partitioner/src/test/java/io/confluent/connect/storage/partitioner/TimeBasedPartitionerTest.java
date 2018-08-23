@@ -14,20 +14,26 @@
 
 package io.confluent.connect.storage.partitioner;
 
-import io.confluent.connect.storage.StorageSinkTestBase;
-import io.confluent.connect.storage.common.StorageCommonConfig;
 import org.apache.kafka.common.record.TimestampType;
+import org.apache.kafka.common.utils.Time;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
+import org.apache.kafka.connect.data.Timestamp;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import io.confluent.connect.storage.StorageSinkTestBase;
+import io.confluent.connect.storage.common.StorageCommonConfig;
 
 import static org.junit.Assert.assertEquals;
 
@@ -67,12 +73,61 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     Map<String, Object> config = createConfig("timestamp");
     partitioner.configure(config);
 
-    long timestamp = new DateTime(2015, 4, 2, 1, 0, 0, 0, DateTimeZone.forID(timeZoneString)).getMillis();
-    SinkRecord sinkRecord = createSinkRecord(timestamp);
+    DateTime moment = new DateTime(2015, 4, 2, 1, 0, 0, 0, DateTimeZone.forID(timeZoneString));
+    String expectedPartition = "year=2015/month=4/day=2/hour=1/";
 
+    long rawTimestamp = moment.getMillis();
+    SinkRecord sinkRecord = createSinkRecord(rawTimestamp);
     String encodedPartition = partitioner.encodePartition(sinkRecord);
+    assertEquals(expectedPartition, encodedPartition);
 
-    assertEquals("year=2015/month=4/day=2/hour=1/", encodedPartition);
+    String timestamp = ISODateTimeFormat.dateTimeNoMillis().print(moment);
+    sinkRecord = createSinkRecord(Schema.STRING_SCHEMA, timestamp);
+    encodedPartition = partitioner.encodePartition(sinkRecord);
+    assertEquals(expectedPartition, encodedPartition);
+
+    timestamp = ISODateTimeFormat.dateTime().print(moment);
+    sinkRecord = createSinkRecord(Schema.STRING_SCHEMA, timestamp);
+    encodedPartition = partitioner.encodePartition(sinkRecord);
+    assertEquals(expectedPartition, encodedPartition);
+
+    sinkRecord = createSinkRecord(Timestamp.SCHEMA, moment.toDate());
+    encodedPartition = partitioner.encodePartition(sinkRecord);
+    assertEquals(expectedPartition, encodedPartition);
+
+    int shortTimestamp = (int) new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeZone.forID(timeZoneString)).getMillis();
+    sinkRecord = createSinkRecord(Schema.INT32_SCHEMA, shortTimestamp);
+    encodedPartition = partitioner.encodePartition(sinkRecord);
+    assertEquals("year=1970/month=1/day=1/hour=0/", encodedPartition);
+  }
+
+  @Test
+  public void testRecordFieldTimeExtractorWithDifferentFormatsAndMap() throws Exception {
+    TimeBasedPartitioner<String> partitioner = new TimeBasedPartitioner<>();
+    Map<String, Object> config = createConfig("timestamp");
+    partitioner.configure(config);
+
+    DateTime moment = new DateTime(2015, 4, 2, 1, 0, 0, 0, DateTimeZone.forID(timeZoneString));
+    String expectedPartition = "year=2015/month=4/day=2/hour=1/";
+    //String timestamp = ISODateTimeFormat.dateTimeNoMillis().print(moment);
+    String timestamp = ISODateTimeFormat.dateTime().print(moment);
+    SinkRecord sinkRecord = createSchemalessSinkRecord(timestamp);
+    String encodedPartition = partitioner.encodePartition(sinkRecord);
+    assertEquals(expectedPartition, encodedPartition);
+
+    timestamp = ISODateTimeFormat.dateTime().print(moment);
+    sinkRecord = createSchemalessSinkRecord(timestamp);
+    encodedPartition = partitioner.encodePartition(sinkRecord);
+    assertEquals(expectedPartition, encodedPartition);
+
+    sinkRecord = createSchemalessSinkRecord(moment.toDate());
+    encodedPartition = partitioner.encodePartition(sinkRecord);
+    assertEquals(expectedPartition, encodedPartition);
+
+    long rawTimestamp = new DateTime(2015, 4, 2, 1, 0, 0, 0, DateTimeZone.forID(timeZoneString)).getMillis();
+    sinkRecord = createSchemalessSinkRecord(rawTimestamp);
+    encodedPartition = partitioner.encodePartition(sinkRecord);
+    assertEquals(expectedPartition, encodedPartition);
   }
 
   @Test
@@ -135,15 +190,26 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
   }
 
   private SinkRecord createSinkRecord(long timestamp) {
-    Schema schema = createSchemaWithTimestampField();
+    return createSinkRecord(Schema.INT64_SCHEMA, timestamp);
+  }
+
+  private SinkRecord createSinkRecord(Schema timestampSchema, Object timestamp) {
+    Schema schema = createSchemaWithTimestampField(timestampSchema);
     Struct record = createRecordWithTimestampField(schema, timestamp);
     return new SinkRecord(TOPIC, PARTITION, Schema.STRING_SCHEMA, null, schema, record, 0L,
-            timestamp, TimestampType.CREATE_TIME);
+        timestamp instanceof Long ? (Long) timestamp : Time.SYSTEM.milliseconds(), TimestampType.CREATE_TIME);
+  }
+
+  private SinkRecord createSchemalessSinkRecord(Object timestamp) {
+    Map<String, Object> record = new HashMap<>();
+    record.put("timestamp", timestamp);
+    return new SinkRecord(TOPIC, PARTITION, null, null, null, record, 0L,
+        timestamp instanceof Long ? (Long) timestamp : Time.SYSTEM.milliseconds(), TimestampType.CREATE_TIME);
   }
 
   private SinkRecord createSinkRecordWithNestedTimeField(long timestamp) {
     Struct record = createRecordWithNestedTimeField(timestamp);
     return new SinkRecord(TOPIC, PARTITION, Schema.STRING_SCHEMA, null, record.schema(), record, 0L,
-            timestamp, TimestampType.CREATE_TIME);
-}
+        timestamp, TimestampType.CREATE_TIME);
+  }
 }
