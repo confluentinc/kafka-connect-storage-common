@@ -101,6 +101,10 @@ public class StorageSinkTestBase {
   }
 
   protected Schema createSchemaWithTimestampField() {
+    return createSchemaWithTimestampField(Schema.INT64_SCHEMA);
+  }
+
+  protected Schema createSchemaWithTimestampField(Schema timestampSchema) {
     return SchemaBuilder.struct().name("record").version(1)
         .field("boolean", Schema.BOOLEAN_SCHEMA)
         .field("int", Schema.INT32_SCHEMA)
@@ -108,11 +112,15 @@ public class StorageSinkTestBase {
         .field("float", Schema.FLOAT32_SCHEMA)
         .field("double", Schema.FLOAT64_SCHEMA)
         .field("string", SchemaBuilder.string().defaultValue("abc").build())
-        .field("timestamp", Schema.INT64_SCHEMA)
+        .field("timestamp", timestampSchema)
         .build();
   }
 
   protected Struct createRecordWithTimestampField(Schema newSchema, long timestamp) {
+    return createRecordWithTimestampField(newSchema, (Object) timestamp);
+  }
+
+  protected Struct createRecordWithTimestampField(Schema newSchema, Object timestamp) {
     return new Struct(newSchema)
         .put("boolean", true)
         .put("int", 12)
