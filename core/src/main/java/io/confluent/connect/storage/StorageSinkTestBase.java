@@ -101,6 +101,10 @@ public class StorageSinkTestBase {
   }
 
   protected Schema createSchemaWithTimestampField() {
+    return createSchemaWithTimestampField(Schema.INT64_SCHEMA);
+  }
+
+  protected Schema createSchemaWithTimestampField(Schema timestampSchema) {
     return SchemaBuilder.struct().name("record").version(1)
         .field("boolean", Schema.BOOLEAN_SCHEMA)
         .field("int", Schema.INT32_SCHEMA)
@@ -108,11 +112,15 @@ public class StorageSinkTestBase {
         .field("float", Schema.FLOAT32_SCHEMA)
         .field("double", Schema.FLOAT64_SCHEMA)
         .field("string", SchemaBuilder.string().defaultValue("abc").build())
-        .field("timestamp", Schema.INT64_SCHEMA)
+        .field("timestamp", timestampSchema)
         .build();
   }
 
   protected Struct createRecordWithTimestampField(Schema newSchema, long timestamp) {
+    return createRecordWithTimestampField(newSchema, (Object) timestamp);
+  }
+
+  protected Struct createRecordWithTimestampField(Schema newSchema, Object timestamp) {
     return new Struct(newSchema)
         .put("boolean", true)
         .put("int", 12)
@@ -121,29 +129,6 @@ public class StorageSinkTestBase {
         .put("double", 12.2)
         .put("string", "def")
         .put("timestamp", timestamp);
-  }
-
-  protected Struct createRecordWithTimestampField(Schema newSchema, String timestamp) {
-    return new Struct(newSchema)
-            .put("boolean", true)
-            .put("int", 12)
-            .put("long", 12L)
-            .put("float", 12.2f)
-            .put("double", 12.2)
-            .put("string", "def")
-            .put("timestamp", timestamp);
-  }
-
-  protected Schema createSchemaWithStringTimestampField() {
-    return SchemaBuilder.struct().name("record").version(1)
-            .field("boolean", Schema.BOOLEAN_SCHEMA)
-            .field("int", Schema.INT32_SCHEMA)
-            .field("long", Schema.INT64_SCHEMA)
-            .field("float", Schema.FLOAT32_SCHEMA)
-            .field("double", Schema.FLOAT64_SCHEMA)
-            .field("string", SchemaBuilder.string().defaultValue("abc").build())
-            .field("timestamp", Schema.STRING_SCHEMA)
-            .build();
   }
 
   protected Struct createRecordWithNestedTimeField(long timestamp) {
