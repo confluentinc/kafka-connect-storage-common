@@ -60,11 +60,11 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
 
   public static final String APPEND_LATE_DATA = "append.late.data";
   public static final Boolean APPEND_LATE_DATA_DEFAULT = false;
-  public static final String APPEND_LATE_DATA_DOC = "If true, the partitions "
-      + "will append data from previous (already committed) partitions into the current, open "
-      + "partition. If false, late data intended for closed partitions will be rolled into "
-      + "files marked with the partition indicated by the extracted time, even if this creates "
-      + "many small files.";
+  public static final String APPEND_LATE_DATA_DOC = "If true, the connector "
+      + "will append late-arriving data intended for earlier partitions into the current, open "
+      + "partition. If false, late-arriving data intended for earlier partitions will be rolled "
+      + "into files marked with the partition indicated by the extracted time, even if this "
+      + "creates many small files.";
   public static final String APPEND_LATE_DATA_DISPLAY = "Append Late Data In Current Partition";
 
   public static final String RETRY_BACKOFF_CONFIG = "retry.backoff.ms";
