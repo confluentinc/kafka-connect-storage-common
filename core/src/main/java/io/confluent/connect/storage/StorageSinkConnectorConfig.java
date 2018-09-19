@@ -22,8 +22,10 @@ import org.apache.kafka.common.config.ConfigDef.Importance;
 import org.apache.kafka.common.config.ConfigDef.Type;
 import org.apache.kafka.common.config.ConfigDef.Width;
 
+import java.util.HashMap;
 import java.util.Map;
 
+import io.confluent.connect.avro.AvroDataConfig;
 import io.confluent.connect.storage.common.ComposableConfig;
 
 public class StorageSinkConnectorConfig extends AbstractConfig implements ComposableConfig {
@@ -101,6 +103,12 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final int SCHEMA_CACHE_SIZE_DEFAULT = 1000;
   public static final String SCHEMA_CACHE_SIZE_DISPLAY = "Schema Cache Size";
 
+  public static final String CONNECT_META_DATA_CONFIG = "connect.meta.data";
+  public static final boolean CONNECT_META_DATA_DEFAULT = true;
+  public static final String CONNECT_META_DATA_DOC =
+      "Allow connect converter to add its meta data to the output schema";
+  public static final String CONNECT_META_DATA_DISPLAY = "Connect Metadata";
+
   /**
    * Create a new configuration definition.
    *
@@ -176,6 +184,18 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
       );
 
       configDef.define(
+          CONNECT_META_DATA_CONFIG,
+          Type.BOOLEAN,
+          CONNECT_META_DATA_DEFAULT,
+          Importance.LOW,
+          CONNECT_META_DATA_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          CONNECT_META_DATA_DISPLAY
+      );
+
+      configDef.define(
           RETRY_BACKOFF_CONFIG,
           Type.LONG,
           RETRY_BACKOFF_DEFAULT,
@@ -232,5 +252,12 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
 
   public StorageSinkConnectorConfig(ConfigDef configDef, Map<String, String> props) {
     super(configDef, props);
+  }
+
+  public AvroDataConfig avroDataConfig() {
+    Map<String, Object> props = new HashMap<>();
+    props.put(SCHEMA_CACHE_SIZE_CONFIG, get(SCHEMA_CACHE_SIZE_CONFIG));
+    props.put(CONNECT_META_DATA_CONFIG, get(CONNECT_META_DATA_CONFIG));
+    return new AvroDataConfig(props);
   }
 }
