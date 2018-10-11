@@ -17,14 +17,18 @@
 package io.confluent.connect.storage;
 
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.record.TimestampType;
+import org.apache.kafka.common.utils.Utils;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
+import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.sink.SinkTaskContext;
 import org.junit.After;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,6 +42,7 @@ public class StorageSinkTestBase {
   protected static final TopicPartition TOPIC_PARTITION = new TopicPartition(TOPIC, PARTITION);
   protected static final TopicPartition TOPIC_PARTITION2 = new TopicPartition(TOPIC, PARTITION2);
   protected static final TopicPartition TOPIC_PARTITION3 = new TopicPartition(TOPIC, PARTITION3);
+  protected static final long TIMESTAMP = 12L;
 
   protected Map<String, String> properties;
   protected String url;
@@ -48,6 +53,11 @@ public class StorageSinkTestBase {
     props.put(StorageCommonConfig.STORE_URL_CONFIG, url);
     props.put(StorageSinkConnectorConfig.FLUSH_SIZE_CONFIG, "3");
     return props;
+  }
+
+  protected String generateEncodedPartitionFromMap(Map<String, Object> fieldMapping) {
+    String delim = StorageCommonConfig.DIRECTORY_DELIM_DEFAULT;
+    return Utils.mkString(fieldMapping, "", "", "=", delim);
   }
 
   protected Schema createSchema() {
@@ -131,11 +141,36 @@ public class StorageSinkTestBase {
         .put("timestamp", timestamp);
   }
 
-  protected Struct createRecordWithNestedTimeField(long timestamp) {
+  protected Struct createRecordWithNestedTimestampField(long timestamp) {
     Schema nestedChildSchema = createSchemaWithTimestampField();
     Schema nestedSchema = SchemaBuilder.struct().field("nested", nestedChildSchema);
     return new Struct(nestedSchema)
             .put("nested", createRecordWithTimestampField(nestedChildSchema, timestamp));
+  }
+
+  protected Map<String, Object> createMapWithTimestampField(long timestamp) {
+    Map<String, Object> m = new LinkedHashMap<>();
+    m.put("boolean", true);
+    m.put("int", 12);
+    m.put("long", 12L);
+    m.put("float", 12.2f);
+    m.put("double", 12.2);
+    m.put("string", "def");
+    m.put("timestamp", timestamp);
+    return m;
+  }
+
+  protected SinkRecord createSinkRecord(long timestamp) {
+    Schema schema = createSchemaWithTimestampField();
+    Struct record = createRecordWithTimestampField(schema, timestamp);
+    return new SinkRecord(TOPIC, PARTITION, Schema.STRING_SCHEMA, null, schema, record, 0L,
+          timestamp, TimestampType.CREATE_TIME);
+  }
+
+  protected SinkRecord createSinkRecordWithNestedTimestampField(long timestamp) {
+    Struct record = createRecordWithNestedTimestampField(timestamp);
+    return new SinkRecord(TOPIC, PARTITION, Schema.STRING_SCHEMA, null, record.schema(), record, 0L,
+          timestamp, TimestampType.CREATE_TIME);
   }
 
   public void setUp() throws Exception {
