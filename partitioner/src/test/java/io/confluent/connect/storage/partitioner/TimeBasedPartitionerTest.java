@@ -180,7 +180,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     Map<String, Object> config = createConfig(null);
     config.put(PartitionerConfig.PATH_FORMAT_CONFIG, "'year='YYYY/");
     TimeBasedPartitioner<String> partitioner = configurePartitioner(
-          new TimeBasedPartitioner<>(), null, config);
+          new TimeBasedPartitioner<String>(), null, config);
     assertEquals("'year='YYYY", partitioner.getPathFormat());
   }
 
@@ -285,7 +285,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     Map<String, Object> config = new HashMap<>();
     config.put(PartitionerConfig.PATH_FORMAT_CONFIG, "'year='YYYY/");
     TimeBasedPartitioner<String> partitioner = configurePartitioner(
-          new TimeBasedPartitioner<>(), null, config);
+          new TimeBasedPartitioner<String>(), null, config);
 
     assertThat(partitioner.getPathFormat(), is("'year='YYYY"));
   }
@@ -327,7 +327,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
   @Test
   public void testIntTimeExtract() {
     TimeBasedPartitioner<String> partitioner = configurePartitioner(
-          new TimeBasedPartitioner<>(), "int", null);
+          new TimeBasedPartitioner<String>(), "int", null);
 
     String path = getPartitionedPath(partitioner);
 
@@ -341,7 +341,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
   @Test
   public void testLongTimeExtract() {
     TimeBasedPartitioner<String> partitioner = configurePartitioner(
-          new TimeBasedPartitioner<>(), "long", null);
+          new TimeBasedPartitioner<String>(), "long", null);
 
     String path = getPartitionedPath(partitioner);
 
@@ -435,7 +435,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     m.put("header", createRecord(valueSchema));
     SinkRecord sinkRecord = createValuedSinkRecord(mapSchema, m, DATE_TIME.getMillis());
     Struct nestedValue = (Struct) ((Map) sinkRecord.value()).get("header");
-    assertThat(nestedValue.get(fieldName), is("abc"));
+    assertThat((String) nestedValue.get(fieldName), is("abc"));
 
     getEncodedPartition(String.format("header.%s", fieldName), sinkRecord);
   }
@@ -460,7 +460,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
   public void testNumericRecordFieldTimeMap() {
     String timeField = "timestamp";
     TimeBasedPartitioner<String> partitioner = configurePartitioner(
-          new TimeBasedPartitioner<>(), timeField, null);
+          new TimeBasedPartitioner<String>(), timeField, null);
 
     assertThat(partitioner.getTimestampExtractor(), instanceOf(
           TimeBasedPartitioner.RecordFieldTimestampExtractor.class));
@@ -478,7 +478,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
   public void testRecordFieldTimeDateExtractor() {
     String timeField = "timestamp";
     TimeBasedPartitioner<String> partitioner = configurePartitioner(
-          new TimeBasedPartitioner<>(), timeField, null);
+          new TimeBasedPartitioner<String>(), timeField, null);
 
     assertThat(partitioner.getTimestampExtractor(),
           instanceOf(TimeBasedPartitioner.RecordFieldTimestampExtractor.class));
@@ -525,7 +525,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
   @Test
   public void testNestedRecordFieldTimeExtractor() throws Exception {
     TimeBasedPartitioner<String> partitioner = configurePartitioner(
-          new TimeBasedPartitioner<>(), "nested.timestamp", null);
+          new TimeBasedPartitioner<String>(), "nested.timestamp", null);
 
     assertThat(partitioner.getTimestampExtractor(),
           instanceOf(TimeBasedPartitioner.RecordFieldTimestampExtractor.class));
@@ -546,7 +546,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
 
     String timeFieldName = "timestamp";
     TimeBasedPartitioner<String> partitioner = configurePartitioner(
-          new TimeBasedPartitioner<>(), timeFieldName, null);
+          new TimeBasedPartitioner<String>(), timeFieldName, null);
     assertThat(partitioner.getTimestampExtractor(), instanceOf(
           TimeBasedPartitioner.RecordFieldTimestampExtractor.class));
 
@@ -571,7 +571,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
   @Test
   public void testRecordTimeExtractor() throws Exception {
     TimeBasedPartitioner<String> partitioner = configurePartitioner(
-          new TimeBasedPartitioner<>(), null, null);
+          new TimeBasedPartitioner<String>(), null, null);
 
     assertThat(partitioner.getTimestampExtractor(),
           instanceOf(TimeBasedPartitioner.RecordTimestampExtractor.class));
@@ -746,7 +746,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
    */
   private String getEncodedPartition(String timeFieldName, SinkRecord r) {
     TimeBasedPartitioner<String> partitioner = configurePartitioner(
-          new TimeBasedPartitioner<>(), timeFieldName, null);
+          new TimeBasedPartitioner<String>(), timeFieldName, null);
     return partitioner.encodePartition(r);
   }
 
