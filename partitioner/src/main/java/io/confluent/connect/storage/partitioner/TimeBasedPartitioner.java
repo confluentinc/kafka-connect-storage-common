@@ -65,8 +65,8 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
     delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
     this.partitionDurationMs = partitionDurationMs;
     this.pathFormat = pathFormat;
-    this.formatter = getDateTimeFormatter(pathFormat, timeZone).withLocale(locale);
     try {
+      this.formatter = getDateTimeFormatter(pathFormat, timeZone).withLocale(locale);
       timestampExtractor = newTimestampExtractor(
           (String) config.get(PartitionerConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG));
       timestampExtractor.configure(config);
@@ -124,7 +124,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
           pathFormat,
           "Path format cannot be empty."
       );
-    } else if (delim.equals(pathFormat.substring(pathFormat.length() - delim.length() - 1))) {
+    } else if (!StringUtils.isBlank(delim) && pathFormat.endsWith(delim)) {
       // Delimiter has been added by the user at the end of the path format string. Removing.
       pathFormat = pathFormat.substring(0, pathFormat.length() - delim.length());
     }
