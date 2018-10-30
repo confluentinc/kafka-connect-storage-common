@@ -153,8 +153,18 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
   }
 
   @Override
+  public String encodePartition(SinkRecord sinkRecord, long nowInMillis) {
+    Long timestamp = timestampExtractor.extract(sinkRecord, nowInMillis);
+    return encodedPartitionForTimestamp(sinkRecord, timestamp);
+  }
+
+  @Override
   public String encodePartition(SinkRecord sinkRecord) {
     Long timestamp = timestampExtractor.extract(sinkRecord);
+    return encodedPartitionForTimestamp(sinkRecord, timestamp);
+  }
+
+  private String encodedPartitionForTimestamp(SinkRecord sinkRecord, Long timestamp) {
     if (timestamp == null) {
       String msg = "Unable to determine timestamp using timestamp.extractor "
           + timestampExtractor.getClass().getName()
@@ -218,6 +228,11 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
   public static class WallclockTimestampExtractor implements TimestampExtractor {
     @Override
     public void configure(Map<String, Object> config) {}
+
+    @Override
+    public Long extract(ConnectRecord<?> record, long nowInMillis) {
+      return nowInMillis;
+    }
 
     @Override
     public Long extract(ConnectRecord<?> record) {

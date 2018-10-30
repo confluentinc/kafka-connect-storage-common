@@ -24,4 +24,8 @@ public interface TimestampExtractor {
   void configure(Map<String, Object> config);
 
   Long extract(ConnectRecord<?> record);
+
+  default Long extract(ConnectRecord<?> record, long nowInMillis) {
+    return extract(record);
+  }
 }

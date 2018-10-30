@@ -32,6 +32,10 @@ public interface Partitioner<T> {
 
   String encodePartition(SinkRecord sinkRecord);
 
+  default String encodePartition(SinkRecord sinkRecord, long nowInMillis) {
+    return encodePartition(sinkRecord);
+  }
+
   String generatePartitionedPath(String topic, String encodedPartition);
 
   List<T> partitionFields();
