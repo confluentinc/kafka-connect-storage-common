@@ -30,7 +30,25 @@ import java.util.Map;
 public interface Partitioner<T> {
   void configure(Map<String, Object> config);
 
+  /**
+   * Returns string representing the output path for a sinkRecord to be encoded and stored.
+   *
+   * @param sinkRecord The record to be stored by the Sink Connector
+   * @return The path/filename the SinkRecord will be stored into after it is encoded
+   */
   String encodePartition(SinkRecord sinkRecord);
+
+  /**
+   * Returns string representing the output path for a sinkRecord to be encoded and stored.
+   *
+   * @param sinkRecord The record to be stored by the Sink Connector
+   * @param nowInMillis The current time in ms. Some Partitioners will use this option, but by
+   *                    default it is unused.
+   * @return The path/filename the SinkRecord will be stored into after it is encoded
+   */
+  default String encodePartition(SinkRecord sinkRecord, long nowInMillis) {
+    return encodePartition(sinkRecord);
+  }
 
   String generatePartitionedPath(String topic, String encodedPartition);
 
