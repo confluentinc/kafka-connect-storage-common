@@ -243,7 +243,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
     }
 
     /**
-     * Returns system time, aka Wallclock
+     * Returns the current time from {@link Time#System Time.SYSTEM}.
      *
      * @param record Record to extract time from
      * @return Wallclock time in milliseconds
