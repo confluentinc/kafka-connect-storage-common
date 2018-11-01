@@ -230,9 +230,8 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
     public void configure(Map<String, Object> config) {}
 
     /**
-     * If caller specifies nowInMillis, caller can better control and predict behavior of wallclock
-     * extractor. Can be useful to have records of the same batch extract to the same time for
-     * consistency.
+     * Returns the current timestamp supplied by the caller, which is assumed to be the processing
+     * time.
      *
      * @param record Record from which to extract time
      * @param nowInMillis Time in ms specified by caller, useful for getting consistent wallclocks
