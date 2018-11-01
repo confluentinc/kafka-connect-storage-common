@@ -42,7 +42,6 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
     delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
   }
 
-  @Deprecated
   @Override
   public String encodePartition(SinkRecord sinkRecord) {
     Object value = sinkRecord.value();

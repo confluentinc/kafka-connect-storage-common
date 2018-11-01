@@ -35,10 +35,7 @@ public interface Partitioner<T> {
    *
    * @param sinkRecord The record to be stored by the Sink Connector
    * @return The path/filename the SinkRecord will be stored into after it is encoded
-   *
-   * @deprecated use {@link #encodePartition(SinkRecord, long)} instead
    */
-  @Deprecated
   String encodePartition(SinkRecord sinkRecord);
 
   /**

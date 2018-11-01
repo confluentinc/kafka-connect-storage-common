@@ -158,7 +158,6 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
     return encodedPartitionForTimestamp(sinkRecord, timestamp);
   }
 
-  @Deprecated
   @Override
   public String encodePartition(SinkRecord sinkRecord) {
     Long timestamp = timestampExtractor.extract(sinkRecord);
@@ -249,7 +248,6 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
      * @param record Record to extract time from
      * @return Wallclock time in milliseconds
      */
-    @Deprecated
     @Override
     public Long extract(ConnectRecord<?> record) {
       return Time.SYSTEM.milliseconds();
@@ -260,7 +258,6 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
     @Override
     public void configure(Map<String, Object> config) {}
 
-    @Deprecated
     @Override
     public Long extract(ConnectRecord<?> record) {
       return record.timestamp();
@@ -277,7 +274,6 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
       dateTime = ISODateTimeFormat.dateTimeParser();
     }
 
-    @Deprecated
     @Override
     public Long extract(ConnectRecord<?> record) {
       Object value = record.value();

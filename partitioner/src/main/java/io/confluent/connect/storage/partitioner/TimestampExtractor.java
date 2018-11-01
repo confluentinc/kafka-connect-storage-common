@@ -28,10 +28,7 @@ public interface TimestampExtractor {
    *
    * @param record Record from which to extract a timestamp
    * @return Timestamp in milliseconds
-   *
-   * @deprecated use {@link #extract(ConnectRecord, long)}
    */
-  @Deprecated
   Long extract(ConnectRecord<?> record);
 
   /**
