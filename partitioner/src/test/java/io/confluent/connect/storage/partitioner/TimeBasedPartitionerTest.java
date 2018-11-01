@@ -580,6 +580,26 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     assertThat(sinkRecord.timestamp(), is(DATE_TIME.getMillis()));
     String encodedPartition = partitioner.encodePartition(sinkRecord);
     validateEncodedPartition(encodedPartition);
+
+    encodedPartition = partitioner.encodePartition(sinkRecord, 123L);
+    validateEncodedPartition(encodedPartition);
+  }
+
+  @Test
+  public void testWallclockTimeExtractor() {
+    long now = 15778800000L;
+    TimeBasedPartitioner<String> partitioner = configurePartitioner(
+        new TimeBasedPartitioner<>(), null, Collections.singletonMap(
+            PartitionerConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG, "Wallclock")
+    );
+
+    assertThat(partitioner.getTimestampExtractor(),
+        instanceOf(TimeBasedPartitioner.WallclockTimestampExtractor.class));
+
+    SinkRecord sinkRecord = getSinkRecord();
+
+    String encodedPartition = partitioner.encodePartition(sinkRecord, now);
+    validatePathFromDateTime(encodedPartition, new DateTime(now, DATE_TIME_ZONE));
   }
 
   /**

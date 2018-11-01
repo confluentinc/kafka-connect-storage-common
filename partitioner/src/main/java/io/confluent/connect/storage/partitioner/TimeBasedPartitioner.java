@@ -153,8 +153,18 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
   }
 
   @Override
+  public String encodePartition(SinkRecord sinkRecord, long nowInMillis) {
+    Long timestamp = timestampExtractor.extract(sinkRecord, nowInMillis);
+    return encodedPartitionForTimestamp(sinkRecord, timestamp);
+  }
+
+  @Override
   public String encodePartition(SinkRecord sinkRecord) {
     Long timestamp = timestampExtractor.extract(sinkRecord);
+    return encodedPartitionForTimestamp(sinkRecord, timestamp);
+  }
+
+  private String encodedPartitionForTimestamp(SinkRecord sinkRecord, Long timestamp) {
     if (timestamp == null) {
       String msg = "Unable to determine timestamp using timestamp.extractor "
           + timestampExtractor.getClass().getName()
@@ -219,6 +229,25 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
     @Override
     public void configure(Map<String, Object> config) {}
 
+    /**
+     * Returns the current timestamp supplied by the caller, which is assumed to be the processing
+     * time.
+     *
+     * @param record Record from which to extract time
+     * @param nowInMillis Time in ms specified by caller, useful for getting consistent wallclocks
+     * @return The wallclock specified by the input parameter in milliseconds
+     */
+    @Override
+    public Long extract(ConnectRecord<?> record, long nowInMillis) {
+      return nowInMillis;
+    }
+
+    /**
+     * Returns the current time from {@link Time#SYSTEM}.
+     *
+     * @param record Record to extract time from
+     * @return Wallclock time in milliseconds
+     */
     @Override
     public Long extract(ConnectRecord<?> record) {
       return Time.SYSTEM.milliseconds();

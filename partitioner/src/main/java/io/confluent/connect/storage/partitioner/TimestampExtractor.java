@@ -23,5 +23,22 @@ import java.util.Map;
 public interface TimestampExtractor {
   void configure(Map<String, Object> config);
 
+  /**
+   * Extract timestamp from a record
+   *
+   * @param record Record from which to extract a timestamp
+   * @return Timestamp in milliseconds
+   */
   Long extract(ConnectRecord<?> record);
+
+  /**
+   * Extract timestamp from a record
+   *
+   * @param record Record from which to extract a timestamp
+   * @param nowInMillis Current time in milliseconds an implementation may use or return
+   * @return Timestamp in milliseconds
+   */
+  default Long extract(ConnectRecord<?> record, long nowInMillis) {
+    return extract(record);
+  }
 }
