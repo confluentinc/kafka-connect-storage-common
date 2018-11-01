@@ -45,6 +45,7 @@ public class DefaultPartitioner<T> implements Partitioner<T> {
     delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
   }
 
+  @Deprecated
   @Override
   public String encodePartition(SinkRecord sinkRecord) {
     return PARTITION_FIELD + "=" + String.valueOf(sinkRecord.kafkaPartition());
