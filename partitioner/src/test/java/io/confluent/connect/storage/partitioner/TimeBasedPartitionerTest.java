@@ -34,6 +34,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -569,6 +570,41 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
   }
 
   @Test
+  public void testRecordFieldTimeStringWithFormatExtractor() {
+    String pattern = "yyyy/MM/dd HH:mm:ss";
+    SimpleDateFormat dtf = new SimpleDateFormat(pattern);
+    String timeStr = dtf.format(DATE_TIME.toDate());
+    Long ts = DATE_TIME.getMillis();
+
+    String timeFieldName = "timestamp";
+    Map<String, Object> config = new HashMap<>();
+    config.put(PartitionerConfig.TIMESTAMP_FIELD_FORMAT_CONFIG, pattern);
+
+    TimeBasedPartitioner<String> partitioner = configurePartitioner(
+          new TimeBasedPartitioner<>(), timeFieldName, config);
+
+    assertThat(partitioner.getTimestampExtractor(), instanceOf(
+          TimeBasedPartitioner.RecordFieldTimestampExtractor.class));
+
+    // Struct with time as formatted string
+    Schema schema = SchemaBuilder.struct().name("record")
+          .field(timeFieldName, Schema.STRING_SCHEMA);
+    Struct datum = new Struct(schema).put(timeFieldName, timeStr);
+    SinkRecord sinkRecord = createValuedSinkRecord(schema, datum, ts);
+    String encodedPartition = partitioner.encodePartition(sinkRecord);
+    validateEncodedPartition(encodedPartition);
+
+    // Create nested time field using map{string->struct}
+    Schema mapSchema = SchemaBuilder.map(Schema.STRING_SCHEMA, schema);
+    Map<String, Struct> header = new HashMap<>();
+    header.put("header", datum);
+    sinkRecord = createValuedSinkRecord(mapSchema, header, ts);
+
+    encodedPartition = getEncodedPartition(String.format("header.%s", timeFieldName), sinkRecord, config);
+    validateEncodedPartition(encodedPartition);
+  }
+
+  @Test
   public void testRecordTimeExtractor() throws Exception {
     TimeBasedPartitioner<String> partitioner = configurePartitioner(
           new TimeBasedPartitioner<>(), null, null);
@@ -770,6 +806,12 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     return partitioner.encodePartition(r);
   }
 
+  private String getEncodedPartition(String timeFieldName, SinkRecord r, Map<String, Object> config) {
+	    TimeBasedPartitioner<String> partitioner = configurePartitioner(
+	          new TimeBasedPartitioner<>(), timeFieldName, config);
+	    return partitioner.encodePartition(r);
+	  }
+  
   private String getEncodedPartition(String timeFieldName) {
     return getEncodedPartition(timeFieldName, getSinkRecord());
   }

@@ -33,6 +33,7 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -266,11 +267,16 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
 
   public static class RecordFieldTimestampExtractor implements TimestampExtractor {
     private String fieldName;
+    private String fieldFormat;
+    private boolean isEpoch = false;
     private DateTimeFormatter dateTime;
 
     @Override
     public void configure(Map<String, Object> config) {
       fieldName = (String) config.get(PartitionerConfig.TIMESTAMP_FIELD_NAME_CONFIG);
+      fieldFormat = (String) config.get(PartitionerConfig.TIMESTAMP_FIELD_FORMAT_CONFIG);
+      isEpoch = Boolean.parseBoolean(
+            (String) config.get(PartitionerConfig.IS_EPOCH));
       dateTime = ISODateTimeFormat.dateTimeParser();
     }
 
@@ -291,7 +297,10 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
           case INT64:
             return ((Number) timestampValue).longValue();
           case STRING:
-            return dateTime.parseMillis((String) timestampValue);
+            if (fieldFormat == null)
+              return dateTime.parseMillis((String) timestampValue);
+            DateTimeFormatter fmt = DateTimeFormat.forPattern(fieldFormat);
+            return fmt.parseDateTime((String) timestampValue).getMillis();
           default:
             log.error(
                 "Unsupported type '{}' for user-defined timestamp field.",
@@ -307,7 +316,10 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
         if (timestampValue instanceof Number) {
           return ((Number) timestampValue).longValue();
         } else if (timestampValue instanceof String) {
-          return dateTime.parseMillis((String) timestampValue);
+            if (fieldFormat == null)
+                return dateTime.parseMillis((String) timestampValue);
+              DateTimeFormatter fmt = DateTimeFormat.forPattern(fieldFormat);
+              return fmt.parseDateTime((String) timestampValue).getMillis();
         } else if (timestampValue instanceof Date) {
           return ((Date) timestampValue).getTime();
         } else {
