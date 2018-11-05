@@ -295,10 +295,15 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
         switch (fieldSchema.type()) {
           case INT32:
           case INT64:
+            if (isEpoch)
+            	return ((Number) timestampValue).longValue() * 1000;
             return ((Number) timestampValue).longValue();
           case STRING:
-            if (fieldFormat == null)
+            if (fieldFormat == null) {
+              if (isEpoch)
+                return dateTime.parseMillis((String) timestampValue) * 1000;
               return dateTime.parseMillis((String) timestampValue);
+            }
             DateTimeFormatter fmt = DateTimeFormat.forPattern(fieldFormat);
             return fmt.parseDateTime((String) timestampValue).getMillis();
           default:
@@ -314,10 +319,16 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
         Map<?, ?> map = (Map<?, ?>) value;
         Object timestampValue = DataUtils.getNestedFieldValue(map, fieldName);
         if (timestampValue instanceof Number) {
+          if (isEpoch)
+              	return ((Number) timestampValue).longValue() * 1000;
           return ((Number) timestampValue).longValue();
+          
         } else if (timestampValue instanceof String) {
-            if (fieldFormat == null)
-                return dateTime.parseMillis((String) timestampValue);
+            if (fieldFormat == null) { 
+                if (isEpoch)
+                    return dateTime.parseMillis((String) timestampValue) * 1000;
+                  return dateTime.parseMillis((String) timestampValue);
+              }
               DateTimeFormatter fmt = DateTimeFormat.forPattern(fieldFormat);
               return fmt.parseDateTime((String) timestampValue).getMillis();
         } else if (timestampValue instanceof Date) {

@@ -605,6 +605,40 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
   }
 
   @Test
+  public void testRecordFieldTimeEpochExtractor() {
+    DateTimeFormatter fmt = ISODateTimeFormat.dateTime();
+    long millis = DATE_TIME.getMillis();
+    String timeStr = fmt.print(millis / 1000);
+
+    String timeFieldName = "timestamp";
+    Map<String, Object> config = new HashMap<>();
+    config.put(PartitionerConfig.IS_EPOCH, "true");
+
+    TimeBasedPartitioner<String> partitioner = configurePartitioner(
+          new TimeBasedPartitioner<>(), timeFieldName, config);
+
+    assertThat(partitioner.getTimestampExtractor(), instanceOf(
+          TimeBasedPartitioner.RecordFieldTimestampExtractor.class));
+
+    // Struct with time as formatted string
+    Schema schema = SchemaBuilder.struct().name("record")
+          .field(timeFieldName, Schema.STRING_SCHEMA);
+    Struct datum = new Struct(schema).put(timeFieldName, timeStr);
+    SinkRecord sinkRecord = createValuedSinkRecord(schema, datum, millis);
+    String encodedPartition = partitioner.encodePartition(sinkRecord);
+    validateEncodedPartition(encodedPartition);
+
+    // Create nested time field using map{string->struct}
+    Schema mapSchema = SchemaBuilder.map(Schema.STRING_SCHEMA, schema);
+    Map<String, Struct> header = new HashMap<>();
+    header.put("header", datum);
+    sinkRecord = createValuedSinkRecord(mapSchema, header, millis);
+
+    encodedPartition = getEncodedPartition(String.format("header.%s", timeFieldName), sinkRecord, config);
+    validateEncodedPartition(encodedPartition);
+  }
+  
+  @Test
   public void testRecordTimeExtractor() throws Exception {
     TimeBasedPartitioner<String> partitioner = configurePartitioner(
           new TimeBasedPartitioner<>(), null, null);
