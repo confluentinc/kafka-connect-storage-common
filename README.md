@@ -17,7 +17,7 @@ To build a development version you'll need a recent version of Kafka. You can bu
 
 # License
 
-The project is licensed under the Apache 2 license.
+This project is licensed under the [Confluent Community License](LICENSE).
 
 
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fconfluentinc%2Fkafka-connect-storage-common.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fconfluentinc%2Fkafka-connect-storage-common?ref=badge_large)
