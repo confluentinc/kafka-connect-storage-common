@@ -4,7 +4,6 @@ Source: https://github.com/confluentinc/kafka-connect-storage-common
 
 Files: *
 Copyright: 2017 Confluent, Inc.
-License: Apache-2
 License: Confluent Community License
 
 License: Confluent Community License
