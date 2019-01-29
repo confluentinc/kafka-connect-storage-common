@@ -37,6 +37,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.confluent.connect.storage.errors.HiveMetaStoreException;
 
@@ -44,6 +46,7 @@ public class HiveMetaStore {
 
   private static final Logger log = LoggerFactory.getLogger(HiveMetaStore.class);
   protected final IMetaStoreClient client;
+  private Pattern hiveTableMatcher;
 
   public HiveMetaStore(AbstractConfig connectorConfig) {
     this(new Configuration(), connectorConfig);
@@ -78,6 +81,10 @@ public class HiveMetaStore {
     } catch (IOException | MetaException e) {
       throw new HiveMetaStoreException(e);
     }
+
+    String hiveTablePattern = connectorConfig
+        .getString(HiveConfig.HIVE_TABLE_PATTERN_CONFIG);
+    hiveTableMatcher = Pattern.compile(hiveTablePattern);
   }
 
   private interface ClientAction<R> {
@@ -364,6 +371,21 @@ public class HiveMetaStore {
   }
 
   public String tableNameConverter(String table) {
-    return table == null ? table : table.replaceAll("[.-]", "_");
+    if (table == null) {
+      return null;
+    }
+
+    String converterTable;
+    Matcher tableMatcher = hiveTableMatcher.matcher(table);
+    if (tableMatcher.find() && tableMatcher.groupCount() == 1) {
+      converterTable = tableMatcher.group(1);
+    } else {
+      throw new HiveMetaStoreException(
+              "Cannot convert hive table name. Pattern: '" + hiveTableMatcher.pattern()
+                      + "' source table: " + table
+      );
+    }
+
+    return converterTable.replaceAll("[.-]", "_");
   }
 }

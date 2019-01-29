@@ -60,6 +60,13 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
   public static final String HIVE_DATABASE_DEFAULT = "default";
   public static final String HIVE_DATABASE_DISPLAY = "Hive database";
 
+  public static final String HIVE_TABLE_PATTERN_CONFIG = "hive.table.pattern";
+  public static final String HIVE_TABLE_PATTERN_DOC =
+      "Regular expression for transformation from Kafka topic name to Hive table name. "
+      + "If regular expression doesn't match, Kafka topic name will be used as Hive table name.";
+  public static final String HIVE_TABLE_PATTERN_DEFAULT = "(.*)";
+  public static final String HIVE_TABLE_PATTERN_DISPLAY = "Hive table pattern";
+
   // Schema group
   public static final String SCHEMA_COMPATIBILITY_CONFIG = "schema.compatibility";
   public static final String SCHEMA_COMPATIBILITY_DOC =
@@ -152,6 +159,18 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
           Width.SHORT,
           HIVE_DATABASE_DISPLAY,
           hiveIntegrationDependentsRecommender
+      );
+
+      CONFIG_DEF.define(
+              HIVE_TABLE_PATTERN_CONFIG,
+          Type.STRING,
+              HIVE_TABLE_PATTERN_DEFAULT,
+          Importance.LOW,
+              HIVE_TABLE_PATTERN_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+              HIVE_TABLE_PATTERN_DISPLAY
       );
     }
 
