@@ -1,7 +1,6 @@
 package io.confluent.connect.storage.hive;
 
 import io.confluent.connect.storage.errors.HiveMetaStoreException;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -11,6 +10,7 @@ import org.junit.runners.Parameterized;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 
 import static io.confluent.connect.storage.hive.HiveConfig.HIVE_TABLE_PATTERN_CONFIG;
 import static io.confluent.connect.storage.hive.HiveConfig.HIVE_TABLE_PATTERN_DEFAULT;
@@ -39,7 +39,7 @@ public class HiveMetaStoreTableNameConverterFactoryTest {
     return Arrays.asList(new Object[][]{
             {HIVE_TABLE_PATTERN_DEFAULT, "topic_name", "topic_name", null},
             {HIVE_TABLE_PATTERN_DEFAULT, "topic-name", "topic_name", null},
-            {HIVE_TABLE_PATTERN_DEFAULT, "topic-name", "topic_name", null},
+            {HIVE_TABLE_PATTERN_DEFAULT, "topic.name", "topic_name", null},
             {"^.*\\.(.*)$", "topic.name", "name", null},
             {"^.*\\.(.*)$", "topic-name", null, HiveMetaStoreException.class}
     });
@@ -47,9 +47,9 @@ public class HiveMetaStoreTableNameConverterFactoryTest {
 
   @Test
   public void test() {
-    HiveConfig hiveConfig = new HiveConfig(new HashMap<String, String>() {{
-      put(HIVE_TABLE_PATTERN_CONFIG, hivePatternConfig);
-    }});
+    Map<String, String> properties = new HashMap<>();
+    properties.put(HIVE_TABLE_PATTERN_CONFIG, hivePatternConfig);
+    HiveConfig hiveConfig = new HiveConfig(properties);
 
     HiveMetaStore hiveMetaStore = new HiveMetaStore(hiveConfig);
 
