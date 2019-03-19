@@ -69,11 +69,10 @@ public class DefaultPartitioner<T> implements Partitioner<T> {
     try {
       generatorClass = getSchemaGeneratorClass();
       return generatorClass.newInstance();
-    } catch (
-        ClassNotFoundException
-            | ClassCastException
-            | IllegalAccessException
-            | InstantiationException e) {
+    } catch (ClassNotFoundException
+        | ClassCastException
+        | IllegalAccessException
+        | InstantiationException e) {
       ConfigException ce = new ConfigException("Invalid generator class: " + generatorClass);
       ce.initCause(e);
       throw ce;
