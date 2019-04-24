@@ -50,11 +50,6 @@
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
-            <artifactId>kafka-connect-storage-hive</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-storage-wal</artifactId>
             <version>${project.version}</version>
         </dependency>

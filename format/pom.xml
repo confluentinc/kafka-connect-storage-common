@@ -33,10 +33,6 @@
     <dependencies>
         <dependency>
             <groupId>io.confluent</groupId>
-            <artifactId>kafka-connect-storage-hive</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-avro-converter</artifactId>
         </dependency>
         <dependency>
