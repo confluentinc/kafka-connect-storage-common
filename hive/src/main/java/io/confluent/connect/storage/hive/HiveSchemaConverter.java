@@ -16,8 +16,11 @@
 package io.confluent.connect.storage.hive;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
+import org.apache.kafka.connect.data.Date;
+import org.apache.kafka.connect.data.Decimal;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Schema.Type;
@@ -26,10 +29,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.kafka.connect.data.Time;
+import org.apache.kafka.connect.data.Timestamp;
 
 public class HiveSchemaConverter {
 
   private static final Map<Type, TypeInfo> TYPE_TO_TYPEINFO;
+
+  private static final String CONNECT_AVRO_DECIMAL_PRECISION_PROP = "connect.decimal.precision";
+  private static final String CONNECT_AVRO_DECIMAL_PRECISION_DEFAULT = "38";
 
   static {
     TYPE_TO_TYPEINFO = new HashMap<>();
@@ -90,6 +98,29 @@ public class HiveSchemaConverter {
   }
 
   public static TypeInfo convertPrimitive(Schema schema) {
-    return TYPE_TO_TYPEINFO.get(schema.type());
+    if (schema.name() == null) {
+      return TYPE_TO_TYPEINFO.get(schema.type());
+    }
+
+    //TODO: should take Hive version into consideration
+    switch (schema.name()) {
+      case Decimal.LOGICAL_NAME:
+        String scale = schema.parameters().get(Decimal.SCALE_FIELD);
+        String precision = schema.parameters().getOrDefault(CONNECT_AVRO_DECIMAL_PRECISION_PROP,
+            CONNECT_AVRO_DECIMAL_PRECISION_DEFAULT);
+        return new DecimalTypeInfo(Integer.parseInt(precision), Integer.parseInt(scale));
+
+      case Date.LOGICAL_NAME:
+        return TypeInfoFactory.dateTypeInfo;
+
+      case Time.LOGICAL_NAME:
+        return TypeInfoFactory.intervalDayTimeTypeInfo;
+
+      case Timestamp.LOGICAL_NAME:
+        return TypeInfoFactory.timestampTypeInfo;
+
+      default:
+        return TYPE_TO_TYPEINFO.get(schema.type());
+    }
   }
 }
