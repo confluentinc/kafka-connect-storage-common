@@ -146,28 +146,6 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
     }
   }
 
-  public static class SchemaCompatibilityRecommender extends BooleanParentRecommender {
-
-    public SchemaCompatibilityRecommender() {
-      super(HIVE_INTEGRATION_CONFIG);
-    }
-
-    @Override
-    public List<Object> validValues(String name, Map<String, Object> connectorConfigs) {
-      boolean hiveIntegration = (boolean) connectorConfigs.get(parentConfigName);
-      if (hiveIntegration) {
-        return Arrays.<Object>asList("BACKWARD", "FORWARD", "FULL");
-      } else {
-        return Arrays.<Object>asList("NONE", "BACKWARD", "FORWARD", "FULL");
-      }
-    }
-
-    @Override
-    public boolean visible(String name, Map<String, Object> connectorConfigs) {
-      return true;
-    }
-  }
-
   public static class BooleanParentRecommender implements ConfigDef.Recommender {
 
     protected final String parentConfigName;
