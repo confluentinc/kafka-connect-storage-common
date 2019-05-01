@@ -36,8 +36,13 @@ public class HiveSchemaConverter {
 
   private static final Map<Type, TypeInfo> TYPE_TO_TYPEINFO;
 
+  // the name here is consistent with io.confluent.connect.avro.AvroData, when connect Decimal
+  // schema is created, this property name is used to set precision.
+  // We have to use the exact name to retrieve precision value.
   private static final String CONNECT_AVRO_DECIMAL_PRECISION_PROP = "connect.decimal.precision";
-  private static final String CONNECT_AVRO_DECIMAL_PRECISION_DEFAULT = "38";
+
+  // this is the maximum digits Hive allows for DECIMAL type.
+  private static final int DECIMAL_PRECISION_DEFAULT = 38;
 
   static {
     TYPE_TO_TYPEINFO = new HashMap<>();
@@ -63,6 +68,17 @@ public class HiveSchemaConverter {
     return columns;
   }
 
+  public static List<FieldSchema>  convertSchemaMaybeLogical(Schema schema) {
+    List<FieldSchema> columns = new ArrayList<>();
+    if (Schema.Type.STRUCT.equals(schema.type())) {
+      for (Field field: schema.fields()) {
+        columns.add(new FieldSchema(
+            field.name(), convertMaybeLogical(field.schema()).getTypeName(), field.schema().doc()));
+      }
+    }
+    return columns;
+  }
+
   public static TypeInfo convert(Schema schema) {
     // TODO: throw an error on recursive types
     switch (schema.type()) {
@@ -74,6 +90,19 @@ public class HiveSchemaConverter {
         return convertMap(schema);
       default:
         return convertPrimitive(schema);
+    }
+  }
+
+  public static TypeInfo convertMaybeLogical(Schema schema) {
+    switch (schema.type()) {
+      case STRUCT:
+        return convertStruct(schema);
+      case ARRAY:
+        return convertArray(schema);
+      case MAP:
+        return convertMap(schema);
+      default:
+        return convertPrimitiveMaybeLogical(schema);
     }
   }
 
@@ -98,16 +127,22 @@ public class HiveSchemaConverter {
   }
 
   public static TypeInfo convertPrimitive(Schema schema) {
+    return TYPE_TO_TYPEINFO.get(schema.type());
+  }
+
+  public static TypeInfo convertPrimitiveMaybeLogical(Schema schema) {
     if (schema.name() == null) {
       return TYPE_TO_TYPEINFO.get(schema.type());
     }
 
-    //TODO: should take Hive version into consideration
     switch (schema.name()) {
       case Decimal.LOGICAL_NAME:
         String scale = schema.parameters().get(Decimal.SCALE_FIELD);
-        String precision = schema.parameters().getOrDefault(CONNECT_AVRO_DECIMAL_PRECISION_PROP,
-            CONNECT_AVRO_DECIMAL_PRECISION_DEFAULT);
+        String precision = schema.parameters().get(CONNECT_AVRO_DECIMAL_PRECISION_PROP);
+        if (precision == null
+            || Integer.parseInt(precision) > DECIMAL_PRECISION_DEFAULT) {
+          return TYPE_TO_TYPEINFO.get(schema.type());
+        }
         return new DecimalTypeInfo(Integer.parseInt(precision), Integer.parseInt(scale));
 
       case Date.LOGICAL_NAME:
