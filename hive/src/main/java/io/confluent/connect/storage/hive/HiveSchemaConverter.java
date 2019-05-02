@@ -39,10 +39,10 @@ public class HiveSchemaConverter {
   // the name here is consistent with io.confluent.connect.avro.AvroData, when connect Decimal
   // schema is created, this property name is used to set precision.
   // We have to use the exact name to retrieve precision value.
-  private static final String CONNECT_AVRO_DECIMAL_PRECISION_PROP = "connect.decimal.precision";
+  static final String CONNECT_AVRO_DECIMAL_PRECISION_PROP = "connect.decimal.precision";
 
   // this is the maximum digits Hive allows for DECIMAL type.
-  private static final int DECIMAL_PRECISION_DEFAULT = 38;
+  static final int DECIMAL_PRECISION_DEFAULT = 38;
 
   static {
     TYPE_TO_TYPEINFO = new HashMap<>();
