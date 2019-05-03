@@ -21,7 +21,10 @@ import org.apache.kafka.common.config.ConfigDef.Importance;
 import org.apache.kafka.common.config.ConfigDef.Type;
 import org.apache.kafka.common.config.ConfigDef.Width;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import io.confluent.connect.avro.AvroDataConfig;
@@ -114,6 +117,19 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
       + ".avro.file.CodecFactory)";
   public static final String[] AVRO_SUPPORTED_CODECS = new String[]{"null", "deflate", "snappy",
       "bzip2"};
+
+  // Schema group
+  public static final String SCHEMA_COMPATIBILITY_CONFIG = "schema.compatibility";
+  public static final String SCHEMA_COMPATIBILITY_DOC =
+      "The schema compatibility rule to use when the connector is observing schema changes. The "
+      + "supported configurations are NONE, BACKWARD, FORWARD and FULL.";
+  public static final String SCHEMA_COMPATIBILITY_DEFAULT = "NONE";
+  public static final String SCHEMA_COMPATIBILITY_DISPLAY = "Schema Compatibility";
+
+  // CHECKSTYLE:OFF
+  public static final ConfigDef.Recommender schemaCompatibilityRecommender =
+      new SchemaCompatibilityRecommender();
+  // CHECKSTYLE:ON
 
   /**
    * Create a new configuration definition.
@@ -269,7 +285,68 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
       );
 
     }
+
+    {
+      // Define Schema configuration group
+      final String group = "Schema";
+      int orderInGroup = 0;
+
+      // Define Schema configuration group
+      configDef.define(
+          SCHEMA_COMPATIBILITY_CONFIG,
+          Type.STRING,
+          SCHEMA_COMPATIBILITY_DEFAULT,
+          Importance.HIGH,
+          SCHEMA_COMPATIBILITY_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          SCHEMA_COMPATIBILITY_DISPLAY,
+          schemaCompatibilityRecommender
+      );
+    }
     return configDef;
+  }
+
+  public static class SchemaCompatibilityRecommender extends BooleanParentRecommender {
+
+    public SchemaCompatibilityRecommender() {
+      super("hive.integration");
+    }
+
+    @Override
+    public List<Object> validValues(String name, Map<String, Object> connectorConfigs) {
+      Boolean hiveIntegration = (Boolean) connectorConfigs.get(parentConfigName);
+      if (hiveIntegration != null && hiveIntegration) {
+        return Arrays.asList("BACKWARD", "FORWARD", "FULL");
+      } else {
+        return Arrays.asList("NONE", "BACKWARD", "FORWARD", "FULL");
+      }
+    }
+
+    @Override
+    public boolean visible(String name, Map<String, Object> connectorConfigs) {
+      return true;
+    }
+  }
+
+  public static class BooleanParentRecommender implements ConfigDef.Recommender {
+
+    protected final String parentConfigName;
+
+    public BooleanParentRecommender(String parentConfigName) {
+      this.parentConfigName = parentConfigName;
+    }
+
+    @Override
+    public List<Object> validValues(String name, Map<String, Object> connectorConfigs) {
+      return new LinkedList<>();
+    }
+
+    @Override
+    public boolean visible(String name, Map<String, Object> connectorConfigs) {
+      return (boolean) connectorConfigs.get(parentConfigName);
+    }
   }
 
   public String getAvroCodec() {

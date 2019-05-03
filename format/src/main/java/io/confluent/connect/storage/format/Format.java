@@ -15,8 +15,6 @@
 
 package io.confluent.connect.storage.format;
 
-import io.confluent.connect.storage.hive.HiveFactory;
-
 /**
  * Storage format.
  *
@@ -28,5 +26,6 @@ public interface Format<C, T> {
 
   SchemaFileReader<C, T> getSchemaFileReader();
 
-  HiveFactory getHiveFactory();
+  @Deprecated
+  Object getHiveFactory();
 }

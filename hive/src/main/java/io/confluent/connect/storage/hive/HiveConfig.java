@@ -61,19 +61,9 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
   public static final String HIVE_DATABASE_DEFAULT = "default";
   public static final String HIVE_DATABASE_DISPLAY = "Hive database";
 
-  // Schema group
-  public static final String SCHEMA_COMPATIBILITY_CONFIG = "schema.compatibility";
-  public static final String SCHEMA_COMPATIBILITY_DOC =
-      "The schema compatibility rule to use when the connector is observing schema changes. The "
-      + "supported configurations are NONE, BACKWARD, FORWARD and FULL.";
-  public static final String SCHEMA_COMPATIBILITY_DEFAULT = "NONE";
-  public static final String SCHEMA_COMPATIBILITY_DISPLAY = "Schema Compatibility";
-
   // CHECKSTYLE:OFF
   public static final ConfigDef.Recommender hiveIntegrationDependentsRecommender =
       new BooleanParentRecommender(HIVE_INTEGRATION_CONFIG);
-  public static final ConfigDef.Recommender schemaCompatibilityRecommender =
-      new SchemaCompatibilityRecommender();
   // CHECKSTYLE:ON
 
   protected static final ConfigDef CONFIG_DEF = new ConfigDef();
@@ -98,8 +88,7 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
               HIVE_METASTORE_URIS_CONFIG,
               HIVE_CONF_DIR_CONFIG,
               HIVE_HOME_CONFIG,
-              HIVE_DATABASE_CONFIG,
-              SCHEMA_COMPATIBILITY_CONFIG
+              HIVE_DATABASE_CONFIG
           )
       );
 
@@ -154,48 +143,6 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
           HIVE_DATABASE_DISPLAY,
           hiveIntegrationDependentsRecommender
       );
-    }
-
-    {
-      // Define Schema configuration group
-      final String group = "Schema";
-      int orderInGroup = 0;
-
-      // Define Schema configuration group
-      CONFIG_DEF.define(
-          SCHEMA_COMPATIBILITY_CONFIG,
-          Type.STRING,
-          SCHEMA_COMPATIBILITY_DEFAULT,
-          Importance.HIGH,
-          SCHEMA_COMPATIBILITY_DOC,
-          group,
-          ++orderInGroup,
-          Width.SHORT,
-          SCHEMA_COMPATIBILITY_DISPLAY,
-          schemaCompatibilityRecommender
-      );
-    }
-  }
-
-  public static class SchemaCompatibilityRecommender extends BooleanParentRecommender {
-
-    public SchemaCompatibilityRecommender() {
-      super(HIVE_INTEGRATION_CONFIG);
-    }
-
-    @Override
-    public List<Object> validValues(String name, Map<String, Object> connectorConfigs) {
-      boolean hiveIntegration = (boolean) connectorConfigs.get(parentConfigName);
-      if (hiveIntegration) {
-        return Arrays.<Object>asList("BACKWARD", "FORWARD", "FULL");
-      } else {
-        return Arrays.<Object>asList("NONE", "BACKWARD", "FORWARD", "FULL");
-      }
-    }
-
-    @Override
-    public boolean visible(String name, Map<String, Object> connectorConfigs) {
-      return true;
     }
   }
 
