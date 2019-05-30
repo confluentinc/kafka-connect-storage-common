@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 
 # create_spec.sh spec.in out.spec
