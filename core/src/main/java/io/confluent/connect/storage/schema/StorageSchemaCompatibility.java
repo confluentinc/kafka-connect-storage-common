@@ -61,7 +61,8 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
      *
      * @param originalSchema the original (new) schema; may not be null
      * @param currentSchema  the current schema; may not be null
-     * @return true if the schemas are equals, or false if they are not equal
+     * @return true if the schemas are not equal and therefore incompatible,
+     *         or false if they are equal and therefore compatible
      */
     @Override
     protected boolean check(
@@ -78,13 +79,11 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
      * {@link #project projecting} a key or value with the original schema into the current schema.
      *
      * <p>This method will consider schemas compatible for projection if the original schema's
-     * {@link Schema#version() version} is less than or equal to the current schema's version.
-     * IOW, if the original schema has an <em>older</em> version than the current schema, the
-     * schemas will be incompatible.
+     * {@link Schema#version() version} is greater than or equal to the current schema's version.
      *
      * @param originalSchema the original (new) schema; may not be null
-     * @param currentSchema  the current schema; may not b enull
-     * @return true if the schema versions are not compatible for projection, or false if they are
+     * @param currentSchema  the current schema; may not be null
+     * @return true if the schema are not compatible for projection, or false if they are
      *         compatible
      */
     @Override
@@ -128,12 +127,12 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
   }
 
   /**
-   * Check whether the two schemas have incompatible such that a value using the supplied value
+   * Check whether the two schemas are incompatible such that a value using the supplied value
    * schema could not be successfully {@link #project projected} to the specified current schema.
    *
    * @param valueSchema   the schema of the value to be projected; may not be null
-   * @param currentSchema the current schema; may not b enull
-   * @return true if the schema versions are not compatible for projection, or false if they are
+   * @param currentSchema the current schema; may not be null
+   * @return true if the schemas are not compatible for projection, or false if they are
    *         compatible
    */
   protected boolean validateAndCheck(
@@ -177,7 +176,7 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    *   <li>The {@link Schema#parameters() Schema parameters} are different, per
    *       {@link #checkSchemaParameters(Schema, Schema)}</li>
    *   <li>The {@link Schema#version() Schema versions} don't allow projection, per
-   *       {@link #checkSchemaTypes(Schema, Schema)}</li>
+   *       {@link #checkVersions(Schema, Schema)}</li>
    * </ol>
    * In all of these cases, a record key or value using the original schema will not be able to
    * be projected to the current schema.
@@ -187,7 +186,7 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    *
    * @param originalSchema the original (new) schema; may not be null
    * @param currentSchema  the current schema; may not be null
-   * @return true if the schema versions are not compatible for projection, or false if they are
+   * @return true if the schemas are not compatible for projection, or false if they are
    *         compatible
    */
   protected boolean check(
@@ -217,7 +216,7 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    * will be incompatible.
    *
    * @param originalSchema the original (new) schema; may not be null
-   * @param currentSchema  the current schema; may not b enull
+   * @param currentSchema  the current schema; may not be null
    * @return true if the schema versions are not compatible for projection, or false if they are
    *         compatible
    */
@@ -229,11 +228,11 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
   }
 
   /**
-   * Check whether the two schemas have incompatible names that prevent successfully
+   * Check whether the two schemas have incompatible schema types that prevent successfully
    * {@link #project projecting} a key or value with the original schema into the current schema.
    *
    * @param originalSchema the original (new) schema; may not be null
-   * @param currentSchema  the current schema; may not b enull
+   * @param currentSchema  the current schema; may not be null
    * @return true if the schema types are not compatible for projection, or false if they are
    *         compatible
    */
@@ -267,7 +266,7 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    * into the current schema.
    *
    * @param originalSchema the original (new) schema; may not be null
-   * @param currentSchema  the current schema; may not b enull
+   * @param currentSchema  the current schema; may not be null
    * @return true if the schema parameters are not compatible for projection, or false if they are
    *         compatible
    */
