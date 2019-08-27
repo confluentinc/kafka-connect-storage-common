@@ -13,7 +13,7 @@
 
     <suppress
             checks="(CyclomaticComplexity)"
-            files="PartitionerConfig.java"
+            files="(PartitionerConfig|StorageSchemaCompatibility).java"
     />
 
     <suppress
