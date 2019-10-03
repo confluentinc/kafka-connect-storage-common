@@ -140,7 +140,7 @@ public class HiveSchemaConverter {
       case Decimal.LOGICAL_NAME:
         String scale = schema.parameters().get(Decimal.SCALE_FIELD);
         String precision = schema.parameters().get(CONNECT_AVRO_DECIMAL_PRECISION_PROP);
-        if (precision == null || Integer.valueOf(precision) <= DECIMAL_PRECISION_DEFAULT) {
+        if (precision == null || Integer.parseInt(precision) <= DECIMAL_PRECISION_DEFAULT) {
           precision = String.valueOf(DECIMAL_PRECISION_DEFAULT);
         } else {
           throw new ConnectException("Illegal precision: "
