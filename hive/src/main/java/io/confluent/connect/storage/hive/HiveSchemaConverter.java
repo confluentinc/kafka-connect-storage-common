@@ -16,8 +16,11 @@
 package io.confluent.connect.storage.hive;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
+import org.apache.kafka.connect.data.Date;
+import org.apache.kafka.connect.data.Decimal;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Schema.Type;
@@ -26,10 +29,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.kafka.connect.data.Time;
+import org.apache.kafka.connect.data.Timestamp;
+import org.apache.kafka.connect.errors.ConnectException;
 
 public class HiveSchemaConverter {
 
   private static final Map<Type, TypeInfo> TYPE_TO_TYPEINFO;
+
+  // the name has to be consistent with io.confluent.connect.avro.AvroData, when Connect Decimal
+  // schema is created, this property name is used to set precision.
+  // We have to use the exact name to retrieve precision value.
+  protected static final String CONNECT_AVRO_DECIMAL_PRECISION_PROP = "connect.decimal.precision";
+
+  // this is the maximum digits Hive allows for DECIMAL type.
+  protected static final int DECIMAL_PRECISION_DEFAULT = 38;
 
   static {
     TYPE_TO_TYPEINFO = new HashMap<>();
@@ -55,6 +69,17 @@ public class HiveSchemaConverter {
     return columns;
   }
 
+  public static List<FieldSchema> convertSchemaMaybeLogical(Schema schema) {
+    List<FieldSchema> columns = new ArrayList<>();
+    if (Schema.Type.STRUCT.equals(schema.type())) {
+      for (Field field: schema.fields()) {
+        columns.add(new FieldSchema(
+            field.name(), convertMaybeLogical(field.schema()).getTypeName(), field.schema().doc()));
+      }
+    }
+    return columns;
+  }
+
   public static TypeInfo convert(Schema schema) {
     // TODO: throw an error on recursive types
     switch (schema.type()) {
@@ -66,6 +91,19 @@ public class HiveSchemaConverter {
         return convertMap(schema);
       default:
         return convertPrimitive(schema);
+    }
+  }
+
+  public static TypeInfo convertMaybeLogical(Schema schema) {
+    switch (schema.type()) {
+      case STRUCT:
+        return convertStruct(schema);
+      case ARRAY:
+        return convertArray(schema);
+      case MAP:
+        return convertMap(schema);
+      default:
+        return convertPrimitiveMaybeLogical(schema);
     }
   }
 
@@ -91,5 +129,37 @@ public class HiveSchemaConverter {
 
   public static TypeInfo convertPrimitive(Schema schema) {
     return TYPE_TO_TYPEINFO.get(schema.type());
+  }
+
+  public static TypeInfo convertPrimitiveMaybeLogical(Schema schema) {
+    if (schema.name() == null) {
+      return convertPrimitive(schema);
+    }
+
+    switch (schema.name()) {
+      case Decimal.LOGICAL_NAME:
+        String scale = schema.parameters().get(Decimal.SCALE_FIELD);
+        String precision = schema.parameters().get(CONNECT_AVRO_DECIMAL_PRECISION_PROP);
+        if (precision == null || Integer.valueOf(precision) <= DECIMAL_PRECISION_DEFAULT) {
+          precision = String.valueOf(DECIMAL_PRECISION_DEFAULT);
+        } else {
+          throw new ConnectException("Illegal precision: "
+              + "Because Hive allows at most 38 precision, the precision"
+              + "has to be less than 39.");
+        }
+        return new DecimalTypeInfo(Integer.parseInt(precision), Integer.parseInt(scale));
+
+      case Date.LOGICAL_NAME:
+        return TypeInfoFactory.dateTypeInfo;
+
+      case Time.LOGICAL_NAME:
+        return TypeInfoFactory.intervalDayTimeTypeInfo;
+
+      case Timestamp.LOGICAL_NAME:
+        return TypeInfoFactory.timestampTypeInfo;
+
+      default:
+        return convertPrimitive(schema);
+    }
   }
 }
