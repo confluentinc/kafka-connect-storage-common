@@ -71,12 +71,15 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
 
   //Logical type handling group
   public static final String HIVE_LOGICAL_TYPES_ENABLED_CONFIG = "hive.logical.types.enabled";
-  public static final String HIVE_LOGICAL_TYPES_ENABLED_DOC = "Whether enable hive logical types:"
-      + "DECIMAL, DATE, INTERVAL, TIMESTAMP."
-      + "Please be noted that some of the logical types are not available "
-      + "in earlier versions of Hive. Better to disable hive logical type"
-      + "if using these earlier versions";
-  public static final boolean HIVE_LOGICAL_TYPES_ENABLED_DEFAULT = false;
+  public static final String HIVE_LOGICAL_TYPES_ENABLED_DOC = "Whether to enable logical "
+      + "type conversion: \n"
+      + "Connect Decimal -> Hive DECIMAL \n "
+      + "Connect Date -> Hive DATE \n "
+      + "Connect Timestamp -> Hive TIMESTAMP \n"
+      + "Connect Time is not supported with current implementation of Hive Serde."
+      + "Beware that the 3 logical types above are not compatible with "
+      + "some older versions of Hive.";
+  public static final boolean HIVE_LOGICAL_TYPES_ENABLED_DEFAULT = true;
   public static final String HIVE_LOGICAL_TYPES_ENABLED_DISPLAY = "Enable Hive Logical Types";
 
   // CHECKSTYLE:OFF

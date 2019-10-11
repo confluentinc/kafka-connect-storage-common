@@ -23,8 +23,9 @@ public class HiveSchemaConverterTest {
     assertEquals(TypeInfoFactory.dateTypeInfo,
         HiveSchemaConverter.convertPrimitiveMaybeLogical(dateSchema));
 
+    // logical type time is not supported by Hive serde, convert it to Hive INT
     Schema timeSchema = SchemaBuilder.int32().name(Time.LOGICAL_NAME).build();
-    assertEquals(TypeInfoFactory.intervalDayTimeTypeInfo,
+    assertEquals(TypeInfoFactory.intTypeInfo,
         HiveSchemaConverter.convertPrimitiveMaybeLogical(timeSchema));
 
     Schema timestampSchema = SchemaBuilder.int64().name(Timestamp.LOGICAL_NAME).build();
@@ -36,7 +37,7 @@ public class HiveSchemaConverterTest {
   public void convertPrimitiveMaybeLogicalDecimalValidTest() {
     Map<String, String> props1 = new HashMap<>();
     String someScale = "2";
-    String validPrecision1 = "38";
+    String validPrecision1 = String.valueOf(HiveSchemaConverter.HIVE_DECIMAL_PRECISION_MAX);
     props1.put(Decimal.SCALE_FIELD, someScale);
     props1.put(HiveSchemaConverter.CONNECT_AVRO_DECIMAL_PRECISION_PROP, validPrecision1);
     Schema decimalSchema1 = SchemaBuilder.bytes()
@@ -61,7 +62,7 @@ public class HiveSchemaConverterTest {
         HiveSchemaConverter.convertPrimitiveMaybeLogical(decimalSchema1));
 
     // precision in decimalSchema2 is 10, but our schema converter will still convert it to
-    // the maximum value, 38.
+    // the maximum value, HiveSchemaConverter.HIVE_DECIMAL_PRECISION_MAX.
 
     assertEquals(new DecimalTypeInfo(Integer.parseInt(precision), Integer.parseInt(scale)),
         HiveSchemaConverter.convertPrimitiveMaybeLogical(decimalSchema2));
@@ -77,7 +78,7 @@ public class HiveSchemaConverterTest {
         .build();
 
     assertEquals(
-        new DecimalTypeInfo(HiveSchemaConverter.DECIMAL_PRECISION_DEFAULT, Integer.parseInt(someScale)),
+        new DecimalTypeInfo(HiveSchemaConverter.HIVE_DECIMAL_PRECISION_MAX, Integer.parseInt(someScale)),
         HiveSchemaConverter.convertPrimitiveMaybeLogical(decimalSchema));
   }
 
@@ -85,7 +86,7 @@ public class HiveSchemaConverterTest {
   public void convertPrimitiveMaybeLogicalDecimalInvalidPrecisionTest() {
     Map<String, String> props = new HashMap<>();
     String someScale = "2";
-    String invalidPrecision = "39";
+    String invalidPrecision = String.valueOf(HiveSchemaConverter.HIVE_DECIMAL_PRECISION_MAX + 1);
     props.put(Decimal.SCALE_FIELD, someScale);
     props.put(HiveSchemaConverter.CONNECT_AVRO_DECIMAL_PRECISION_PROP, invalidPrecision);
 
@@ -101,7 +102,7 @@ public class HiveSchemaConverterTest {
   public void convertPrimitiveMaybeLogicalNotLogicalTest() {
     Map<String, String> props = new HashMap<>();
     String someScale = "2";
-    String validPrecision = "38";
+    String validPrecision = String.valueOf(HiveSchemaConverter.HIVE_DECIMAL_PRECISION_MAX);
     props.put(Decimal.SCALE_FIELD, someScale);
     props.put(HiveSchemaConverter.CONNECT_AVRO_DECIMAL_PRECISION_PROP, validPrecision);
 

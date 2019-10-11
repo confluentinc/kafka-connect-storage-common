@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.kafka.connect.data.Time;
 import org.apache.kafka.connect.data.Timestamp;
 import org.apache.kafka.connect.errors.ConnectException;
 
@@ -43,7 +42,7 @@ public class HiveSchemaConverter {
   protected static final String CONNECT_AVRO_DECIMAL_PRECISION_PROP = "connect.decimal.precision";
 
   // this is the maximum digits Hive allows for DECIMAL type.
-  protected static final int DECIMAL_PRECISION_DEFAULT = 38;
+  protected static final int HIVE_DECIMAL_PRECISION_MAX = 38;
 
   static {
     TYPE_TO_TYPEINFO = new HashMap<>();
@@ -140,20 +139,20 @@ public class HiveSchemaConverter {
       case Decimal.LOGICAL_NAME:
         String scale = schema.parameters().get(Decimal.SCALE_FIELD);
         String precision = schema.parameters().get(CONNECT_AVRO_DECIMAL_PRECISION_PROP);
-        if (precision == null || Integer.parseInt(precision) <= DECIMAL_PRECISION_DEFAULT) {
-          precision = String.valueOf(DECIMAL_PRECISION_DEFAULT);
-        } else {
-          throw new ConnectException("Illegal precision: "
-              + "Because Hive allows at most 38 precision, the precision"
-              + "has to be less than 39.");
+        if (precision != null && Integer.parseInt(precision) > HIVE_DECIMAL_PRECISION_MAX) {
+          throw new ConnectException(
+              String.format("Illegal precision %s : Hive allows at most %d precision.",
+                  precision,
+                  HIVE_DECIMAL_PRECISION_MAX)
+          );
         }
-        return new DecimalTypeInfo(Integer.parseInt(precision), Integer.parseInt(scale));
+        // Let precision always be HIVE_DECIMAL_PRECISION_MAX. Hive serde will try the best
+        // to fit decimal data into decimal schema. If the data is too long even for
+        // the maximum precision, hive will throw serde exception. No data loss risk.
+        return new DecimalTypeInfo(HIVE_DECIMAL_PRECISION_MAX, Integer.parseInt(scale));
 
       case Date.LOGICAL_NAME:
         return TypeInfoFactory.dateTypeInfo;
-
-      case Time.LOGICAL_NAME:
-        return TypeInfoFactory.intervalDayTimeTypeInfo;
 
       case Timestamp.LOGICAL_NAME:
         return TypeInfoFactory.timestampTypeInfo;
