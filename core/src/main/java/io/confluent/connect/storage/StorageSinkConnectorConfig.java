@@ -118,6 +118,12 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final String[] AVRO_SUPPORTED_CODECS = new String[]{"null", "deflate", "snappy",
       "bzip2"};
 
+  public static final String PARQUET_CODEC_CONFIG = "parquet.codec";
+  public static final String PARQUET_CODEC_DEFAULT = "snappy";
+  public static final String PARQUET_CODEC_DISPLAY = "Parquet Compression Codec";
+  public static final String PARQUET_CODEC_DOC = "The Parquet compression codec to be used for "
+      + "output files.";
+
   // Schema group
   public static final String SCHEMA_COMPATIBILITY_CONFIG = "schema.compatibility";
   public static final String SCHEMA_COMPATIBILITY_DOC =
@@ -306,6 +312,37 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
       );
     }
     return configDef;
+  }
+
+  /**
+   * Add parquet codec configuration to enable compression options for storage sink connectors
+   * that support Parquet format.
+   *
+   * @param configDef The configuration definition to be extended with the parquet codec property
+   * @param parquetRecommender A recommender and validator for parquet compression codecs
+   * @param group The initial position order in the group
+   * @param initialOrder The initial position order in the group
+   */
+  public static <T extends ConfigDef.Recommender & ConfigDef.Validator> void enableParquetConfig(
+      ConfigDef configDef,
+      T parquetRecommender,
+      String group,
+      int initialOrder
+  ) {
+    int orderInGroup = initialOrder;
+    configDef.define(
+        PARQUET_CODEC_CONFIG,
+        Type.STRING,
+        PARQUET_CODEC_DEFAULT,
+        parquetRecommender,
+        Importance.LOW,
+        PARQUET_CODEC_DOC,
+        group,
+        ++orderInGroup,
+        Width.MEDIUM,
+        PARQUET_CODEC_DISPLAY,
+        parquetRecommender
+    );
   }
 
   public static class SchemaCompatibilityRecommender extends BooleanParentRecommender {
