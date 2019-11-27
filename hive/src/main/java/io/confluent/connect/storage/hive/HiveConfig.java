@@ -69,19 +69,6 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
   public static final String SCHEMA_COMPATIBILITY_DEFAULT = "NONE";
   public static final String SCHEMA_COMPATIBILITY_DISPLAY = "Schema Compatibility";
 
-  //Logical type handling group
-  public static final String HIVE_LOGICAL_TYPES_ENABLED_CONFIG = "hive.logical.types.enabled";
-  public static final String HIVE_LOGICAL_TYPES_ENABLED_DOC = "Whether to enable logical "
-      + "type conversion: \n"
-      + "Connect Decimal -> Hive DECIMAL \n "
-      + "Connect Date -> Hive DATE \n "
-      + "Connect Timestamp -> Hive TIMESTAMP \n"
-      + "Connect Time is not supported with current implementation of Hive Serde."
-      + "Beware that the 3 logical types above are not compatible with "
-      + "some older versions of Hive.";
-  public static final boolean HIVE_LOGICAL_TYPES_ENABLED_DEFAULT = true;
-  public static final String HIVE_LOGICAL_TYPES_ENABLED_DISPLAY = "Enable Hive Logical Types";
-
   // CHECKSTYLE:OFF
   public static final ConfigDef.Recommender hiveIntegrationDependentsRecommender =
       new BooleanParentRecommender(HIVE_INTEGRATION_CONFIG);
@@ -186,25 +173,6 @@ public class HiveConfig extends AbstractConfig implements ComposableConfig {
           Width.SHORT,
           SCHEMA_COMPATIBILITY_DISPLAY,
           schemaCompatibilityRecommender
-      );
-    }
-
-    {
-      // Define Logical type handling configuration group
-      final String group = "Logical type handling";
-      int orderInGroup = 0;
-
-      // Define Logical type handling configuration group
-      CONFIG_DEF.define(
-          HIVE_LOGICAL_TYPES_ENABLED_CONFIG,
-          Type.BOOLEAN,
-          HIVE_LOGICAL_TYPES_ENABLED_DEFAULT,
-          Importance.MEDIUM,
-          HIVE_LOGICAL_TYPES_ENABLED_DOC,
-          group,
-          ++orderInGroup,
-          Width.SHORT,
-          HIVE_LOGICAL_TYPES_ENABLED_DISPLAY
       );
     }
   }
