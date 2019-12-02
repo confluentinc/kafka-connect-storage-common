@@ -18,9 +18,10 @@ import org.junit.Test;
 public class HiveSchemaConverterTest {
   @Test
   public void convertPrimitiveMaybeLogicalAllExceptDecimalTest() {
-
+    // The only decimal type supported by Hive with parquet is decimal,
+    // All other types should be parsed as primitive.
     Schema dateSchema = SchemaBuilder.int32().name(Date.LOGICAL_NAME).build();
-    assertEquals(TypeInfoFactory.dateTypeInfo,
+    assertEquals(TypeInfoFactory.intTypeInfo,
         HiveSchemaConverter.convertPrimitiveMaybeLogical(dateSchema));
 
     // logical type time is not supported by Hive serde, convert it to Hive INT
@@ -29,7 +30,7 @@ public class HiveSchemaConverterTest {
         HiveSchemaConverter.convertPrimitiveMaybeLogical(timeSchema));
 
     Schema timestampSchema = SchemaBuilder.int64().name(Timestamp.LOGICAL_NAME).build();
-    assertEquals(TypeInfoFactory.timestampTypeInfo,
+    assertEquals(TypeInfoFactory.longTypeInfo,
         HiveSchemaConverter.convertPrimitiveMaybeLogical(timestampSchema));
   }
 

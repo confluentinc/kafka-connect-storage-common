@@ -19,7 +19,6 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
-import org.apache.kafka.connect.data.Date;
 import org.apache.kafka.connect.data.Decimal;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
@@ -29,7 +28,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.kafka.connect.data.Timestamp;
 import org.apache.kafka.connect.errors.ConnectException;
 
 public class HiveSchemaConverter {
@@ -135,30 +133,22 @@ public class HiveSchemaConverter {
       return convertPrimitive(schema);
     }
 
-    switch (schema.name()) {
-      case Decimal.LOGICAL_NAME:
-        String scale = schema.parameters().get(Decimal.SCALE_FIELD);
-        String precision = schema.parameters().get(CONNECT_AVRO_DECIMAL_PRECISION_PROP);
-        if (precision != null && Integer.parseInt(precision) > HIVE_DECIMAL_PRECISION_MAX) {
-          throw new ConnectException(
-              String.format("Illegal precision %s : Hive allows at most %d precision.",
-                  precision,
-                  HIVE_DECIMAL_PRECISION_MAX)
-          );
-        }
-        // Let precision always be HIVE_DECIMAL_PRECISION_MAX. Hive serde will try the best
-        // to fit decimal data into decimal schema. If the data is too long even for
-        // the maximum precision, hive will throw serde exception. No data loss risk.
-        return new DecimalTypeInfo(HIVE_DECIMAL_PRECISION_MAX, Integer.parseInt(scale));
-
-      case Date.LOGICAL_NAME:
-        return TypeInfoFactory.dateTypeInfo;
-
-      case Timestamp.LOGICAL_NAME:
-        return TypeInfoFactory.timestampTypeInfo;
-
-      default:
-        return convertPrimitive(schema);
+    if (Decimal.LOGICAL_NAME.equals(schema.name())) {
+      String scale = schema.parameters().get(Decimal.SCALE_FIELD);
+      String precision = schema.parameters().get(CONNECT_AVRO_DECIMAL_PRECISION_PROP);
+      if (precision != null && Integer.parseInt(precision) > HIVE_DECIMAL_PRECISION_MAX) {
+        throw new ConnectException(
+            String.format("Illegal precision %s : Hive allows at most %d precision.",
+                precision,
+                HIVE_DECIMAL_PRECISION_MAX)
+        );
+      }
+      // Let precision always be HIVE_DECIMAL_PRECISION_MAX. Hive serde will try the best
+      // to fit decimal data into decimal schema. If the data is too long even for
+      // the maximum precision, hive will throw serde exception. No data loss risk.
+      return new DecimalTypeInfo(HIVE_DECIMAL_PRECISION_MAX, Integer.parseInt(scale));
+    } else {
+      return convertPrimitive(schema);
     }
   }
 }
