@@ -32,7 +32,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   // Connector group
   public static final String FORMAT_CLASS_CONFIG = "format.class";
   public static final String FORMAT_CLASS_DOC =
-      "The format class to use when writing data to the store. ";
+      "The format class to use when writing data to the store.";
   public static final String FORMAT_CLASS_DISPLAY = "Format class";
 
   public static final String FLUSH_SIZE_CONFIG = "flush.size";
@@ -43,21 +43,25 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final String ROTATE_INTERVAL_MS_CONFIG = "rotate.interval.ms";
   public static final String
       ROTATE_INTERVAL_MS_DOC =
-      "The time interval in milliseconds to invoke file commits. This configuration ensures that "
-      + "file commits are invoked every configured interval. This configuration is useful when "
-      + "data ingestion rate is low and the connector didn't write enough messages to commit "
-      + "files. The default value -1 means that this feature is disabled.";
+      "The time interval in milliseconds to invoke file commits. You can configure this parameter"
+      + " so that the time interval is determined by using a timestamp extractor (for "
+      + "example, Kafka Record Time, Record Field, or Wall Clock extractor). When the first "
+      + "record is processed, a timestamp is set as the base time. This is useful if you "
+      + "require exactly-once-semantics. This configuration ensures that file commits are "
+      + "invoked at every configured interval. The default value ``-1`` indicates that this "
+      + "feature is disabled.";
   public static final long ROTATE_INTERVAL_MS_DEFAULT = -1L;
   public static final String ROTATE_INTERVAL_MS_DISPLAY = "Rotate Interval (ms)";
 
   public static final String ROTATE_SCHEDULE_INTERVAL_MS_CONFIG = "rotate.schedule.interval.ms";
   public static final String ROTATE_SCHEDULE_INTERVAL_MS_DOC =
       "The time interval in milliseconds to periodically invoke file commits. This configuration "
-      + "ensures that file commits are invoked every configured interval. Time of commit will be "
-      + "adjusted to 00:00 of selected timezone. Commit will be performed at scheduled time "
-      + "regardless previous commit time or number of messages. This configuration is useful when"
-      + " you have to commit your data based on current server time, like at the beginning of "
-      + "every hour. The default value -1 means that this feature is disabled.";
+      + "ensures that file commits are invoked at every configured interval. Time of commit "
+      + "will be adjusted to 00:00 of selected timezone. The commit will be performed at the "
+      + "scheduled time, regardless of the previous commit time or number of messages. This "
+      + "configuration is useful when you have to commit your data based on current server "
+      + "time, for example at the beginning of every hour. The default value ``-1`` means "
+      + "that this feature is disabled.";
   public static final long ROTATE_SCHEDULE_INTERVAL_MS_DEFAULT = -1L;
   public static final String ROTATE_SCHEDULE_INTERVAL_MS_DISPLAY = "Rotate Schedule Interval (ms)";
 
@@ -81,8 +85,8 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
       "filename.offset.zero.pad.width";
   public static final String
       FILENAME_OFFSET_ZERO_PAD_WIDTH_DOC =
-      "Width to zero-pad offsets in store's filenames if offsets are too short in order to "
-      + "provide fixed-width filenames that can be ordered by simple lexicographic sorting.";
+      "Width to zero pad offsets in store's filenames if offsets are too short in order to "
+      + "provide fixed width filenames that can be ordered by simple lexicographic sorting.";
   public static final int FILENAME_OFFSET_ZERO_PAD_WIDTH_DEFAULT = 10;
   public static final String FILENAME_OFFSET_ZERO_PAD_WIDTH_DISPLAY =
       "Filename Offset Zero Pad Width";
@@ -103,7 +107,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final String CONNECT_META_DATA_CONFIG = "connect.meta.data";
   public static final boolean CONNECT_META_DATA_DEFAULT = true;
   public static final String CONNECT_META_DATA_DOC =
-      "Allow connect converter to add its meta data to the output schema";
+      "Allow connect converter to add its metadata to the output schema";
   public static final String CONNECT_META_DATA_DISPLAY = "Connect Metadata";
 
   public static final String AVRO_CODEC_CONFIG = "avro.codec";
