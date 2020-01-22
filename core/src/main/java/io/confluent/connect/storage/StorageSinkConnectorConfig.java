@@ -45,23 +45,24 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final String
       ROTATE_INTERVAL_MS_DOC =
       "The time interval in milliseconds to invoke file commits. You can configure this parameter"
-      + " so that the time interval is determined by using a timestamp extractor (e.g. Kafka "
-      + "Record Time, Record Field, or Wall Clock extractor). When the first record is "
-      + "processed, a timestamp is set as the base time. This is useful if you require "
-      + "exactly-once-semantics. This configuration ensures that file commits are invoked "
-      + "every configured interval. The default value ``-1`` indicates that this feature is "
-      + "disabled.";
+      + " so that the time interval is determined by using a timestamp extractor (for "
+      + "example, Kafka Record Time, Record Field, or Wall Clock extractor). When the first "
+      + "record is processed, a timestamp is set as the base time. This is useful if you "
+      + "require exactly-once-semantics. This configuration ensures that file commits are "
+      + "invoked at every configured interval. The default value ``-1`` indicates that this "
+      + "feature is disabled.";
   public static final long ROTATE_INTERVAL_MS_DEFAULT = -1L;
   public static final String ROTATE_INTERVAL_MS_DISPLAY = "Rotate Interval (ms)";
 
   public static final String ROTATE_SCHEDULE_INTERVAL_MS_CONFIG = "rotate.schedule.interval.ms";
   public static final String ROTATE_SCHEDULE_INTERVAL_MS_DOC =
       "The time interval in milliseconds to periodically invoke file commits. This configuration "
-      + "ensures that file commits are invoked every configured interval. Time of commit will be "
-      + "adjusted to 00:00 of selected timezone. The commit will be performed at the scheduled "
-      + "time, regardless of the previous commit time or number of messages. This configuration is "
-      + "useful when you have to commit your data based on current server time, for example at the "
-      + "beginning of every hour. The default value ``-1`` means that this feature is disabled.";
+      + "ensures that file commits are invoked at every configured interval. Time of commit "
+      + "will be adjusted to 00:00 of selected timezone. The commit will be performed at the "
+      + "scheduled time, regardless of the previous commit time or number of messages. This "
+      + "configuration is useful when you have to commit your data based on current server "
+      + "time, for example at the beginning of every hour. The default value ``-1`` means "
+      + "that this feature is disabled.";
   public static final long ROTATE_SCHEDULE_INTERVAL_MS_DEFAULT = -1L;
   public static final String ROTATE_SCHEDULE_INTERVAL_MS_DISPLAY = "Rotate Schedule Interval (ms)";
 
