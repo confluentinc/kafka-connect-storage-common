@@ -19,7 +19,9 @@ package io.confluent.connect.storage.errors;
 import org.apache.kafka.connect.errors.ConnectException;
 
 public class PartitionException extends ConnectException {
-  
+
+  private static final long serialVersionUID = 1L;
+
   public PartitionException(String s) {
     super(s);
   }
