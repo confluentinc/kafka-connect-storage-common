@@ -67,23 +67,22 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
 
   public static final String LOCALE_CONFIG = "locale";
   public static final String LOCALE_DOC =
-      "The locale to use when partitioning with ``TimeBasedPartitioner``, and used to format "
-      + "dates and times. For example, use ``en-US`` for US English, ``en-GB`` for UK English, "
-      + "or ``fr-FR`` for French (in France). These may vary by Java version; see the "
-      + "`available locales <http://www.localeplanet.com/java/>`_.";
+      "The locale to use when partitioning with ``TimeBasedPartitioner``. Used to format dates "
+      + "and times. For example, use ``en-US`` for US English, ``en-GB`` for UK English, or "
+      + "``fr-FR`` for French (in France). These may vary by Java version. See the `available"
+      + " locales <http://www.localeplanet.com/java/>`__.";
   public static final String LOCALE_DEFAULT = "";
   public static final String LOCALE_DISPLAY = "Locale";
 
   public static final String TIMEZONE_CONFIG = "timezone";
   public static final String TIMEZONE_DOC =
-      "The timezone to use when partitioning with ``TimeBasedPartitioner``, and used to format "
-      + "and compute dates and times. "
-      + "Use standard short names for timezones such as ``UTC`` or (without daylight savings)"
-      + " ``PST``, ``EST``, and ``ECT``, or longer standard names such as ``America/Los_Angeles``,"
-      + " ``America/New_York``, and ``Europe/Paris``. "
-      + "These may vary by Java version; see the `available timezones within each locale "
-      + "<http://www.localeplanet.com/java>`_, such as `those within the US English locale "
-      + "<http://www.localeplanet.com/java/en-US/index.html>`_.";
+      "The timezone to use when partitioning with ``TimeBasedPartitioner``. Used to format and "
+      + "compute dates and times. Use standard short names for timezones such as ``UTC`` or "
+      + "(without daylight savings) ``PST``, ``EST``, and ``ECT``, or longer standard names "
+      + "such as ``America/Los_Angeles``, ``America/New_York``, and ``Europe/Paris``. These "
+      + "may vary by Java version. See the `available timezones within each locale "
+      + "<http://www.localeplanet.com/java>`__, such as `those within the US English locale "
+      + "<http://www.localeplanet.com/java/en-US/index.html>`__.";
   public static final String TIMEZONE_DEFAULT = "";
   public static final String TIMEZONE_DISPLAY = "Timezone";
 
