@@ -101,6 +101,13 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final String TIMESTAMP_FIELD_NAME_DEFAULT = "timestamp";
   public static final String TIMESTAMP_FIELD_NAME_DISPLAY = "Record Field for Timestamp Extractor";
 
+  public static final String TIMESTAMP_UNIT_NAME_CONFIG = "timestamp.unit";
+  public static final String TIMESTAMP_UNIT_NAME_DOC =
+          "The time unit to be used for timestamp by the timestamp extractor.";
+  public static final String TIMESTAMP_UNIT_NAME_DEFAULT = "ms";
+  public static final String TIMESTAMP_UNIT_NAME_DISPLAY =
+          "Time Unit of specified Record Field for Timestamp Extractor";
+
   /**
    * Create a new configuration definition.
    *
@@ -208,6 +215,16 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           ++orderInGroup,
           Width.LONG,
           TIMESTAMP_FIELD_NAME_DISPLAY);
+
+      configDef.define(TIMESTAMP_UNIT_NAME_CONFIG,
+          Type.STRING,
+          TIMESTAMP_UNIT_NAME_DEFAULT,
+          Importance.MEDIUM,
+          TIMESTAMP_UNIT_NAME_DOC,
+          group,
+          ++orderInGroup,
+          Width.LONG,
+          TIMESTAMP_UNIT_NAME_DISPLAY);
     }
 
     return configDef;
