@@ -19,6 +19,8 @@ import org.apache.kafka.connect.errors.ConnectException;
 
 public class HiveMetaStoreException extends ConnectException {
 
+  private static final long serialVersionUID = 1L;
+
   public HiveMetaStoreException(String s) {
     super(s);
   }
