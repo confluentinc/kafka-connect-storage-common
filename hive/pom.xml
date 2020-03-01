@@ -32,7 +32,6 @@
     <properties>
         <commons.lang3.version>3.1</commons.lang3.version>
         <kryo.version>2.22</kryo.version>
-        <xml-apis.version>1.4.01</xml-apis.version>
     </properties>
 
     <dependencies>
@@ -65,17 +64,7 @@
                     <groupId>org.apache.hive</groupId>
                     <artifactId>hive-exec</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>jdk.tools</groupId>
-                    <artifactId>jdk.tools</artifactId>
-                </exclusion>
             </exclusions>
-        </dependency>
-        <!-- Explicitly include working version of xml-apis -->
-        <dependency>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis</artifactId>
-            <version>${xml-apis.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hive</groupId>

@@ -67,8 +67,8 @@
         <commons-io.version>2.4</commons-io.version>
         <confluent.maven.repo>http://packages.confluent.io/maven/</confluent.maven.repo>
         <confluent.version>6.0.0-SNAPSHOT</confluent.version>
-        <hadoop.version>2.10.0</hadoop.version>
-        <hive.version>2.3.6</hive.version>
+        <hadoop.version>2.7.3</hadoop.version>
+        <hive.version>1.2.2</hive.version>
         <joda.version>2.9.6</joda.version>
         <licenses.version>6.0.0-SNAPSHOT</licenses.version>
         <parquet.version>1.10.1</parquet.version>
@@ -174,7 +174,7 @@
                 <configuration>
                     <showWarnings>true</showWarnings>
                     <compilerArgs>
-                        <arg>-Xlint:-processing</arg>
+                        <arg>-Xlint:all</arg>
                         <arg>-Werror</arg>
                     </compilerArgs>
                 </configuration>
