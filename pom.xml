@@ -71,7 +71,7 @@
         <hive.version>1.2.2</hive.version>
         <joda.version>2.9.6</joda.version>
         <licenses.version>5.3.3-SNAPSHOT</licenses.version>
-        <parquet.version>1.10.1</parquet.version>
+        <parquet.version>1.11.0</parquet.version>
         <httpclient.version>4.5.2</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
         <jline.version>2.12.1</jline.version>
