@@ -53,12 +53,10 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
 public class TimeBasedPartitionerTest extends StorageSinkTestBase {
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
 
   private static final String TIME_ZONE = "America/Los_Angeles";
   private static final DateTimeZone DATE_TIME_ZONE = DateTimeZone.forID(TIME_ZONE);
@@ -81,13 +79,14 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
 
   @Test
   public void testNonPostitiveDuration() {
-    thrown.expect(ConfigException.class);
-    thrown.expectMessage(startsWith("Invalid value -1 for configuration " +
-          PartitionerConfig.PARTITION_DURATION_MS_CONFIG));
-
     Map<String, Object> config = new HashMap<>();
     config.put(PartitionerConfig.PARTITION_DURATION_MS_CONFIG, -1L);
-    configurePartitioner(new TimeBasedPartitioner<>(), null, config);
+    Exception e = assertThrows(ConfigException.class, () -> {
+      configurePartitioner(new TimeBasedPartitioner<>(), null, config);
+    });
+    assertThat(e.getMessage(),
+        startsWith("Invalid value -1 for configuration "
+            + PartitionerConfig.PARTITION_DURATION_MS_CONFIG));
   }
 
   @Test
@@ -116,14 +115,13 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     // Single quotes should be around the year, month literals, not the format strings
     final String pathFormat = "year='YYYY'/month='MM'";
 
-    thrown.expect(ConfigException.class);
-    thrown.expectMessage(startsWith(String.format("Invalid value %s for configuration %s",
-          pathFormat, configKey)));
-
     Map<String, Object> config = new HashMap<>();
     config.put(configKey, pathFormat);
-    configurePartitioner(new TimeBasedPartitioner<>(),
-          null, config);
+    Exception e = assertThrows(ConfigException.class, () -> {
+      configurePartitioner(new TimeBasedPartitioner<>(), null, config);
+    });
+    assertThat(e.getMessage(), startsWith(String.format("Invalid value %s for configuration %s",
+        pathFormat, configKey)));
   }
 
   @Test
@@ -135,12 +133,13 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     final String msg = "Path format cannot be empty.";
     String path = null;
 
-    thrown.expect(ConfigException.class);
-    thrown.expectMessage(is(String.format("Invalid value %s for configuration %s: " +
-            msg, path, configKey)));
-
     config.put(configKey, path);
-    partitioner.configure(config);
+    Exception e = assertThrows(ConfigException.class, () -> {
+      partitioner.configure(config);
+    });
+    assertEquals(
+        String.format("Invalid value %s for configuration %s: " + msg, path, configKey),
+        e.getMessage());
   }
 
   @Test
@@ -152,12 +151,13 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     final String msg = "Path format cannot be empty.";
     String path = "";
 
-    thrown.expect(ConfigException.class);
-    thrown.expectMessage(is(String.format("Invalid value %s for configuration %s: " +
-            msg, path, configKey)));
-
     config.put(configKey, path);
-    partitioner.configure(config);
+    Exception e = assertThrows(ConfigException.class, () -> {
+      partitioner.configure(config);
+    });
+    assertEquals(
+        String.format("Invalid value %s for configuration %s: " + msg, path, configKey),
+        e.getMessage());
   }
 
   @Test
@@ -168,11 +168,12 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     Map<String, Object> config = createConfig(null);
     config.put(configKey, path);
 
-    thrown.expect(ConfigException.class);
-    thrown.expectMessage(is(String.format("Invalid value %s for configuration %s: " +
-            msg, path, configKey)));
-
-    configurePartitioner(new TimeBasedPartitioner<>(), null, config);
+    Exception e = assertThrows(ConfigException.class, () -> {
+      configurePartitioner(new TimeBasedPartitioner<>(), null, config);
+    });
+    assertEquals(
+        String.format("Invalid value %s for configuration %s: " + msg, path, configKey),
+        e.getMessage());
   }
 
   @Test
@@ -193,12 +194,13 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     final String msg = "Locale cannot be empty.";
     String localeString = null;
 
-    thrown.expect(ConfigException.class);
-    thrown.expectMessage(is(String.format("Invalid value %s for configuration %s: " +
-            msg, localeString, configKey)));
-
     config.put(configKey, localeString);
-    partitioner.configure(config);
+    Exception e = assertThrows(ConfigException.class, () -> {
+      partitioner.configure(config);
+    });
+    assertEquals(
+        String.format("Invalid value %s for configuration %s: " + msg, localeString, configKey),
+        e.getMessage());
   }
 
   @Test
@@ -210,12 +212,13 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     final String msg = "Locale cannot be empty.";
     String localeString = "";
 
-    thrown.expect(ConfigException.class);
-    thrown.expectMessage(is(String.format("Invalid value %s for configuration %s: " +
-            msg, localeString, configKey)));
-
     config.put(configKey, localeString);
-    partitioner.configure(config);
+    Exception e = assertThrows(ConfigException.class, () -> {
+      partitioner.configure(config);
+    });
+    assertEquals(
+        String.format("Invalid value %s for configuration %s: " + msg, localeString, configKey),
+        e.getMessage());
   }
 
   @Test
@@ -227,12 +230,13 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     final String msg = "Timezone cannot be empty.";
     String timeZoneString = null;
 
-    thrown.expect(ConfigException.class);
-    thrown.expectMessage(is(String.format("Invalid value %s for configuration %s: " +
-            msg, timeZoneString, configKey)));
-
     config.put(configKey, timeZoneString);
-    partitioner.configure(config);
+    Exception e = assertThrows(ConfigException.class, () -> {
+      partitioner.configure(config);
+    });
+    assertEquals(
+        String.format("Invalid value %s for configuration %s: " + msg, timeZoneString, configKey),
+        e.getMessage());
   }
 
   @Test
@@ -244,12 +248,13 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     final String msg = "Timezone cannot be empty.";
     String timeZoneString = "";
 
-    thrown.expect(ConfigException.class);
-    thrown.expectMessage(is(String.format("Invalid value %s for configuration %s: " +
-            msg, timeZoneString, configKey)));
-
     config.put(configKey, timeZoneString);
-    partitioner.configure(config);
+    Exception e = assertThrows(ConfigException.class, () -> {
+      partitioner.configure(config);
+    });
+    assertEquals(
+        String.format("Invalid value %s for configuration %s: " + msg, timeZoneString, configKey),
+        e.getMessage());
   }
 
   @Test
@@ -259,25 +264,26 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
           + extractorClassName
           + "TimestampExtractor";
 
-    thrown.expect(ConfigException.class);
-    thrown.expectMessage(is("Invalid timestamp extractor: " + extractorClassName));
-
     Map<String, Object> config = new HashMap<>();
     config.put(PartitionerConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG, extractorClassName);
-    configurePartitioner(new TimeBasedPartitioner<String>(), null, config);
+    Exception e = assertThrows(ConfigException.class, () -> {
+      configurePartitioner(new TimeBasedPartitioner<String>(), null, config);
+    });
+    assertEquals("Invalid timestamp extractor: " + extractorClassName, e.getMessage());
   }
 
   @Test
   public void testUnassignableTimestampExtractor() {
     String extractorClassName = DateTimeUtils.class.getName();
 
-    thrown.expect(ConnectException.class);
-    thrown.expectMessage(is(String.format(
-          "Class %s does not implement TimestampExtractor", extractorClassName)));
-
     Map<String, Object> config = new HashMap<>();
     config.put(PartitionerConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG, extractorClassName);
-    configurePartitioner(new TimeBasedPartitioner<String>(), null, config);
+    Exception e = assertThrows(ConnectException.class, () -> {
+      configurePartitioner(new TimeBasedPartitioner<String>(), null, config);
+    });
+    assertEquals(
+        String.format("Class %s does not implement TimestampExtractor", extractorClassName),
+        e.getMessage());
   }
 
   @Test
@@ -292,36 +298,38 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
 
   @Test
   public void testRecordTimeExtractorNullSinkRecordTime() {
-    thrown.expect(ConnectException.class);
-    thrown.expectMessage(startsWith("Unable to determine timestamp using timestamp.extractor"));
-
     SinkRecord r = createValuedSinkRecord(Schema.STRING_SCHEMA, "foo", null);
 
     // Setting time field as null to use RecordTimestampExtractor
-    getEncodedPartition(null, r);
+    Exception e = assertThrows(ConnectException.class, () -> {
+      getEncodedPartition(null, r);
+    });
+    assertThat(e.getMessage(),
+        startsWith("Unable to determine timestamp using timestamp.extractor"));
   }
 
   @Test
   public void testRecordFieldNotStructOrMap() {
-    thrown.expect(PartitionException.class);
-    thrown.expectMessage(is("Error encoding partition."));
-
     Schema valueSchema = Schema.STRING_SCHEMA;
     SinkRecord r = createValuedSinkRecord(valueSchema, "foo", 0L);
 
     // Field name must be non-null, but value doesn't matter here, as valueSchema
     // isn't Struct or Map
-    getEncodedPartition("bar", r);
+    Exception e = assertThrows(PartitionException.class, () -> {
+      getEncodedPartition("bar", r);
+    });
+    assertEquals("Error encoding partition.", e.getMessage());
   }
 
   @Test
   public void testNullSinkRecordTime() {
-    thrown.expect(ConnectException.class);
-    thrown.expectMessage(startsWith("Unable to determine timestamp using timestamp.extractor"));
-
     SinkRecord r = new SinkRecord(TOPIC, PARTITION, null, null,
           Schema.STRING_SCHEMA, "foo", 0);
-    getEncodedPartition(null, r);
+    Exception e = assertThrows(ConnectException.class, () -> {
+      getEncodedPartition(null, r);
+    });
+    assertThat(e.getMessage(),
+        startsWith("Unable to determine timestamp using timestamp.extractor"));
   }
 
   @Test
@@ -355,27 +363,28 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
   @Test
   public void testFloatTimeExtract() {
     String fieldName = "float";
-    thrown.expect(PartitionException.class);
-    thrown.expectMessage(is("Error extracting timestamp from record field: " + fieldName));
 
-    getEncodedPartition(fieldName);
+    Exception e = assertThrows(PartitionException.class, () -> {
+      getEncodedPartition(fieldName);
+    });
+    assertEquals("Error extracting timestamp from record field: " + fieldName,
+        e.getMessage());
   }
 
   @Test
   public void testDoubleTimeExtract() {
     String fieldName = "double";
-    thrown.expect(PartitionException.class);
-    thrown.expectMessage(is("Error extracting timestamp from record field: " + fieldName));
 
-    getEncodedPartition(fieldName);
+    Exception e = assertThrows(PartitionException.class, () -> {
+      getEncodedPartition(fieldName);
+    });
+    assertEquals("Error extracting timestamp from record field: " + fieldName,
+        e.getMessage());
   }
 
   @Test
   public void testStructRecordFieldArrayExtraction() {
     final String fieldName = "array";
-
-    thrown.expect(PartitionException.class);
-    thrown.expectMessage(is("Error extracting timestamp from record field: " + fieldName));
 
     final SchemaBuilder fieldSchema = SchemaBuilder.array(Schema.INT64_SCHEMA);
     final long millis = DATE_TIME.getMillis();
@@ -385,15 +394,16 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     Struct struct = new Struct(valueSchema).put(fieldName, value);
     SinkRecord sinkRecord = createValuedSinkRecord(valueSchema, struct, millis);
 
-    getEncodedPartition(fieldName, sinkRecord);
+    Exception e = assertThrows(PartitionException.class, () -> {
+      getEncodedPartition(fieldName, sinkRecord);
+    });
+    assertEquals("Error extracting timestamp from record field: " + fieldName,
+        e.getMessage());
   }
 
   @Test
   public void testMapRecordFieldArrayExtraction() {
     final String fieldName = "array";
-
-    thrown.expect(PartitionException.class);
-    thrown.expectMessage(is("Error extracting timestamp from record field: " + fieldName));
 
     final SchemaBuilder fieldSchema = SchemaBuilder.array(Schema.INT64_SCHEMA);
     final long millis = DATE_TIME.getMillis();
@@ -404,29 +414,30 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     Schema mapSchema = SchemaBuilder.map(Schema.STRING_SCHEMA, fieldSchema);
     SinkRecord sinkRecord = createValuedSinkRecord(mapSchema, m, millis);
 
-    getEncodedPartition(fieldName, sinkRecord);
+    Exception e = assertThrows(PartitionException.class, () -> {
+      getEncodedPartition(fieldName, sinkRecord);
+    });
+    assertEquals("Error extracting timestamp from record field: " + fieldName,
+        e.getMessage());
   }
 
   @Test
   public void testInvalidStringTimeStructExtract() {
     String fieldName = "string";
 
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage(startsWith("Invalid format"));
-
     SinkRecord sinkRecord = createSinkRecord(DATE_TIME.getMillis());
     Struct struct = (Struct) sinkRecord.value();
     assertThat(String.valueOf(struct.get(fieldName)), is("def"));
 
-    getEncodedPartition(fieldName, sinkRecord);
+    Exception e = assertThrows(IllegalArgumentException.class, () -> {
+      getEncodedPartition(fieldName, sinkRecord);
+    });
+    assertThat(e.getMessage(), startsWith("Invalid format"));
   }
 
   @Test
   public void testInvalidStringTimeMapExtract() {
     String fieldName = "string";
-
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage(startsWith("Invalid format"));
 
     Schema keySchema = Schema.STRING_SCHEMA;
     Schema valueSchema = createNewSchema();
@@ -437,7 +448,10 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     Struct nestedValue = (Struct) ((Map) sinkRecord.value()).get("header");
     assertThat(nestedValue.get(fieldName), is("abc"));
 
-    getEncodedPartition(String.format("header.%s", fieldName), sinkRecord);
+    Exception e = assertThrows(IllegalArgumentException.class, () -> {
+      getEncodedPartition(String.format("header.%s", fieldName), sinkRecord);
+    });
+    assertThat(e.getMessage(), startsWith("Invalid format"));
   }
 
   @Test

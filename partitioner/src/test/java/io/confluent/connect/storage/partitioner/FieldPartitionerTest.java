@@ -30,11 +30,10 @@ import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 public class FieldPartitionerTest extends StorageSinkTestBase {
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
 
   private <T> FieldPartitioner<T> getFieldPartitioner(String... fields) {
     Map<String, Object> config = new HashMap<>();
@@ -84,30 +83,22 @@ public class FieldPartitionerTest extends StorageSinkTestBase {
 
   @Test
   public void testFloatPartition() throws PartitionException {
-    thrown.expect(PartitionException.class);
-    thrown.expectMessage(is("Error encoding partition."));
-
     String fieldName = "float";
     FieldPartitioner<Float> partitioner = getFieldPartitioner(fieldName);
-    String path = getEncodedPatitionerPath(partitioner);
-
-    Map<String, Object> m = new LinkedHashMap<>();
-    m.put(fieldName, 12.2f);
-    assertThat(path, is(generateEncodedPartitionFromMap(m)));
+    Exception e = assertThrows(PartitionException.class, () -> {
+      getEncodedPatitionerPath(partitioner);
+    });
+    assertEquals("Error encoding partition.", e.getMessage());
   }
 
   @Test
   public void testDoublePartition() throws PartitionException {
-    thrown.expect(PartitionException.class);
-    thrown.expectMessage(is("Error encoding partition."));
-
     String fieldName = "double";
     FieldPartitioner<Double> partitioner = getFieldPartitioner(fieldName);
-    String path = getEncodedPatitionerPath(partitioner);
-
-    Map<String, Object> m = new LinkedHashMap<>();
-    m.put(fieldName, 12.2);
-    assertThat(path, is(generateEncodedPartitionFromMap(m)));
+    Exception e = assertThrows(PartitionException.class, () -> {
+      getEncodedPatitionerPath(partitioner);
+    });
+    assertEquals("Error encoding partition.", e.getMessage());
   }
 
   @Test
@@ -123,16 +114,16 @@ public class FieldPartitionerTest extends StorageSinkTestBase {
 
   @Test
   public void testNotStructPartition() throws PartitionException {
-    thrown.expect(PartitionException.class);
-    thrown.expectMessage(is("Error encoding partition."));
-
     String fieldName = "foo";
     FieldPartitioner<String> partitioner = getFieldPartitioner(fieldName);
     SinkRecord sinkRecord = new SinkRecord(TOPIC, PARTITION, Schema.STRING_SCHEMA, null,
           Schema.STRING_SCHEMA, fieldName, 0L);
 
     // Schema is not a Struct
-    partitioner.encodePartition(sinkRecord);
+    Exception e = assertThrows(PartitionException.class, () -> {
+      partitioner.encodePartition(sinkRecord);
+    });
+    assertEquals("Error encoding partition.", e.getMessage());
   }
 
   @Test
