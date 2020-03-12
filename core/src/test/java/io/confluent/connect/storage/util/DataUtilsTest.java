@@ -25,12 +25,10 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 public class DataUtilsTest extends StorageSinkTestBase {
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
-
   private static final Date DATE = new Date(TIMESTAMP);
 
   private void assertDate(Object o, Date value) {
@@ -160,72 +158,77 @@ public class DataUtilsTest extends StorageSinkTestBase {
 
   @Test
   public void testValidateNullObject() throws ConnectException {
-    thrown.expect(ConnectException.class);
-    thrown.expectMessage(is("Attempted to extract a field from a null object."));
-
-    DataUtils.getNestedField(null, "foo");
+    Exception e = assertThrows(ConnectException.class, () -> {
+      DataUtils.getNestedField(null, "foo");
+    });
+    assertEquals("Attempted to extract a field from a null object.", e.getMessage());
   }
 
   @Test
   public void testValidateNullField() throws ConnectException {
-    thrown.expect(ConnectException.class);
-    thrown.expectMessage(is("The field to extract cannot be null or empty."));
-
     Schema schema = createSchemaWithTimestampField();
-    DataUtils.getNestedField(schema, null);
+
+    Exception e = assertThrows(ConnectException.class, () -> {
+      DataUtils.getNestedField(schema, null);
+    });
+    assertEquals("The field to extract cannot be null or empty.", e.getMessage());
   }
 
   @Test
   public void testValidateEmptyField() throws ConnectException {
-    thrown.expect(ConnectException.class);
-    thrown.expectMessage(is("The field to extract cannot be null or empty."));
-
     Schema schema = createSchemaWithTimestampField();
-    DataUtils.getNestedField(schema, "");
+
+    Exception e = assertThrows(ConnectException.class, () -> {
+      DataUtils.getNestedField(schema, "");
+    });
+    assertEquals("The field to extract cannot be null or empty.", e.getMessage());
   }
 
   @Test
   public void testWrongDataStructure() throws DataException {
-    thrown.expect(DataException.class);
-    thrown.expectMessage(startsWith("Argument not a Struct or Map"));
-
     List<Integer> x = Arrays.asList(1, 2, 3);
-    DataUtils.getField(x, "foo");
+
+    Exception e = assertThrows(DataException.class, () -> {
+      DataUtils.getField(x, "foo");
+    });
+    assertThat(e.getMessage(), startsWith("Argument not a Struct or Map"));
   }
 
   @Test
   public void testMissingTopField() throws DataException {
     String fieldName = "foo";
-    thrown.expect(DataException.class);
-    thrown.expectMessage(startsWith(String.format("The field '%s' does not exist in", fieldName)));
-
     Map<String, Object> map = createMapWithTimestampField(TIMESTAMP);
-    DataUtils.getNestedFieldValue(map, fieldName);
+
+    Exception e = assertThrows(DataException.class, () -> {
+      DataUtils.getNestedFieldValue(map, fieldName);
+    });
+    assertThat(e.getMessage(),
+        startsWith(String.format("The field '%s' does not exist in", fieldName)));
   }
 
   @Test
   public void testMissingNestedField() throws DataException {
     String topField = "nested";
     String fieldName = "foo";
-    thrown.expect(DataException.class);
-    thrown.expectMessage(startsWith(
-          String.format("The field '%s.%s' does not exist in", topField, fieldName)));
 
     Map<String, Object> innerMap = createMapWithTimestampField(TIMESTAMP);
     Map<String, Object> map = new HashMap<>();
     map.put(topField, innerMap);
-    DataUtils.getNestedFieldValue(map, topField + "." + fieldName);
+    Exception e = assertThrows(DataException.class, () -> {
+      DataUtils.getNestedFieldValue(map, topField + "." + fieldName);
+    });
+    assertThat(e.getMessage(),
+        startsWith(String.format("The field '%s.%s' does not exist in", topField, fieldName)));
   }
 
   @Test
   public void testNestedFieldSchemaWrongType() throws DataException {
-    thrown.expect(DataException.class);
-    thrown.expectMessage(startsWith("Unable to get field"));
-
     Schema schema = createSchemaWithTimestampField();
     Field f = DataUtils.getNestedField(schema, "string");
-    DataUtils.getNestedField(f.schema(), "foo");
 
-    DataUtils.getNestedField(schema, "string.foo");
+    Exception e = assertThrows(DataException.class, () -> {
+      DataUtils.getNestedField(f.schema(), "foo");
+    });
+    assertThat(e.getMessage(), startsWith("Unable to get field"));
   }
 }
