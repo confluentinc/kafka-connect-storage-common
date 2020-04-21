@@ -1,6 +1,8 @@
 #!/usr/bin/env groovy
 common {
-  slackChannel = '#connect-warn'
-  upstreamProjects = ['confluentinc/common','confluentinc/schema-registry']
-  pintMerge = true
+  slackChannel = ''
+  pintMerge = false
+  testbreakReporting = false
+  disableConcurrentBuilds = true
+  downStreamRepos = ["kafka-connect-hdfs"]
 }
