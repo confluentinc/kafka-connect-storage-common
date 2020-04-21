@@ -23,7 +23,7 @@
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>kafka-connect-storage-common-parent</artifactId>
-        <version>6.0.0-SNAPSHOT</version>
+        <version>6.0.0-0</version>
     </parent>
 
     <artifactId>kafka-connect-storage-common-package</artifactId>
@@ -35,27 +35,27 @@
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-storage-common</artifactId>
-            <version>${project.version}</version>
+            <version>${io.confluent.kafka-connect-storage-common.version}</version>
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-storage-format</artifactId>
-            <version>${project.version}</version>
+            <version>${io.confluent.kafka-connect-storage-common.version}</version>
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-storage-partitioner</artifactId>
-            <version>${project.version}</version>
+            <version>${io.confluent.kafka-connect-storage-common.version}</version>
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-storage-wal</artifactId>
-            <version>${project.version}</version>
+            <version>${io.confluent.kafka-connect-storage-common.version}</version>
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-storage-core</artifactId>
-            <version>${project.version}</version>
+            <version>${io.confluent.kafka-connect-storage-common.version}</version>
         </dependency>
         <!-- kafka -> zookeeper -> jline ends up including junit 3.8.1 here. Explicitly list the
              dependency and scope it to test to avoid pulling it in -->
@@ -142,7 +142,7 @@
                                             ${project.build.directory}/${project.build.finalName}-package/share/doc/kafka-connect-storage-common/notices
                                         </argument>
                                         <argument>-t kafka-connect-storage-common</argument>
-                                        <argument>-x licenses-${licenses.version}.jar</argument>
+                                        <argument>-x licenses-${io.confluent.license-file-generator.version}.jar</argument>
                                     </arguments>
                                 </configuration>
                                 <phase>package</phase>
@@ -163,7 +163,7 @@
                             <dependency>
                                 <groupId>io.confluent</groupId>
                                 <artifactId>licenses</artifactId>
-                                <version>${licenses.version}</version>
+                                <version>${io.confluent.license-file-generator.version}</version>
                             </dependency>
                         </dependencies>
                     </plugin>
@@ -197,7 +197,7 @@
                                         <argument>-l ${project.parent.basedir}/licenses</argument>
                                         <argument>-n ${project.parent.basedir}/notices</argument>
                                         <argument>-t kafka-connect-storage-common</argument>
-                                        <argument>-x licenses-${licenses.version}.jar</argument>
+                                        <argument>-x licenses-${io.confluent.license-file-generator.version}.jar</argument>
                                     </arguments>
                                 </configuration>
                                 <phase>package</phase>
@@ -218,7 +218,7 @@
                             <dependency>
                                 <groupId>io.confluent</groupId>
                                 <artifactId>licenses</artifactId>
-                                <version>${licenses.version}</version>
+                                <version>${io.confluent.license-file-generator.version}</version>
                             </dependency>
                         </dependencies>
                     </plugin>
