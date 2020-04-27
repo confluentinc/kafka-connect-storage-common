@@ -75,8 +75,8 @@
         <httpclient.version>4.5.2</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
         <jline.version>2.12.1</jline.version>
-        <io.confluent.schema-registry.version>[6.0.0-1, 6.0.1-0)</io.confluent.schema-registry.version>
-        <io.confluent.license-file-generator.version>[6.0.0-1, 6.0.1-0)</io.confluent.license-file-generator.version>
+        <io.confluent.schema-registry.version>[6.0.0-0, 6.0.1-0)</io.confluent.schema-registry.version>
+        <io.confluent.license-file-generator.version>[6.0.0-0, 6.0.1-0)</io.confluent.license-file-generator.version>
     </properties>
 
     <repositories>
