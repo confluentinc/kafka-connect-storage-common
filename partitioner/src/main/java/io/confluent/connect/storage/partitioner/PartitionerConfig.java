@@ -76,11 +76,12 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final String TIMEZONE_CONFIG = "timezone";
   public static final String TIMEZONE_DOC =
       "The timezone to use when partitioning with ``TimeBasedPartitioner``. Used to format and "
-      + "compute dates and times. Use standard short names for timezones such as ``UTC`` or "
-      + "(without daylight savings) ``PST``, ``EST``, and ``ECT``, or longer standard names "
-      + "such as ``America/Los_Angeles``, ``America/New_York``, and ``Europe/Paris``. These "
+      + "compute dates and times. All timezone IDs must be specified in the long format, such as "
+      + "``America/Los_Angeles``, ``America/New_York``, and ``Europe/Paris``, or ``UTC``. "
+      + "Alternatively a locale independent, fixed offset, datetime zone can be specified in form "
+      + "``[+-]hh:mm``. Support for these timezones "
       + "may vary by Java version. See the `available timezones within each locale "
-      + "<http://www.localeplanet.com/java>`__, such as `those within the US English locale "
+      + "<http://www.localeplanet.com/java/>`__, such as `those within the US English locale "
       + "<http://www.localeplanet.com/java/en-US/index.html>`__.";
   public static final String TIMEZONE_DEFAULT = "";
   public static final String TIMEZONE_DISPLAY = "Timezone";
