@@ -33,7 +33,7 @@
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-storage-core</artifactId>
-            <version>${confluent.version}</version>
+            <version>${io.confluent.kafka-connect-storage-common.version}</version>
         </dependency>
         <dependency>
             <groupId>joda-time</groupId>

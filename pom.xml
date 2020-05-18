@@ -75,6 +75,7 @@
         <httpclient.version>4.5.2</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
         <jline.version>2.12.1</jline.version>
+        <io.confluent.kafka-connect-storage-common.version>6.0.0-0</io.confluent.kafka-connect-storage-common.version>
         <io.confluent.schema-registry.version>[6.0.0-0, 6.0.1-0)</io.confluent.schema-registry.version>
     </properties>
 
@@ -92,27 +93,27 @@
             <dependency>
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-connect-storage-common</artifactId>
-                <version>${project.version}</version>
+                <version>${io.confluent.kafka-connect-storage-common.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-connect-storage-core</artifactId>
-                <version>${project.version}</version>
+                <version>${io.confluent.kafka-connect-storage-common.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-connect-storage-format</artifactId>
-                <version>${project.version}</version>
+                <version>${io.confluent.kafka-connect-storage-common.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-connect-storage-partitioner</artifactId>
-                <version>${project.version}</version>
+                <version>${io.confluent.kafka-connect-storage-common.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-connect-storage-wal</artifactId>
-                <version>${project.version}</version>
+                <version>${io.confluent.kafka-connect-storage-common.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.confluent</groupId>
