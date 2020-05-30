@@ -23,7 +23,7 @@
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>common</artifactId>
-        <version>6.0.0-SNAPSHOT</version>
+        <version>6.0.0-beta200530181008</version>
     </parent>
 
     <artifactId>kafka-connect-storage-common-parent</artifactId>
@@ -66,11 +66,11 @@
     <properties>
         <commons-io.version>2.4</commons-io.version>
         <confluent.maven.repo>http://packages.confluent.io/maven/</confluent.maven.repo>
-        <confluent.version>6.0.0-SNAPSHOT</confluent.version>
+        <confluent.version>6.0.0-beta200530181008</confluent.version>
         <hadoop.version>2.10.0</hadoop.version>
         <hive.version>2.3.6</hive.version>
         <joda.version>2.9.6</joda.version>
-        <licenses.version>6.0.0-SNAPSHOT</licenses.version>
+        <licenses.version>6.0.0-beta200530181008</licenses.version>
         <parquet.version>1.11.0</parquet.version>
         <httpclient.version>4.5.2</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
