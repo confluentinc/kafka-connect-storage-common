@@ -19,6 +19,8 @@ import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.errors.ConnectException;
+import org.apache.kafka.connect.header.ConnectHeaders;
+import org.apache.kafka.connect.header.Header;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.apache.kafka.connect.source.SourceTask;
 import org.slf4j.Logger;
@@ -31,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 public class SchemaSourceTask extends SourceTask {
+
   private static final Logger log = LoggerFactory.getLogger(SchemaSourceTask.class);
 
   public static final String NAME_CONFIG = "name";
@@ -41,6 +44,7 @@ public class SchemaSourceTask extends SourceTask {
   public static final String MULTIPLE_SCHEMA_CONFIG = "multiple.schema";
   public static final String PARTITION_COUNT_CONFIG = "partition.count";
   public static final String ENABLE_STDOUT_CONFIG = "enable.stdout";
+  public static final String COMPLEX_KEYS_HEADERS = "complex.keys.headers";
 
   private static final String ID_FIELD = "id";
   private static final String SEQNO_FIELD = "seqno";
@@ -56,6 +60,7 @@ public class SchemaSourceTask extends SourceTask {
   private boolean multipleSchema;
   private int partitionCount;
   private boolean isOutputEnabled;
+  private boolean complexKeysHeaders;
 
   // Until we can use ThroughputThrottler from Kafka, use a fixed
   // sleep interval. This isn't perfect, but close enough
@@ -86,6 +91,54 @@ public class SchemaSourceTask extends SourceTask {
       .field("seqno", Schema.INT64_SCHEMA)
       .build();
 
+  private static Schema simpleKeySchema = Schema.STRING_SCHEMA;
+  private static Schema complexKeySchema = SchemaBuilder.struct().name("complexkeyschema")
+      .field("boolean", Schema.BOOLEAN_SCHEMA)
+      .field("long", Schema.INT64_SCHEMA)
+      .field("float", Schema.FLOAT32_SCHEMA)
+      .field("string", SchemaBuilder.string().defaultValue("key").build())
+      .build();
+
+  private static Struct recordValue1(int id, int partitionVal, long seqno) {
+    return new Struct(valueSchema)
+        .put("boolean", true)
+        .put("int", 12)
+        .put("long", 12L)
+        .put("float", 12.2f)
+        .put("double", 12.2)
+        .put("partitioning", partitionVal)
+        .put("id", id)
+        .put("seqno", seqno);
+  }
+
+  private static Struct recordValue2(int id, int partitionVal, long seqno) {
+    return new Struct(valueSchema2)
+        .put("boolean", true)
+        .put("int", 12)
+        .put("long", 12L)
+        .put("float", 12.2f)
+        .put("double", 12.2)
+        .put("partitioning", partitionVal)
+        .put("string", "def")
+        .put("id", id)
+        .put("seqno", seqno);
+  }
+
+  private static Struct complexRecordKeyValue() {
+    return new Struct(complexKeySchema)
+        .put("boolean", false)
+        .put("long", 8L)
+        .put("float", 8.8f)
+        .put("string", "complex-key-struct");
+  }
+
+  private static Iterable<Header> complexRecordHeaders() {
+    return new ConnectHeaders()
+        .addString("first-header-key", "first-header-value")
+        .addLong("second-header-key", 8L)
+        .addFloat("third-header-key", 6.5f);
+  }
+
   public String version() {
     return new SchemaSourceConnector().version();
   }
@@ -98,6 +151,7 @@ public class SchemaSourceTask extends SourceTask {
       topic = props.get(TOPIC_CONFIG);
       maxNumMsgs = Long.parseLong(props.get(NUM_MSGS_CONFIG));
       multipleSchema = Boolean.parseBoolean(props.get(MULTIPLE_SCHEMA_CONFIG));
+      complexKeysHeaders = Boolean.parseBoolean(props.get(COMPLEX_KEYS_HEADERS));
       partitionCount = Integer.parseInt(
           props.containsKey(PARTITION_COUNT_CONFIG)
           ? props.get(PARTITION_COUNT_CONFIG)
@@ -151,50 +205,43 @@ public class SchemaSourceTask extends SourceTask {
 
       Map<String, Long> ccOffset = Collections.singletonMap(SEQNO_FIELD, seqno);
       int partitionVal = (int) (seqno % partitionCount);
-      final Struct data;
       final SourceRecord srcRecord;
-      if (!multipleSchema || count % 2 == 0) {
-        data = new Struct(valueSchema)
-            .put("boolean", true)
-            .put("int", 12)
-            .put("long", 12L)
-            .put("float", 12.2f)
-            .put("double", 12.2)
-            .put("partitioning", partitionVal)
-            .put("id", id)
-            .put("seqno", seqno);
 
+      Schema recordKeySchema = simpleKeySchema;
+      Object recordKeyValue = "key";
+      Iterable<Header> recordHeaders = null;
+
+      if (complexKeysHeaders) {
+        recordKeySchema = complexKeySchema;
+        recordKeyValue = complexRecordKeyValue();
+        recordHeaders = complexRecordHeaders();
+      }
+
+      if (!multipleSchema || count % 2 == 0) {
         srcRecord = new SourceRecord(
             partition,
             ccOffset,
             topic,
             id,
-            Schema.STRING_SCHEMA,
-            "key",
+            recordKeySchema,
+            recordKeyValue,
             valueSchema,
-            data
+            recordValue1(id, partitionVal, seqno),
+            null,
+            recordHeaders
         );
       } else {
-        data = new Struct(valueSchema2)
-            .put("boolean", true)
-            .put("int", 12)
-            .put("long", 12L)
-            .put("float", 12.2f)
-            .put("double", 12.2)
-            .put("partitioning", partitionVal)
-            .put("string", "def")
-            .put("id", id)
-            .put("seqno", seqno);
-
         srcRecord = new SourceRecord(
             partition,
             ccOffset,
             topic,
             id,
-            Schema.STRING_SCHEMA,
-            "key",
+            recordKeySchema,
+            recordKeyValue,
             valueSchema2,
-            data
+            recordValue2(id, partitionVal, seqno),
+            null,
+            recordHeaders
         );
       }
 
