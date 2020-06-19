@@ -22,14 +22,22 @@
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>kafka-connect-storage-common-parent</artifactId>
-        <version>6.0.0-SNAPSHOT</version>
+        <version>6.1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>kafka-connect-storage-partitioner</artifactId>
     <packaging>jar</packaging>
     <name>kafka-connect-storage-partitioner</name>
+    <properties>
+        <kafkaconnect.version>2.1.1</kafkaconnect.version>
+    </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>connect-transforms</artifactId>
+            <version>${kafkaconnect.version}</version>
+        </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-storage-core</artifactId>
