@@ -23,13 +23,13 @@
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>common</artifactId>
-        <version>[6.0.0-0, 6.0.1-0)</version>
+        <version>6.0.0-57</version>
     </parent>
 
     <artifactId>kafka-connect-storage-common-parent</artifactId>
     <packaging>pom</packaging>
     <name>kafka-connect-storage-common-parent</name>
-    <version>6.0.0-0</version>
+    <version>6.0.0-22</version>
     <organization>
         <name>Confluent, Inc.</name>
         <url>http://confluent.io</url>
@@ -74,8 +74,8 @@
         <httpclient.version>4.5.2</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
         <jline.version>2.12.1</jline.version>
-        <io.confluent.kafka-connect-storage-common.version>6.0.0-0</io.confluent.kafka-connect-storage-common.version>
-        <io.confluent.schema-registry.version>[6.0.0-0, 6.0.1-0)</io.confluent.schema-registry.version>
+        <io.confluent.kafka-connect-storage-common.version>6.0.0-22</io.confluent.kafka-connect-storage-common.version>
+        <io.confluent.schema-registry.version>6.0.0-47</io.confluent.schema-registry.version>
     </properties>
 
     <repositories>
