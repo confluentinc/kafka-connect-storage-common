@@ -54,6 +54,18 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
             <version>${hadoop.version}</version>
+            <!-- use a confluent repackaged version of log4j with security patches -->
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>confluent-log4j</artifactId>
+            <version>${confluent-log4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hive.hcatalog</groupId>
@@ -68,6 +80,10 @@
                     <groupId>org.eclipse.jetty.aggregate</groupId>
                     <artifactId>jetty-all</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -75,6 +91,12 @@
             <artifactId>hive-exec</artifactId>
             <version>${hive.version}</version>
             <classifier>core</classifier>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
