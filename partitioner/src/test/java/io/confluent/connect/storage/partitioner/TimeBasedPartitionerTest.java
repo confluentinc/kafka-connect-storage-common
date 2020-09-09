@@ -111,6 +111,21 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
   }
 
   @Test
+  public void testGeneratePartitionedPathWithoutTopicName() throws Exception {
+    Map<String, Object> config = createConfig(null);
+    config.put(StorageCommonConfig.PATH_INCLUDE_TOPICNAME_CONFIG, false);
+
+    BiHourlyPartitioner partitioner = (BiHourlyPartitioner) configurePartitioner(
+          new BiHourlyPartitioner(), null, config);
+
+    SinkRecord sinkRecord = getSinkRecord();
+    String encodedPartition = partitioner.encodePartition(sinkRecord);
+    final String topic = "topic";
+    String path = partitioner.generatePartitionedPath(topic, encodedPartition);
+    assertEquals("year=2015/month=4/day=2/hour=0/", path);
+  }
+
+  @Test
   public void testInvalidPathFormat() {
     final String configKey = PartitionerConfig.PATH_FORMAT_CONFIG;
     // Single quotes should be around the year, month literals, not the format strings
@@ -685,8 +700,11 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     config.put(PartitionerConfig.PATH_FORMAT_CONFIG, PATH_FORMAT);
     config.put(PartitionerConfig.LOCALE_CONFIG, Locale.US.toString());
     config.put(PartitionerConfig.TIMEZONE_CONFIG, DATE_TIME_ZONE.toString());
+    config.put(StorageCommonConfig.PATH_INCLUDE_TOPICNAME_CONFIG, StorageCommonConfig.PATH_INCLUDE_TOPICNAME_DEFAULT);
     if (timeFieldName != null) {
       config.put(PartitionerConfig.TIMESTAMP_FIELD_NAME_CONFIG, timeFieldName);
+      config.put(PartitionerConfig.TIMESTAMP_SCALING_FACTOR_CONFIG, PartitionerConfig.TIMESTAMP_SCALING_FACTOR_DEFAULT);
+      config.put(PartitionerConfig.TIMESTAMP_SCALING_OPERATION_CONFIG, PartitionerConfig.TIMESTAMP_SCALING_OPERATION_DEFAULT);
     }
     return config;
   }
