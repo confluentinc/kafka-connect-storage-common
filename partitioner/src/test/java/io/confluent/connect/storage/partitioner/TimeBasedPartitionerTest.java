@@ -31,9 +31,7 @@ import org.joda.time.ReadableInstant;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.ISODateTimeFormat;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.util.Collections;
 import java.util.Date;
@@ -48,14 +46,13 @@ import io.confluent.connect.storage.common.StorageCommonConfig;
 import io.confluent.connect.storage.errors.PartitionException;
 import io.confluent.connect.storage.util.DateTimeUtils;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.fail;
 
 public class TimeBasedPartitionerTest extends StorageSinkTestBase {
 
@@ -581,6 +578,37 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
 
     encodedPartition = getEncodedPartition(String.format("header.%s", timeFieldName), sinkRecord);
     validateEncodedPartition(encodedPartition);
+  }
+
+  @Test
+  public void testRecordFieldTimeStringExtractorRecord() {
+    long millis = DATE_TIME.getMillis();
+    String timeStr = String.valueOf(millis);
+    String timeFieldName = "timestamp";
+    TimeBasedPartitioner<String> partitioner = configurePartitioner(
+        new TimeBasedPartitioner<>(), timeFieldName, null);
+    Schema schema = SchemaBuilder.struct().name("record")
+        .field(timeFieldName, Schema.STRING_SCHEMA);
+    Struct s = new Struct(schema).put(timeFieldName, timeStr);
+    SinkRecord sinkRecord = createValuedSinkRecord(schema, s, millis);
+    Long extractedTimestamp = partitioner.getTimestampExtractor().extract(sinkRecord);
+    assertThat(extractedTimestamp, is(millis));
+  }
+
+  @Test
+  public void testRecordFieldTimeStringExtractorMap() {
+    long millis = DATE_TIME.getMillis();
+    String timeStr = String.valueOf(millis);
+    String timeFieldName = "timestamp";
+    TimeBasedPartitioner<String> partitioner = configurePartitioner(
+        new TimeBasedPartitioner<>(), timeFieldName, null);
+    Schema keySchema = Schema.STRING_SCHEMA;
+    Schema mapSchema = SchemaBuilder.map(keySchema, Schema.STRING_SCHEMA);
+    Map<String, Object> map = new HashMap<>();
+    map.put(timeFieldName, timeStr);
+    SinkRecord sinkRecord = createValuedSinkRecord(mapSchema, map, millis);
+    Long extractedTimestamp = partitioner.getTimestampExtractor().extract(sinkRecord);
+    assertThat(extractedTimestamp, is(millis));
   }
 
   @Test

@@ -15,7 +15,6 @@
 
 package io.confluent.connect.storage.partitioner;
 
-import io.confluent.connect.storage.util.DataUtils;
 import org.apache.kafka.common.config.ConfigException;
 import org.apache.kafka.common.utils.Time;
 import org.apache.kafka.connect.connector.ConnectRecord;
@@ -41,6 +40,7 @@ import io.confluent.connect.storage.common.SchemaGenerator;
 import io.confluent.connect.storage.common.StorageCommonConfig;
 import io.confluent.connect.storage.common.util.StringUtils;
 import io.confluent.connect.storage.errors.PartitionException;
+import io.confluent.connect.storage.util.DataUtils;
 
 public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
   private static final Logger log = LoggerFactory.getLogger(TimeBasedPartitioner.class);
@@ -290,7 +290,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
           case INT64:
             return ((Number) timestampValue).longValue();
           case STRING:
-            return dateTime.parseMillis((String) timestampValue);
+            return extractTimestampFromString(timestampValue);
           default:
             log.error(
                 "Unsupported type '{}' for user-defined timestamp field.",
@@ -306,7 +306,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
         if (timestampValue instanceof Number) {
           return ((Number) timestampValue).longValue();
         } else if (timestampValue instanceof String) {
-          return dateTime.parseMillis((String) timestampValue);
+          return extractTimestampFromString(timestampValue);
         } else if (timestampValue instanceof Date) {
           return ((Date) timestampValue).getTime();
         } else {
@@ -322,6 +322,16 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
         log.error("Value is not of Struct or Map type.");
         throw new PartitionException("Error encoding partition.");
       }
+    }
+
+    private Long extractTimestampFromString(Object timestampValue) {
+      String timestampValueStr = (String) timestampValue;
+      try {
+        return Long.valueOf(timestampValueStr);
+      } catch (NumberFormatException e) {
+        // expected, ignore
+      }
+      return dateTime.parseMillis(timestampValueStr);
     }
   }
 }
