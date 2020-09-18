@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.confluent.connect.storage.common.ComposableConfig;
+import org.joda.time.DateTimeZone;
 
 public class PartitionerConfig extends AbstractConfig implements ComposableConfig {
 
@@ -182,6 +183,7 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
       configDef.define(TIMEZONE_CONFIG,
           Type.STRING,
           TIMEZONE_DEFAULT,
+          new TimezoneValidator(),
           Importance.MEDIUM,
           TIMEZONE_DOC,
           group,
@@ -272,6 +274,29 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
         ce.initCause(e);
         throw ce;
       }
+    }
+  }
+
+  public static class TimezoneValidator implements ConfigDef.Validator {
+    @Override
+    public void ensureValid(String name, Object timezone) {
+      String timezoneStr = ((String) timezone).trim();
+      if (!timezoneStr.isEmpty()) {
+        try {
+          DateTimeZone.forID(timezoneStr);
+        } catch (IllegalArgumentException e) {
+          throw new ConfigException(
+              name,
+              timezone,
+              e.getMessage()
+          );
+        }
+      }
+    }
+
+    @Override
+    public String toString() {
+      return "Any timezone accepted by: " + DateTimeZone.class;
     }
   }
 

@@ -70,11 +70,12 @@
         <hadoop.version>2.10.0</hadoop.version>
         <hive.version>2.3.6</hive.version>
         <joda.version>2.9.6</joda.version>
-        <licenses.version>6.1.0-SNAPSHOT</licenses.version>
-        <parquet.version>1.11.0</parquet.version>
+        <licenses.version>6.0.0-SNAPSHOT</licenses.version>
+        <parquet.version>1.11.1</parquet.version>
         <httpclient.version>4.5.2</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
         <jline.version>2.12.1</jline.version>
+        <confluent-log4j.version>1.2.17-cp2</confluent-log4j.version>
     </properties>
 
     <repositories>
