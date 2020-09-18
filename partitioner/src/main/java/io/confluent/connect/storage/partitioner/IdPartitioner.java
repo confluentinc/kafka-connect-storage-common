@@ -1,18 +1,13 @@
 package io.confluent.connect.storage.partitioner;
 
+import io.confluent.connect.storage.common.StorageCommonConfig;
 import org.apache.kafka.common.utils.Utils;
-import org.apache.kafka.connect.data.Schema;
-import org.apache.kafka.connect.data.Schema.Type;
-import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
-
-import io.confluent.connect.storage.common.StorageCommonConfig;
-import io.confluent.connect.storage.errors.PartitionException;
 
 import static org.apache.kafka.connect.transforms.util.Requirements.requireMap;
 
@@ -29,11 +24,16 @@ public class IdPartitioner<T> extends DefaultPartitioner<T> {
     }
 
     @Override
+    public String generatePartitionedPath(String topic, String encodedPartition) {
+        return encodedPartition;
+    }
+
+    @Override
     public String encodePartition(SinkRecord sinkRecord) {
         Object value = sinkRecord.value();
         log.info(value.toString());
 
-        Map<String, Object> key = requireMap(sinkRecord.key(), PURPOSE);
+        Map<String, Object> key = requireMap(sinkRecord.value(), PURPOSE);
         log.info(key.toString());
 
         StringBuilder builder = new StringBuilder();
