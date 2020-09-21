@@ -22,7 +22,7 @@
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>kafka-connect-storage-common-parent</artifactId>
-        <version>6.0.0-SNAPSHOT</version>
+        <version>10.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>kafka-connect-storage-hive</artifactId>
@@ -39,12 +39,12 @@
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-storage-common</artifactId>
-            <version>${confluent.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-storage-partitioner</artifactId>
-            <version>${confluent.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
