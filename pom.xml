@@ -28,6 +28,7 @@
 
     <artifactId>kafka-connect-storage-common-parent</artifactId>
     <packaging>pom</packaging>
+    <version>10.0.0-SNAPSHOT</version>
     <name>kafka-connect-storage-common-parent</name>
     <organization>
         <name>Confluent, Inc.</name>
@@ -66,16 +67,15 @@
     <properties>
         <commons-io.version>2.4</commons-io.version>
         <confluent.maven.repo>http://packages.confluent.io/maven/</confluent.maven.repo>
-        <confluent.version>6.0.0-SNAPSHOT</confluent.version>
         <hadoop.version>2.10.0</hadoop.version>
         <hive.version>2.3.6</hive.version>
         <joda.version>2.9.6</joda.version>
-        <licenses.version>6.0.0-SNAPSHOT</licenses.version>
         <parquet.version>1.11.1</parquet.version>
         <httpclient.version>4.5.2</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
         <jline.version>2.12.1</jline.version>
         <confluent-log4j.version>1.2.17-cp2</confluent-log4j.version>
+        <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
     </properties>
 
     <repositories>
@@ -117,7 +117,7 @@
             <dependency>
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-connect-avro-converter</artifactId>
-                <version>${project.version}</version>
+                <version>${confluent.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.parquet</groupId>
@@ -203,6 +203,16 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>${maven.release.plugin.version}</version>
+                <configuration>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <remoteTagging>false</remoteTagging>
+                    <tagNameFormat>v@{project.version}</tagNameFormat>
+                </configuration>
             </plugin>
         </plugins>
     </build>
