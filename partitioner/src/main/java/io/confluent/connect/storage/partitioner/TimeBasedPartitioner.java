@@ -266,11 +266,38 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
   public static class RecordFieldTimestampExtractor implements TimestampExtractor {
     private String fieldName;
     private DateTimeFormatter dateTime;
+    private long timestampScalingFactor;
+    private String timestampScalingOperation;
 
     @Override
     public void configure(Map<String, Object> config) {
       fieldName = (String) config.get(PartitionerConfig.TIMESTAMP_FIELD_NAME_CONFIG);
       dateTime = ISODateTimeFormat.dateTimeParser();
+      timestampScalingFactor = (long) config.get(PartitionerConfig.TIMESTAMP_SCALING_FACTOR_CONFIG);
+      timestampScalingOperation =
+          (String) config.get(PartitionerConfig.TIMESTAMP_SCALING_OPERATION_CONFIG);
+    }
+
+    public Long scalingTimestamp(
+        long timestamp, String timestampScalingOperation, long timestampScalingFactor) {
+      try {
+        switch (timestampScalingOperation) {
+          case "Division":
+            return timestamp / timestampScalingFactor;
+          case "Multiplication":
+            return timestamp * timestampScalingFactor;
+          default:
+            log.error(
+                "Timestamp scaling operation '{}' is not recognized (timestamp remains unscaled).",
+                  timestampScalingOperation);
+            return timestamp;
+        }
+      } catch (Exception e) {
+        log.error(
+            "Timestamp scaling operation failed due to '{}' (timestamp remains unscaled).",
+                e);
+        return timestamp;
+      }
     }
 
     @Override
@@ -288,7 +315,8 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
         switch (fieldSchema.type()) {
           case INT32:
           case INT64:
-            return ((Number) timestampValue).longValue();
+            return scalingTimestamp(((Number) timestampValue).longValue(),
+                timestampScalingOperation, timestampScalingFactor);
           case STRING:
             return dateTime.parseMillis((String) timestampValue);
           default:
@@ -304,7 +332,8 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
         Map<?, ?> map = (Map<?, ?>) value;
         Object timestampValue = DataUtils.getNestedFieldValue(map, fieldName);
         if (timestampValue instanceof Number) {
-          return ((Number) timestampValue).longValue();
+          return scalingTimestamp(((Number) timestampValue).longValue(),
+              timestampScalingOperation, timestampScalingFactor);
         } else if (timestampValue instanceof String) {
           return dateTime.parseMillis((String) timestampValue);
         } else if (timestampValue instanceof Date) {

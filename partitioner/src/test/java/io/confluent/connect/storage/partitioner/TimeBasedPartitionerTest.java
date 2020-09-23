@@ -47,6 +47,7 @@ import io.confluent.connect.storage.StorageSinkTestBase;
 import io.confluent.connect.storage.common.StorageCommonConfig;
 import io.confluent.connect.storage.errors.PartitionException;
 import io.confluent.connect.storage.util.DateTimeUtils;
+import io.confluent.connect.storage.partitioner.TimeBasedPartitioner.RecordFieldTimestampExtractor;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -354,6 +355,18 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
   }
 
   @Test
+  public void testTimestampScaling() {
+    RecordFieldTimestampExtractor extractor = new RecordFieldTimestampExtractor();
+
+    Long timestamp = 1000L;
+
+    assertEquals(extractor.scalingTimestamp(timestamp, "Division", 1000L),(Long) 1L);
+    assertEquals(extractor.scalingTimestamp(timestamp, "Multiplication", 10L),(Long) 10000L);
+    assertEquals(extractor.scalingTimestamp(timestamp, "UncorrectOperation", 10L),(Long) 1000L);
+    assertEquals(extractor.scalingTimestamp(timestamp, "Division", 0L),(Long) 1000L);
+  }
+
+  @Test
   public void testFloatTimeExtract() {
     String fieldName = "float";
     thrown.expect(PartitionException.class);
@@ -490,6 +503,32 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     long rawTimestamp = moment.getMillis();
     SinkRecord sinkRecord = createSinkRecord(rawTimestamp);
     String encodedPartition = partitioner.encodePartition(sinkRecord);
+    assertEquals(expectedPartition, encodedPartition);
+
+    long rawTimestampSeconds = rawTimestamp * 1000L;
+    long rawTimestampMicroSeconds = rawTimestamp / 1000L;
+
+    SinkRecord sinkRecordSeconds = createSinkRecord(rawTimestampSeconds);
+    SinkRecord sinkRecordMicroSeconds = createSinkRecord(rawTimestampMicroSeconds);
+
+    Map<String, Object> timestampScalingConfig = new HashMap<>();
+
+    timestampScalingConfig.put(PartitionerConfig.TIMESTAMP_SCALING_FACTOR_CONFIG, 1000L);
+    timestampScalingConfig.put(PartitionerConfig.TIMESTAMP_SCALING_OPERATION_CONFIG, "Division");
+
+    TimeBasedPartitioner<String> scaledPartitioner = configurePartitioner(
+          new TimeBasedPartitioner<>(), timeField, timestampScalingConfig);
+
+    encodedPartition = scaledPartitioner.encodePartition(sinkRecordSeconds);
+    assertEquals(expectedPartition, encodedPartition);
+
+    timestampScalingConfig.put(PartitionerConfig.TIMESTAMP_SCALING_FACTOR_CONFIG, 1000L);
+    timestampScalingConfig.put(PartitionerConfig.TIMESTAMP_SCALING_OPERATION_CONFIG, "Multiplication");
+
+    scaledPartitioner = configurePartitioner(
+          new TimeBasedPartitioner<>(), timeField, timestampScalingConfig);
+
+    encodedPartition = scaledPartitioner.encodePartition(sinkRecordMicroSeconds);
     assertEquals(expectedPartition, encodedPartition);
 
     String timestamp = ISODateTimeFormat.dateTimeNoMillis().print(moment);
@@ -673,6 +712,8 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     config.put(PartitionerConfig.TIMEZONE_CONFIG, DATE_TIME_ZONE.toString());
     if (timeFieldName != null) {
       config.put(PartitionerConfig.TIMESTAMP_FIELD_NAME_CONFIG, timeFieldName);
+      config.put(PartitionerConfig.TIMESTAMP_SCALING_FACTOR_CONFIG, PartitionerConfig.TIMESTAMP_SCALING_FACTOR_DEFAULT);
+      config.put(PartitionerConfig.TIMESTAMP_SCALING_OPERATION_CONFIG, PartitionerConfig.TIMESTAMP_SCALING_OPERATION_DEFAULT);
     }
     return config;
   }

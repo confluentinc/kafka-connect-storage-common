@@ -101,6 +101,20 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final String TIMESTAMP_FIELD_NAME_DEFAULT = "timestamp";
   public static final String TIMESTAMP_FIELD_NAME_DISPLAY = "Record Field for Timestamp Extractor";
 
+  public static final String TIMESTAMP_SCALING_FACTOR_CONFIG = "timestamp.scaling.factor";
+  public static final String TIMESTAMP_SCALING_FACTOR_DOC =
+      "The scaling factor to be applied to the timestamp by the timestamp extractor.";
+  public static final long TIMESTAMP_SCALING_FACTOR_DEFAULT = 1L;
+  public static final String TIMESTAMP_SCALING_FACTOR_DISPLAY =
+      "Timestamp scaling factor for Timestamp Extractor";
+
+  public static final String TIMESTAMP_SCALING_OPERATION_CONFIG = "timestamp.scaling.operation";
+  public static final String TIMESTAMP_SCALING_OPERATION_DOC =
+      "The scaling operation to be applied to the timestamp by the timestamp extractor.";
+  public static final String TIMESTAMP_SCALING_OPERATION_DEFAULT = "Division";
+  public static final String TIMESTAMP_SCALING_OPERATION_DISPLAY =
+      "Timestamp scaling operation for Timestamp Extractor";
+
   /**
    * Create a new configuration definition.
    *
@@ -208,6 +222,26 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           ++orderInGroup,
           Width.LONG,
           TIMESTAMP_FIELD_NAME_DISPLAY);
+
+      configDef.define(TIMESTAMP_SCALING_FACTOR_CONFIG,
+          Type.LONG,
+          TIMESTAMP_SCALING_FACTOR_DEFAULT,
+          Importance.MEDIUM,
+          TIMESTAMP_SCALING_FACTOR_DOC,
+          group,
+          ++orderInGroup,
+          Width.LONG,
+          TIMESTAMP_SCALING_FACTOR_DISPLAY);
+
+      configDef.define(TIMESTAMP_SCALING_OPERATION_CONFIG,
+          Type.STRING,
+          TIMESTAMP_SCALING_OPERATION_DEFAULT,
+          Importance.MEDIUM,
+          TIMESTAMP_SCALING_OPERATION_DOC,
+          group,
+          ++orderInGroup,
+          Width.LONG,
+          TIMESTAMP_SCALING_OPERATION_DISPLAY);
     }
 
     return configDef;
