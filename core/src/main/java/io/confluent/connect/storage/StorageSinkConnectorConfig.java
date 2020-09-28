@@ -87,11 +87,8 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final int FILENAME_OFFSET_ZERO_PAD_WIDTH_DEFAULT = 10;
   public static final String FILENAME_OFFSET_ZERO_PAD_WIDTH_DISPLAY =
       "Filename Offset Zero Pad Width";
-
-  public static final String SCHEMA_CACHE_SIZE_CONFIG = "schema.cache.size";
-  // Schema Cache Config Name used by Schema Registry
-  // Ref AvroDataConfig.java in https://github.com/confluentinc/schema-registry
-  public static final String SCHEMAS_CACHE_SIZE_CONFIG = "schemas.cache.config";
+  
+  public static final String SCHEMA_CACHE_SIZE_CONFIG = AvroDataConfig.SCHEMAS_CACHE_SIZE_CONFIG;
   public static final String SCHEMA_CACHE_SIZE_DOC =
       "The size of the schema cache used in the Avro converter.";
   public static final int SCHEMA_CACHE_SIZE_DEFAULT = 1000;
@@ -258,7 +255,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
 
   public AvroDataConfig avroDataConfig() {
     Map<String, Object> props = new HashMap<>();
-    props.put(SCHEMAS_CACHE_SIZE_CONFIG, get(SCHEMA_CACHE_SIZE_CONFIG));
+    props.put(SCHEMA_CACHE_SIZE_CONFIG, get(SCHEMA_CACHE_SIZE_CONFIG));
     props.put(ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG, get(ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG));
     props.put(CONNECT_META_DATA_CONFIG, get(CONNECT_META_DATA_CONFIG));
     return new AvroDataConfig(props);
