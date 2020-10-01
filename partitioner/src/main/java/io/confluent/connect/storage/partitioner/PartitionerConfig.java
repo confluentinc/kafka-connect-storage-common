@@ -15,6 +15,7 @@
 
 package io.confluent.connect.storage.partitioner;
 
+import io.confluent.connect.storage.common.ComposableConfig;
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigDef.Importance;
@@ -26,8 +27,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import io.confluent.connect.storage.common.ComposableConfig;
 
 public class PartitionerConfig extends AbstractConfig implements ComposableConfig {
 
@@ -101,6 +100,12 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
       "The record field to be used as timestamp by the timestamp extractor.";
   public static final String TIMESTAMP_FIELD_NAME_DEFAULT = "timestamp";
   public static final String TIMESTAMP_FIELD_NAME_DISPLAY = "Record Field for Timestamp Extractor";
+
+  public static final String ID_PARTITIONER_ERROR_FALLBACK_CONFIG = "partition.error.fallback";
+  public static final String ID_PARTITIONER_ERROR_FALLBACK_DOC =
+      "A static value to encode the partition if the ID Partitioner failed";
+  public static final String ID_PARTITIONER_ERROR_FALLBACK_DEFAULT = "_MALFORMED";
+  public static final String ID_PARTITIONER_ERROR_FALLBACK_DISPLAY = "ID Partitioner Error Fallback";
 
   /**
    * Create a new configuration definition.
@@ -209,6 +214,16 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           ++orderInGroup,
           Width.LONG,
           TIMESTAMP_FIELD_NAME_DISPLAY);
+
+      configDef.define(ID_PARTITIONER_ERROR_FALLBACK_CONFIG,
+              Type.STRING,
+              ID_PARTITIONER_ERROR_FALLBACK_DEFAULT,
+              Importance.MEDIUM,
+              ID_PARTITIONER_ERROR_FALLBACK_DOC,
+              group,
+              ++orderInGroup,
+              Width.LONG,
+              ID_PARTITIONER_ERROR_FALLBACK_DISPLAY);
     }
 
     return configDef;
