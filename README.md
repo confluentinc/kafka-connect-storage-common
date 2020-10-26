@@ -30,6 +30,8 @@ Shared software modules among [Kafka Connectors](http://kafka.apache.org/documen
 To build a development version you'll need a recent version of Kafka. You can build
 *kafka-connect-storage-common* with Maven using the standard lifecycle phases.
 
+Use the command `mvn clean install -Dmaven.test.skip=true -Dcheckstyle.skip` to build the partitioner. The target package will be in `partitioner/target/`.
+
 
 # Contribute
 
