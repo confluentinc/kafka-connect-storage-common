@@ -53,22 +53,15 @@ public class IdPartitioner<T> extends DefaultPartitioner<T> {
     }
 
     private String encodeWithId(SinkRecord sinkRecord) {
-        Object value = sinkRecord.value();
-        log.info(value.toString());
-
         Map<String, Object> key = requireMap(sinkRecord.key(), PURPOSE);
-        log.info(key.toString());
 
         StringBuilder builder = new StringBuilder();
         for (String fieldName: fieldNames) {
             if (builder.length() > 0) {
                 builder.append(this.delim);
             }
-            log.info(fieldName);
             Object fieldValue = key.get(fieldName);
-            log.info(fieldValue.toString());
             builder.append(fieldValue.toString());
-            log.info(fieldValue.getClass().toString());
         }
 
         return builder.toString();
