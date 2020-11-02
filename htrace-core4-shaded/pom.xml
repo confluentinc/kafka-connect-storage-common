@@ -20,6 +20,7 @@ language governing permissions and limitations under the License. -->
     </parent>
 
     <artifactId>kafka-connect-storage-common-htrace-core4-shaded</artifactId>
+    <packaging>jar</packaging>
     <name>kafka-connect-storage-common-htrace-core4-shaded</name>
     
     <description>htrace-core4 shaded to replace jackson dependencies without CVEs</description>
