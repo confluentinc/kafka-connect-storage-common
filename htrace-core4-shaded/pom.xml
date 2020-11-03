@@ -61,6 +61,17 @@ language governing permissions and limitations under the License. -->
                                     </includes>
                                 </filter>
                                 <filter>
+                                    <!-- this filter is a workaround to the fact that maven phases
+                                    can't run twice without adding new code to the produced jar
+                                    (by producing an empty jar). It's used to remove the placeholder
+                                    class io.confluent.connect.storage.PlaceHolder.class
+                                     -->
+                                    <artifact>io.confluent:*</artifact>
+                                    <excludes>
+                                        <exlude>**</exlude>
+                                    </excludes>
+                                </filter>
+                                <filter>
                                     <artifact>com.fasterxml.jackson.core:*</artifact>
                                     <includes>
                                         <include>**</include>
