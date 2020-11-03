@@ -60,6 +60,7 @@
         <module>partitioner</module>
         <module>format</module>
         <module>hive</module>
+        <module>htrace-core4-shaded</module>
         <module>package-kafka-connect-storage-common</module>
     </modules>
 
