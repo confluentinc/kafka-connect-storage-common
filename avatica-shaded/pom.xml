@@ -56,9 +56,6 @@ language governing permissions and limitations under the License. -->
                                         <include>**</include>
                                     </includes>
                                     <excludes>
-                                        <exclude>META-INF/MANIFEST.MF</exclude>
-                                        <exclude>META-INF/LICENSE</exclude>
-                                        <exclude>META-INF/NOTICE</exclude>
                                         <exclude>META-INF/services/com.fasterxml.jackson.core*</exclude>
                                         <exclude>META-INF/maven/com.fasterxml.jackson.core/**</exclude>
                                         <exclude>com/fasterxml/jackson/**</exclude>
@@ -69,6 +66,11 @@ language governing permissions and limitations under the License. -->
                                     <includes>
                                         <include>**</include>
                                     </includes>
+                                    <excludes>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>META-INF/LICENSE</exclude>
+                                        <exclude>META-INF/NOTICE</exclude>
+                                    </excludes>
                                 </filter>
                             </filters>
                         </configuration>
