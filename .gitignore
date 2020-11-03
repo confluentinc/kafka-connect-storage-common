@@ -16,3 +16,5 @@ build/
 /docs/_build
 
 .DS_Store
+
+**/dependency-reduced-pom.xml
