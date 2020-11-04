@@ -101,7 +101,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final String SCHEMA_CACHE_SIZE_DISPLAY = "Schema Cache Size";
 
   public static final String ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG = "enhanced.avro.schema.support";
-  public static final boolean ENHANCED_AVRO_SCHEMA_SUPPORT_DEFAULT = false;
+  public static final boolean ENHANCED_AVRO_SCHEMA_SUPPORT_DEFAULT = true;
   public static final String ENHANCED_AVRO_SCHEMA_SUPPORT_DOC =
       "Enable enhanced avro schema support in AvroConverter: Enum symbol preservation and Package"
           + " Name awareness";
