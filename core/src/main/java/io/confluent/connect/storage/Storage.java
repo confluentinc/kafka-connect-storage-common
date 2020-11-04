@@ -40,7 +40,8 @@ public interface Storage<C, R> extends Closeable {
    *
    * @param path the path to the object.
    * @return true if object exists, false otherwise.
-   * @throws DataException if the call to the underlying distributed storage failed.
+   * @throws org.apache.kafka.connect.errors.DataException if the call to the underlying
+   *         distributed storage failed.
    */
   boolean exists(String path);
 
