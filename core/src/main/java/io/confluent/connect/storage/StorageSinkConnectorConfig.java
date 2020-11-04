@@ -91,8 +91,8 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final int FILENAME_OFFSET_ZERO_PAD_WIDTH_DEFAULT = 10;
   public static final String FILENAME_OFFSET_ZERO_PAD_WIDTH_DISPLAY =
       "Filename Offset Zero Pad Width";
-
-  public static final String SCHEMA_CACHE_SIZE_CONFIG = "schema.cache.size";
+  
+  public static final String SCHEMA_CACHE_SIZE_CONFIG = AvroDataConfig.SCHEMAS_CACHE_SIZE_CONFIG;
   public static final String SCHEMA_CACHE_SIZE_DOC =
       "The size of the schema cache used in the Avro converter.";
   public static final int SCHEMA_CACHE_SIZE_DEFAULT = 1000;
