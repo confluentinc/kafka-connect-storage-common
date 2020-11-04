@@ -326,6 +326,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
    * @param parquetRecommender A recommender and validator for parquet compression codecs
    * @param group The initial position order in the group
    * @param initialOrder The initial position order in the group
+   * @param <T> The recommender type
    */
   public static <T extends ConfigDef.Recommender & ConfigDef.Validator> void enableParquetConfig(
       ConfigDef configDef,

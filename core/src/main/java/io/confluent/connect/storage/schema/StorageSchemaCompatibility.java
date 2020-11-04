@@ -260,7 +260,7 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
   }
 
   /**
-   * Check whether the two schemas have incompatible {@ink Schema#parameters() parameters} that
+   * Check whether the two schemas have incompatible {@link Schema#parameters() parameters} that
    * prevent successfully {@link #project projecting} a key or value with the original schema
    * into the current schema.
    *
