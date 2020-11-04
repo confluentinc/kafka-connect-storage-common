@@ -21,6 +21,7 @@ public interface SchemaGenerator<T> {
   /**
    * Generate a list of fields based on the given format.
    *
+   * @param format the format to extract the fields from.
    * @return the generated schema as a list of fields.
    */
   List<T> newPartitionFields(String format);
