@@ -324,7 +324,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
       }
     }
 
-    private Long extractTimestampFromString(Object timestampValue) {
+    private Long extractTimestampFromString(String timestampValue) {
       String timestampValueStr = (String) timestampValue;
       try {
         return Long.valueOf(timestampValueStr);
