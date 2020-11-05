@@ -35,6 +35,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import io.confluent.connect.storage.common.SchemaGenerator;
 import io.confluent.connect.storage.common.StorageCommonConfig;
@@ -47,6 +48,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
 
   private static final String SCHEMA_GENERATOR_CLASS =
       "io.confluent.connect.storage.hive.schema.TimeBasedSchemaGenerator";
+  static Pattern NUMERIC_TIMESTAMP_PATTERN = Pattern.compile("^[0-9]{13}$");
 
   // Duration of a partition in milliseconds.
   private long partitionDurationMs;
@@ -290,7 +292,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
           case INT64:
             return ((Number) timestampValue).longValue();
           case STRING:
-            return extractTimestampFromString(timestampValue);
+            return extractTimestampFromString((String) timestampValue);
           default:
             log.error(
                 "Unsupported type '{}' for user-defined timestamp field.",
@@ -306,7 +308,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
         if (timestampValue instanceof Number) {
           return ((Number) timestampValue).longValue();
         } else if (timestampValue instanceof String) {
-          return extractTimestampFromString(timestampValue);
+          return extractTimestampFromString((String) timestampValue);
         } else if (timestampValue instanceof Date) {
           return ((Date) timestampValue).getTime();
         } else {
@@ -325,13 +327,14 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
     }
 
     private Long extractTimestampFromString(String timestampValue) {
-      String timestampValueStr = (String) timestampValue;
-      try {
-        return Long.valueOf(timestampValueStr);
-      } catch (NumberFormatException e) {
-        // expected, ignore
+      if (NUMERIC_TIMESTAMP_PATTERN.matcher(timestampValue).matches()) {
+        try {
+          return Long.valueOf(timestampValue);
+        } catch (NumberFormatException e) {
+          // expected, ignore
+        }
       }
-      return dateTime.parseMillis(timestampValueStr);
+      return dateTime.parseMillis(timestampValue);
     }
   }
 }
