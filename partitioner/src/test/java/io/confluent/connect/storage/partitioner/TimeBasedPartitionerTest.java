@@ -581,7 +581,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
   }
 
   @Test
-  public void testRecordFieldTimeStringExtractorRecord() {
+  public void testRecordFieldTimeAsMillisStringExtractorRecord() {
     long millis = DATE_TIME.getMillis();
     String timeStr = String.valueOf(millis);
     String timeFieldName = "timestamp";
