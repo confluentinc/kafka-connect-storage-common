@@ -15,10 +15,12 @@
 
 package io.confluent.connect.storage.partitioner;
 
+import io.confluent.connect.storage.util.DataUtils;
 import org.apache.kafka.common.utils.Utils;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Schema.Type;
 import org.apache.kafka.connect.data.Struct;
+import org.apache.kafka.connect.errors.DataException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,16 +46,14 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
   @Override
   public String encodePartition(SinkRecord sinkRecord) {
     Object value = sinkRecord.value();
+    StringBuilder builder = new StringBuilder();
     if (value instanceof Struct) {
       final Schema valueSchema = sinkRecord.valueSchema();
       final Struct struct = (Struct) value;
-
-      StringBuilder builder = new StringBuilder();
       for (String fieldName : fieldNames) {
         if (builder.length() > 0) {
           builder.append(this.delim);
         }
-
         Object partitionKey = struct.get(fieldName);
         Type type = valueSchema.field(fieldName).schema().type();
         switch (type) {
@@ -74,6 +74,39 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
           default:
             log.error("Type {} is not supported as a partition key.", type.getName());
             throw new PartitionException("Error encoding partition.");
+        }
+      }
+      return builder.toString();
+    } else if (value instanceof Map) {
+      Map<?, ?> map = (Map<?, ?>) value;
+      for (String fieldName : fieldNames) {
+        if (builder.length() > 0) {
+          builder.append(this.delim);
+        }
+        Object fieldValue = "null";
+        try {
+          fieldValue = DataUtils.getNestedFieldValue(map, fieldName);
+        } catch (DataException e) {
+          log.warn("{} is unable to parse field - {} from record - {}",
+                  this.getClass(), fieldName, sinkRecord.value());
+        }
+        String[] nestedFieldList = fieldName.split("\\.");
+        String partitionName = nestedFieldList[nestedFieldList.length - 1];
+        if (fieldValue instanceof Number) {
+          Number record = (Number) fieldValue;
+          builder.append(partitionName + "=" + record.toString());
+        } else if (fieldValue instanceof String) {
+          builder.append(partitionName + "=" + (String) fieldValue);
+        } else if (fieldValue instanceof Boolean) {
+          boolean booleanRecord = (boolean) fieldValue;
+          builder.append(partitionName + "=" + Boolean.toString(booleanRecord));
+        } else {
+          log.error(
+                  "Unsupported type '{}' for user-defined timestamp field.", fieldValue.getClass()
+          );
+          throw new PartitionException(
+                  "Error extracting timestamp from record field: " + fieldName
+          );
         }
       }
       return builder.toString();

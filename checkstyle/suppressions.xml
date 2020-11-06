@@ -13,7 +13,12 @@
 
     <suppress
             checks="(CyclomaticComplexity)"
-            files="(PartitionerConfig|StorageSchemaCompatibility).java"
+            files="(PartitionerConfig|StorageSchemaCompatibility|FieldPartitioner).java"
+    />
+
+    <suppress
+            checks="(JavaNCSSCheck)"
+            files="FieldPartitioner.java"
     />
 
     <suppress

@@ -20,9 +20,7 @@ import io.confluent.connect.storage.common.StorageCommonConfig;
 import io.confluent.connect.storage.errors.PartitionException;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.sink.SinkRecord;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -125,6 +123,42 @@ public class FieldPartitionerTest extends StorageSinkTestBase {
       partitioner.encodePartition(sinkRecord);
     });
     assertEquals("Error encoding partition.", e.getMessage());
+  }
+
+  @Test
+  public void testMapPartition() throws PartitionException {
+    String fieldName = "nested.string";
+
+    Map<String, Object> expectedNestedMap = createMapWithTimestampField(TIMESTAMP);
+    Map<String, Object> map = new HashMap<>();
+    map.put("nested", expectedNestedMap);
+    FieldPartitioner<String> partitioner;
+    SinkRecord sinkRecord = new SinkRecord(TOPIC, PARTITION, Schema.STRING_SCHEMA, null,
+            Schema.STRING_SCHEMA, map, 0L);
+    String path;
+
+
+    Map<String, Object> m = new LinkedHashMap<>();
+    m.put("string", "def");
+    partitioner = getFieldPartitioner(fieldName);
+    path = partitioner.encodePartition(sinkRecord);
+    assertThat(path, is(generateEncodedPartitionFromMap(m)));
+
+    fieldName = "nested.int";
+    m = new LinkedHashMap<>();
+    m.put("int", "12");
+    partitioner = getFieldPartitioner(fieldName);
+    path = partitioner.encodePartition(sinkRecord);
+    assertThat(path, is(generateEncodedPartitionFromMap(m)));
+
+    fieldName = "nested.long";
+    String secondFieldName = "nested.int";
+    m = new LinkedHashMap<>();
+    m.put("long", "12");
+    m.put("int", "12");
+    partitioner = getFieldPartitioner(fieldName, secondFieldName);
+    path = partitioner.encodePartition(sinkRecord);
+    assertThat(path, is(generateEncodedPartitionFromMap(m)));
   }
 
   @Test
