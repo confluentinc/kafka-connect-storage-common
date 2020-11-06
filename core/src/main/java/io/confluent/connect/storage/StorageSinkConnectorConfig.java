@@ -93,15 +93,15 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final int FILENAME_OFFSET_ZERO_PAD_WIDTH_DEFAULT = 10;
   public static final String FILENAME_OFFSET_ZERO_PAD_WIDTH_DISPLAY =
       "Filename Offset Zero Pad Width";
-
-  public static final String SCHEMA_CACHE_SIZE_CONFIG = "schema.cache.size";
+  
+  public static final String SCHEMA_CACHE_SIZE_CONFIG = AvroDataConfig.SCHEMAS_CACHE_SIZE_CONFIG;
   public static final String SCHEMA_CACHE_SIZE_DOC =
       "The size of the schema cache used in the Avro converter.";
   public static final int SCHEMA_CACHE_SIZE_DEFAULT = 1000;
   public static final String SCHEMA_CACHE_SIZE_DISPLAY = "Schema Cache Size";
 
   public static final String ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG = "enhanced.avro.schema.support";
-  public static final boolean ENHANCED_AVRO_SCHEMA_SUPPORT_DEFAULT = false;
+  public static final boolean ENHANCED_AVRO_SCHEMA_SUPPORT_DEFAULT = true;
   public static final String ENHANCED_AVRO_SCHEMA_SUPPORT_DOC =
       "Enable enhanced avro schema support in AvroConverter: Enum symbol preservation and Package"
           + " Name awareness";
@@ -326,6 +326,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
    * @param parquetRecommender A recommender and validator for parquet compression codecs
    * @param group The initial position order in the group
    * @param initialOrder The initial position order in the group
+   * @param <T> The recommender type
    */
   public static <T extends ConfigDef.Recommender & ConfigDef.Validator> void enableParquetConfig(
       ConfigDef configDef,
