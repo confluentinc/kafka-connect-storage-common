@@ -601,8 +601,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     String timeFieldName = "timestamp";
     TimeBasedPartitioner<String> partitioner = configurePartitioner(
         new TimeBasedPartitioner<>(), timeFieldName, null);
-    Schema keySchema = Schema.STRING_SCHEMA;
-    Schema mapSchema = SchemaBuilder.map(keySchema, Schema.STRING_SCHEMA);
+    Schema mapSchema = SchemaBuilder.map(Schema.STRING_SCHEMA, Schema.STRING_SCHEMA);
     Map<String, Object> map = new HashMap<>();
     map.put(timeFieldName, timeStr);
     SinkRecord sinkRecord = createValuedSinkRecord(mapSchema, map, millis);
