@@ -15,13 +15,11 @@
 
 package io.confluent.connect.storage.util;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-
-import java.util.concurrent.TimeUnit;
+import org.joda.time.Duration;
 
 public class DateTimeUtils {
-
-  private static final long DAY_IN_MS = TimeUnit.DAYS.toMillis(1);
 
   /**
    * Calculates next period of periodMs after currentTimeMs
@@ -39,12 +37,15 @@ public class DateTimeUtils {
       long periodMs,
       DateTimeZone timeZone
   ) {
-    long startOfDay = timeZone.convertLocalToUTC(
-        timeZone.convertUTCToLocal(currentTimeMs) / DAY_IN_MS * DAY_IN_MS,
-        true
-    );
+    DateTime currentDT = new DateTime(currentTimeMs).withZone(timeZone);
+    DateTime startOfDayDT = currentDT.withTimeAtStartOfDay();
+    DateTime startOfNextDayDT = startOfDayDT.plusDays(1);
+    Duration currentDayDuration = new Duration(startOfDayDT, startOfNextDayDT);
+    long todayInMs = currentDayDuration.getMillis();
+
+    long startOfDay = startOfDayDT.getMillis();
     long nextPeriodOffset = ((currentTimeMs - startOfDay) / periodMs + 1) * periodMs;
-    long offset = Math.min(nextPeriodOffset, DAY_IN_MS);
+    long offset = Math.min(nextPeriodOffset, todayInMs);
     return startOfDay + offset;
   }
 }
