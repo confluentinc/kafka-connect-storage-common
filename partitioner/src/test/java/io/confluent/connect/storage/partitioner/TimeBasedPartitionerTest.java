@@ -15,6 +15,10 @@
 
 package io.confluent.connect.storage.partitioner;
 
+import io.confluent.connect.storage.StorageSinkTestBase;
+import io.confluent.connect.storage.common.StorageCommonConfig;
+import io.confluent.connect.storage.errors.PartitionException;
+import io.confluent.connect.storage.util.DateTimeUtils;
 import org.apache.kafka.common.config.ConfigException;
 import org.apache.kafka.common.record.TimestampType;
 import org.apache.kafka.common.utils.Time;
@@ -487,6 +491,17 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     ts = DATE_TIME.getMillis();
     testMapNumericTimestampPartitionEncoding(
           partitioner, timeField, ts, Schema.INT64_SCHEMA, DATE_TIME);
+
+    Map<String, Object> configOverride = new HashMap<>();
+    configOverride.put(PartitionerConfig.TIMESTAMP_UNIT_NAME_CONFIG, "s");
+    TimeBasedPartitioner<String> secondsPartitioner = configurePartitioner(
+            new TimeBasedPartitioner<>(), timeField, configOverride);
+
+    assertThat(secondsPartitioner.getTimestampExtractor(),
+            instanceOf(TimeBasedPartitioner.RecordFieldTimestampExtractor.class));
+
+    testMapNumericTimestampPartitionEncoding(
+            secondsPartitioner, timeField, ((long) ts)/1000, Schema.INT64_SCHEMA, DATE_TIME);
   }
 
   @Test
@@ -498,12 +513,25 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     assertThat(partitioner.getTimestampExtractor(),
           instanceOf(TimeBasedPartitioner.RecordFieldTimestampExtractor.class));
 
+    Map<String, Object> configOverride = new HashMap<>();
+    configOverride.put(PartitionerConfig.TIMESTAMP_UNIT_NAME_CONFIG, "s");
+    TimeBasedPartitioner<String> secondsPartitioner = configurePartitioner(
+            new TimeBasedPartitioner<>(), timeField, configOverride);
+
+    assertThat(secondsPartitioner.getTimestampExtractor(),
+            instanceOf(TimeBasedPartitioner.RecordFieldTimestampExtractor.class));
+
     DateTime moment = new DateTime(2015, 4, 2, 1, 0, 0, 0, DateTimeZone.forID(TIME_ZONE));
     String expectedPartition = "year=2015/month=4/day=2/hour=1";
 
     long rawTimestamp = moment.getMillis();
     SinkRecord sinkRecord = createSinkRecord(rawTimestamp);
     String encodedPartition = partitioner.encodePartition(sinkRecord);
+    assertEquals(expectedPartition, encodedPartition);
+
+    long rawTimestampSeconds = moment.getMillis()/1000;
+    sinkRecord = createSinkRecord(rawTimestampSeconds);
+    encodedPartition = secondsPartitioner.encodePartition(sinkRecord);
     assertEquals(expectedPartition, encodedPartition);
 
     String timestamp = ISODateTimeFormat.dateTimeNoMillis().print(moment);
@@ -525,6 +553,11 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     encodedPartition = partitioner.encodePartition(sinkRecord);
     assertEquals("year=1970/month=1/day=1/hour=0", encodedPartition);
 
+    int shortTimestampSeconds = shortTimestamp/1000;
+    sinkRecord = createSinkRecord(Schema.INT32_SCHEMA, shortTimestampSeconds);
+    encodedPartition = secondsPartitioner.encodePartition(sinkRecord);
+    assertEquals("year=1970/month=1/day=1/hour=0", encodedPartition);
+
     // Struct - Date extraction
     sinkRecord = createSinkRecord(rawTimestamp);
     String structEncodedPartition = partitioner.encodePartition(sinkRecord);
@@ -539,8 +572,9 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
 
   @Test
   public void testNestedRecordFieldTimeExtractor() throws Exception {
+    String timeField = "nested.timestamp";
     TimeBasedPartitioner<String> partitioner = configurePartitioner(
-          new TimeBasedPartitioner<>(), "nested.timestamp", null);
+          new TimeBasedPartitioner<>(), timeField, null);
 
     assertThat(partitioner.getTimestampExtractor(),
           instanceOf(TimeBasedPartitioner.RecordFieldTimestampExtractor.class));
@@ -549,6 +583,20 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     SinkRecord sinkRecord = createSinkRecordWithNestedTimestampField(timestamp);
 
     String encodedPartition = partitioner.encodePartition(sinkRecord);
+
+    validateEncodedPartition(encodedPartition);
+
+    Map<String, Object> configOverride = new HashMap<>();
+    configOverride.put(PartitionerConfig.TIMESTAMP_UNIT_NAME_CONFIG, "s");
+    TimeBasedPartitioner<String> secondsPartitioner = configurePartitioner(
+            new TimeBasedPartitioner<>(), timeField, configOverride);
+
+    assertThat(secondsPartitioner.getTimestampExtractor(),
+            instanceOf(TimeBasedPartitioner.RecordFieldTimestampExtractor.class));
+
+    sinkRecord = createSinkRecordWithNestedTimestampField(timestamp/1000);
+
+    encodedPartition = secondsPartitioner.encodePartition(sinkRecord);
 
     validateEncodedPartition(encodedPartition);
   }

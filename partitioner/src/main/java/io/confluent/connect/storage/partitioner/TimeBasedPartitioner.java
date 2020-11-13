@@ -36,6 +36,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import io.confluent.connect.storage.common.SchemaGenerator;
 import io.confluent.connect.storage.common.StorageCommonConfig;
@@ -266,15 +267,32 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
   public static class RecordFieldTimestampExtractor implements TimestampExtractor {
     private String fieldName;
     private DateTimeFormatter dateTime;
+    private TimeUnit timeUnit;
 
     @Override
     public void configure(Map<String, Object> config) {
       fieldName = (String) config.get(PartitionerConfig.TIMESTAMP_FIELD_NAME_CONFIG);
       dateTime = ISODateTimeFormat.dateTimeParser();
+      timeUnit = getTimeUnit(config);
+    }
+
+    private TimeUnit getTimeUnit(Map<String, Object> config) {
+      String timestampTimeUnit = (String) config.get(PartitionerConfig.TIMESTAMP_UNIT_NAME_CONFIG);
+
+      if ("s".equalsIgnoreCase(timestampTimeUnit)) {
+        return TimeUnit.SECONDS;
+      }
+
+      return TimeUnit.MILLISECONDS;
     }
 
     @Override
     public Long extract(ConnectRecord<?> record) {
+      Long timestamp = extractTimestamp(record);
+      return timeUnit == TimeUnit.SECONDS ? timestamp * 1000 : timestamp;
+    }
+
+    private Long extractTimestamp(ConnectRecord<?> record) {
       Object value = record.value();
       if (value instanceof Struct) {
         Struct struct = (Struct) value;
