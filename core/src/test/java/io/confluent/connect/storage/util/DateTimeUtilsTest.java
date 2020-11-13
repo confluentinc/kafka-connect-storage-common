@@ -58,4 +58,18 @@ public class DateTimeUtilsTest {
         DateTime time2 = new DateTime(DATE_TIME_ZONE.convertUTCToLocal(utc2));
         assertEquals(time1.toString(formatter), time2.toString(formatter));
     }
+
+    @Test
+    public void testGetNextTimeAdjustedByDayDSTSwitch() {
+        // on this DST switch day we get 25 hours in a day (DATE_TIME_ZONE time zone)
+        DateTime dstSwitchDay10pm = DateTime.parse("2019-11-03T22:00:00.000-08:00").withZone(DATE_TIME_ZONE);
+        DateTime dstSwitchDay11pm = DateTime.parse("2019-11-03T23:00:00.000-08:00").withZone(DATE_TIME_ZONE);
+        DateTime dstSwitchNextDayMidnight = DateTime.parse("2019-11-04T00:00:00.000-08:00").withZone(DATE_TIME_ZONE);
+
+        // 10pm next hour should be 11pm
+        assertEquals(dstSwitchDay11pm, calcHourPeriod(dstSwitchDay10pm).withZone(DATE_TIME_ZONE));
+
+        // 11pm next hour should be midnight of next day
+        assertEquals(dstSwitchNextDayMidnight, calcHourPeriod(dstSwitchDay11pm).withZone(DATE_TIME_ZONE));
+    }
 }
