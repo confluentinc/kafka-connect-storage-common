@@ -32,6 +32,7 @@ import org.joda.time.DateTimeZone;
 
 public class PartitionerConfig extends AbstractConfig implements ComposableConfig {
 
+  public static final String IS_EPOCH = "is.epoch";
   // Partitioner group
   public static final String PARTITIONER_CLASS_CONFIG = "partitioner.class";
   public static final String PARTITIONER_CLASS_DOC =
@@ -98,6 +99,7 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final String TIMESTAMP_EXTRACTOR_CLASS_DISPLAY = "Timestamp Extractor";
 
   public static final String TIMESTAMP_FIELD_NAME_CONFIG = "timestamp.field";
+  public static final String TIMESTAMP_FIELD_FORMAT_CONFIG = "timestamp.field.format";
   public static final String TIMESTAMP_FIELD_NAME_DOC =
       "The record field to be used as timestamp by the timestamp extractor.";
   public static final String TIMESTAMP_FIELD_NAME_DEFAULT = "timestamp";

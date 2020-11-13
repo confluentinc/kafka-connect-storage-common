@@ -15,7 +15,11 @@
 
 package io.confluent.connect.storage.partitioner;
 
-import io.confluent.connect.storage.util.DataUtils;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
 import org.apache.kafka.common.config.ConfigException;
 import org.apache.kafka.common.utils.Time;
 import org.apache.kafka.connect.connector.ConnectRecord;
@@ -32,15 +36,11 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
 import io.confluent.connect.storage.common.SchemaGenerator;
 import io.confluent.connect.storage.common.StorageCommonConfig;
 import io.confluent.connect.storage.common.util.StringUtils;
 import io.confluent.connect.storage.errors.PartitionException;
+import io.confluent.connect.storage.util.DataUtils;
 
 public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
   private static final Logger log = LoggerFactory.getLogger(TimeBasedPartitioner.class);
@@ -265,12 +265,34 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
 
   public static class RecordFieldTimestampExtractor implements TimestampExtractor {
     private String fieldName;
+    private String fieldFormat;
+    private boolean isEpoch = false;
     private DateTimeFormatter dateTime;
 
     @Override
     public void configure(Map<String, Object> config) {
       fieldName = (String) config.get(PartitionerConfig.TIMESTAMP_FIELD_NAME_CONFIG);
+      fieldFormat = (String) config.get(PartitionerConfig.TIMESTAMP_FIELD_FORMAT_CONFIG);
+      isEpoch = Boolean.parseBoolean((String) config.get(PartitionerConfig.IS_EPOCH));
       dateTime = ISODateTimeFormat.dateTimeParser();
+    }
+
+    private Long getTimestampFromNumber(Object timestampValue) {
+      if (isEpoch) {
+        return ((Number) timestampValue).longValue() * 1000;
+      }
+      return ((Number) timestampValue).longValue();
+    }
+
+    private Long getTimestampFromString(Object timestampValue) {
+      if (fieldFormat == null) {
+        if (isEpoch) {
+          return dateTime.parseMillis((String) timestampValue) * 1000;
+        }
+        return dateTime.parseMillis((String) timestampValue);
+      }
+      DateTimeFormatter fmt = DateTimeFormat.forPattern(fieldFormat);
+      return fmt.parseDateTime((String) timestampValue).getMillis();
     }
 
     @Override
@@ -280,7 +302,6 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
         Struct struct = (Struct) value;
         Object timestampValue = DataUtils.getNestedFieldValue(struct, fieldName);
         Schema fieldSchema = DataUtils.getNestedField(record.valueSchema(), fieldName).schema();
-
         if (Timestamp.LOGICAL_NAME.equals(fieldSchema.name())) {
           return ((Date) timestampValue).getTime();
         }
@@ -288,9 +309,9 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
         switch (fieldSchema.type()) {
           case INT32:
           case INT64:
-            return ((Number) timestampValue).longValue();
+            return getTimestampFromNumber(timestampValue);
           case STRING:
-            return dateTime.parseMillis((String) timestampValue);
+            return getTimestampFromString(timestampValue);
           default:
             log.error(
                 "Unsupported type '{}' for user-defined timestamp field.",
@@ -304,9 +325,9 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
         Map<?, ?> map = (Map<?, ?>) value;
         Object timestampValue = DataUtils.getNestedFieldValue(map, fieldName);
         if (timestampValue instanceof Number) {
-          return ((Number) timestampValue).longValue();
+          return getTimestampFromNumber(timestampValue);
         } else if (timestampValue instanceof String) {
-          return dateTime.parseMillis((String) timestampValue);
+          return getTimestampFromString(timestampValue);
         } else if (timestampValue instanceof Date) {
           return ((Date) timestampValue).getTime();
         } else {
