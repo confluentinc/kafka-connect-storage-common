@@ -48,7 +48,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
 
   private static final String SCHEMA_GENERATOR_CLASS =
       "io.confluent.connect.storage.hive.schema.TimeBasedSchemaGenerator";
-  static Pattern NUMERIC_TIMESTAMP_PATTERN = Pattern.compile("^[0-9]{13}$");
+  static Pattern NUMERIC_TIMESTAMP_PATTERN = Pattern.compile("^-?[0-9]{1,19}$");
 
   // Duration of a partition in milliseconds.
   private long partitionDurationMs;

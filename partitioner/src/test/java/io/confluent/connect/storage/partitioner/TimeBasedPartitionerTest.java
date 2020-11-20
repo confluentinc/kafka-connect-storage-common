@@ -580,9 +580,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     validateEncodedPartition(encodedPartition);
   }
 
-  @Test
-  public void testRecordFieldTimeAsMillisStringExtractorRecord() {
-    long millis = DATE_TIME.getMillis();
+  private void validateTimestampAsMillisRecordExtracted(long millis) {
     String timeStr = String.valueOf(millis);
     String timeFieldName = "timestamp";
     TimeBasedPartitioner<String> partitioner = configurePartitioner(
@@ -596,8 +594,36 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
   }
 
   @Test
-  public void testRecordFieldTimeAsMillisStringExtractorMap() {
-    Long millis = DATE_TIME.getMillis();
+  public void testRecordFieldTimeAsMillisMinValueStringExtractorRecord() {
+    long millis = Long.MIN_VALUE;
+    validateTimestampAsMillisRecordExtracted(millis);
+  }
+
+  @Test
+  public void testRecordFieldTimeAsMillisNegativeValueStringExtractorRecord() {
+    long millis = -1;
+    validateTimestampAsMillisRecordExtracted(millis);
+  }
+
+  @Test
+  public void testRecordFieldTimeAsMillisZeroStringExtractorRecord() {
+    long millis = 0;
+    validateTimestampAsMillisRecordExtracted(millis);
+  }
+
+  @Test
+  public void testRecordFieldTimeAsMillisStringExtractorRecord() {
+    long millis = DATE_TIME.getMillis();
+    validateTimestampAsMillisRecordExtracted(millis);
+  }
+
+  @Test
+  public void testRecordFieldTimeAsMillisMaxValueStringExtractorRecord() {
+    long millis = Long.MAX_VALUE;
+    validateTimestampAsMillisRecordExtracted(millis);
+  }
+
+  private void validateTimestampAsMillisMapExtracted(long millis) {
     String timeStr = String.valueOf(millis);
     String timeFieldName = "timestamp";
     TimeBasedPartitioner<String> partitioner = configurePartitioner(
@@ -608,6 +634,36 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     SinkRecord sinkRecord = createValuedSinkRecord(mapSchema, map, millis);
     Long extractedTimestamp = partitioner.getTimestampExtractor().extract(sinkRecord);
     assertThat(extractedTimestamp, is(millis));
+  }
+
+  @Test
+  public void testRecordFieldTimeAsMillisMinValueStringExtractorMap() {
+    long millis = Long.MIN_VALUE;
+    validateTimestampAsMillisMapExtracted(millis);
+  }
+
+  @Test
+  public void testRecordFieldTimeAsMillisNegativeValueStringExtractorMap() {
+    long millis = -1;
+    validateTimestampAsMillisMapExtracted(millis);
+  }
+
+  @Test
+  public void testRecordFieldTimeAsMillisZeroStringExtractorMap() {
+    long millis = 0;
+    validateTimestampAsMillisMapExtracted(millis);
+  }
+
+  @Test
+  public void testRecordFieldTimeAsMillisStringExtractorMap() {
+    Long millis = DATE_TIME.getMillis();
+    validateTimestampAsMillisMapExtracted(millis);
+  }
+
+  @Test
+  public void testRecordFieldTimeAsMillisMaxValueStringExtractorMap() {
+    long millis = Long.MAX_VALUE;
+    validateTimestampAsMillisMapExtracted(millis);
   }
 
   @Test
