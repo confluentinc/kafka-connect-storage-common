@@ -117,8 +117,8 @@
             </dependency>
             <dependency>
                 <groupId>io.confluent</groupId>
-                <artifactId>kafka-connect-avro-converter</artifactId>
-                <version>${project.version}</version>
+                <artifactId>kafka-connect-avro-data</artifactId>
+                <version>${confluent.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.parquet</groupId>
