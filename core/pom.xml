@@ -34,7 +34,7 @@
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
-            <artifactId>kafka-connect-avro-converter</artifactId>
+            <artifactId>kafka-connect-avro-data</artifactId>
         </dependency>
         <dependency>
             <groupId>joda-time</groupId>
