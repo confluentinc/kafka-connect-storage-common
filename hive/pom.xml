@@ -31,6 +31,7 @@
         <commons.lang3.version>3.1</commons.lang3.version>
         <kryo.version>2.22</kryo.version>
         <xml-apis.version>1.4.01</xml-apis.version>
+        <jamon.runtime.version>2.4.1</jamon.runtime.version>
     </properties>
 
     <dependencies>
@@ -95,6 +96,10 @@
                     <groupId>log4j</groupId>
                     <artifactId>log4j</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.jamon</groupId>
+                    <artifactId>jamon-runtime</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <!-- Explicitly include working version of xml-apis -->
@@ -133,6 +138,11 @@
             <groupId>org.apache.avro</groupId>
             <artifactId>avro-mapred</artifactId>
             <version>${avro.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jamon</groupId>
+            <artifactId>jamon-runtime</artifactId>
+            <version>${jamon.runtime.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
