@@ -51,6 +51,7 @@ language governing permissions and limitations under the License. -->
                                 <includes>
                                     <include>org.apache.calcite.avatica:*</include>
                                     <include>com.fasterxml.jackson.core:*</include>
+                                    <include>org.apache.httpcomponents</include>
                                 </includes>
                             </artifactSet>
                             <filters>
@@ -63,6 +64,9 @@ language governing permissions and limitations under the License. -->
                                         <exclude>META-INF/services/com.fasterxml.jackson.core*</exclude>
                                         <exclude>META-INF/maven/com.fasterxml.jackson.core/**</exclude>
                                         <exclude>com/fasterxml/jackson/**</exclude>
+                                        <exclude>META-INF/services/org.apache.httpcomponents*</exclude>
+                                        <exclude>META-INF/maven/org.apache.httpcomponents/**</exclude>
+                                        <exclude>org/apache/httpcomponents/**</exclude>
                                     </excludes>
                                 </filter>
                                 <filter>
@@ -78,6 +82,17 @@ language governing permissions and limitations under the License. -->
                                 </filter>
                                 <filter>
                                     <artifact>com.fasterxml.jackson.core:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>META-INF/LICENSE</exclude>
+                                        <exclude>META-INF/NOTICE</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.httpcomponents:httpclient</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>
