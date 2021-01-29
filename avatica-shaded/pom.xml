@@ -22,7 +22,7 @@ language governing permissions and limitations under the License. -->
     <artifactId>kafka-connect-storage-common-avatica-shaded</artifactId>
     <packaging>jar</packaging>
     <name>kafka-connect-storage-common-avatica-shaded</name>
-    
+
     <description>avatica shaded package to replace jackson dependencies without CVEs</description>
     <inceptionYear>2020</inceptionYear>
 
@@ -52,6 +52,7 @@ language governing permissions and limitations under the License. -->
                                     <include>org.apache.calcite.avatica:*</include>
                                     <include>com.fasterxml.jackson.core:*</include>
                                     <include>org.apache.httpcomponents</include>
+                                    <include>commons-codec</include>
                                 </includes>
                             </artifactSet>
                             <filters>
@@ -66,6 +67,8 @@ language governing permissions and limitations under the License. -->
                                         <exclude>com/fasterxml/jackson/**</exclude>
                                         <exclude>META-INF/maven/org.apache.httpcomponents/**</exclude>
                                         <exclude>org/apache/calcite/avatica/org/apache/http/**</exclude>
+                                        <exclude>org/apache/calcite/avatica/org/apache/commons/codec/**</exclude>
+                                        <exclude>META-INF/maven/commons-codec/commons-codec/**</exclude>
                                     </excludes>
                                 </filter>
                                 <filter>
@@ -92,6 +95,17 @@ language governing permissions and limitations under the License. -->
                                 </filter>
                                 <filter>
                                     <artifact>org.apache.httpcomponents:httpclient</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>META-INF/LICENSE</exclude>
+                                        <exclude>META-INF/NOTICE</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>commons-codec:commons-codec</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>
@@ -129,6 +143,11 @@ language governing permissions and limitations under the License. -->
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>${httpclient.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>${commons.codec.version}</version>
         </dependency>
     </dependencies>
 </project>
