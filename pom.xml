@@ -72,7 +72,7 @@
         <joda.version>2.9.6</joda.version>
         <licenses.version>5.1.5-SNAPSHOT</licenses.version>
         <parquet.version>1.8.2</parquet.version>
-        <httpclient.version>4.5.2</httpclient.version>
+        <httpclient.version>4.5.13</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
         <jline.version>2.12.1</jline.version>
     </properties>
