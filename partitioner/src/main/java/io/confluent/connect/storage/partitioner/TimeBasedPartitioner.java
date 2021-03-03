@@ -170,7 +170,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
           + " for record: "
           + sinkRecord;
       log.error(msg);
-      throw new ConnectException(msg);
+      throw new PartitionException(msg);
     }
     DateTime bucket = new DateTime(
         getPartition(partitionDurationMs, timestamp, formatter.getZone())
