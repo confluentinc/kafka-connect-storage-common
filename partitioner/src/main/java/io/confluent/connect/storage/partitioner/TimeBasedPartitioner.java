@@ -23,7 +23,6 @@ import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.data.Timestamp;
 import org.apache.kafka.connect.errors.ConnectException;
-import org.apache.kafka.connect.errors.DataException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -171,7 +170,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
           + " for record: "
           + sinkRecord;
       log.error(msg);
-      throw new DataException(msg);
+      throw new PartitionException(msg);
     }
     DateTime bucket = new DateTime(
         getPartition(partitionDurationMs, timestamp, formatter.getZone())
