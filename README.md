@@ -11,6 +11,8 @@ To contribute, clone this project locally. Here is what you need to do to build 
 - Clone Confluent's project https://github.com/confluentinc/rest-utils and install it manually in your local Maven repo with `mvn clean install`
 - Clone Confluent's project https://github.com/confluentinc/schema-registry and install it manually in your local Maven repo with `mvn clean install`
 
+- IMPORTANT!  Update the pom.xml files of the project with the versions you installed locally!
+
 You might have to delete some test in these project to build them. You can also skip test when building with the argument `-Dmaven.test.skip=true` when installing with Maven
 
 Not all archives are necessary to build this project. For example, only AvroConverter is necessary from the Schema Registry project, so the previous builds might fail and you could still be able to build this project.

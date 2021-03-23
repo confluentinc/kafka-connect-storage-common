@@ -9,6 +9,9 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
+import java.text.SimpleDateFormat;  
+import java.util.Date;  
+
 import static org.apache.kafka.connect.transforms.util.Requirements.requireMap;
 
 public class IdPartitioner<T> extends DefaultPartitioner<T> {
@@ -36,7 +39,7 @@ public class IdPartitioner<T> extends DefaultPartitioner<T> {
     @Override
     public String encodePartition(SinkRecord sinkRecord) {
         try {
-            return encodeWithId(sinkRecord);
+            return encode(sinkRecord);
         } catch (Exception e) {
             log.warn(
                 String.format("IdPartitioner threw an exception: consult the malformed event at '%s%s%s%s%s%s%s.json'",
@@ -52,7 +55,7 @@ public class IdPartitioner<T> extends DefaultPartitioner<T> {
         }
     }
 
-    private String encodeWithId(SinkRecord sinkRecord) {
+    private String encode(SinkRecord sinkRecord) {
         Map<String, Object> key = requireMap(sinkRecord.key(), PURPOSE);
 
         StringBuilder builder = new StringBuilder();
@@ -63,6 +66,12 @@ public class IdPartitioner<T> extends DefaultPartitioner<T> {
             Object fieldValue = key.get(fieldName);
             builder.append(fieldValue.toString());
         }
+
+        builder.append(this.delim);
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
+        Date date = new Date();
+        builder.append(formatter.format(date));
 
         return builder.toString();
     }
