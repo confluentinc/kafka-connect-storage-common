@@ -24,8 +24,8 @@ package io.confluent.connect.storage.wal;
  */
 public class FilePathOffset {
 
-  public final long offset;
-  public final String filePath;
+  private final long offset;
+  private final String filePath;
 
   public FilePathOffset(long offset, String filePath) {
     this.offset = offset;
