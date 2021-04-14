@@ -43,7 +43,7 @@ public class FilePathOffset {
   @Override
   public String toString() {
     return "FilePathOffset{"
-        + "extractedOffset=" + offset
+        + "offset=" + offset
         + ", filePath='" + filePath + '\''
         + '}';
   }
