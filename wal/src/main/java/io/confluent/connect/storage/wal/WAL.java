@@ -34,4 +34,6 @@ public interface WAL {
   void close() throws ConnectException;
 
   String getLogFile();
+
+  FilePathOffset extractLatestOffset();
 }
