@@ -24,16 +24,16 @@ package io.confluent.connect.storage.wal;
  */
 public class FilePathOffset {
 
-  public final long extractedOffset;
+  public final long offset;
   public final String filePath;
 
-  public FilePathOffset(long extractedOffset, String filePath) {
-    this.extractedOffset = extractedOffset;
+  public FilePathOffset(long offset, String filePath) {
+    this.offset = offset;
     this.filePath = filePath;
   }
 
   public long getOffset() {
-    return extractedOffset;
+    return offset;
   }
 
   public String getFilePath() {
@@ -43,7 +43,7 @@ public class FilePathOffset {
   @Override
   public String toString() {
     return "FilePathOffset{"
-        + "extractedOffset=" + extractedOffset
+        + "extractedOffset=" + offset
         + ", filePath='" + filePath + '\''
         + '}';
   }

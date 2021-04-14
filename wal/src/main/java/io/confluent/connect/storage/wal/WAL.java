@@ -35,5 +35,5 @@ public interface WAL {
 
   String getLogFile();
 
-  FilePathOffset extractLatestOffsetFromWAL();
+  FilePathOffset extractLatestOffset();
 }
