@@ -26,7 +26,7 @@
 
     <artifactId>kafka-connect-storage-common-parent</artifactId>
     <packaging>pom</packaging>
-    <version>10.1.0-SNAPSHOT</version>
+    <version>10.1.0</version>
     <name>kafka-connect-storage-common-parent</name>
     <organization>
         <name>Confluent, Inc.</name>
@@ -49,7 +49,7 @@
         <connection>scm:git:git://github.com/confluentinc/kafka-connect-storage-common.git</connection>
         <developerConnection>scm:git:git@github.com:confluentinc/kafka-connect-storage-common.git</developerConnection>
         <url>https://github.com/confluentinc/kafka-connect-storage-common</url>
-        <tag>10.1.x</tag>
+        <tag>v10.1.0</tag>
     </scm>
 
     <modules>
@@ -65,7 +65,7 @@
     </modules>
 
     <properties>
-        <kafka.connect.storage.common.version>10.1.0-SNAPSHOT</kafka.connect.storage.common.version>
+        <kafka.connect.storage.common.version>10.1.0</kafka.connect.storage.common.version>
         <commons-io.version>2.4</commons-io.version>
         <confluent.maven.repo>http://packages.confluent.io/maven/</confluent.maven.repo>
         <hadoop.version>2.10.1</hadoop.version>
