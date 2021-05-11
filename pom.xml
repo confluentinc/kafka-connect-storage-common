@@ -67,6 +67,7 @@
         <commons-io.version>2.4</commons-io.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
         <commons.codec.version>1.15</commons.codec.version>
+        <confluent.log4j.version>1.2.17-cp2</confluent.log4j.version>
         <confluent.maven.repo>http://packages.confluent.io/maven/</confluent.maven.repo>
         <confluent.version>5.2.5-SNAPSHOT</confluent.version>
         <hadoop.version>2.10.1</hadoop.version>
@@ -175,6 +176,11 @@
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
                 <version>${commons.codec.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.confluent</groupId>
+                <artifactId>confluent-log4j</artifactId>
+                <version>${confluent.log4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
