@@ -71,15 +71,16 @@
         <confluent.version>5.2.5-SNAPSHOT</confluent.version>
         <hadoop.version>2.10.1</hadoop.version>
         <hive.version>1.2.2</hive.version>
+        <httpclient.version>4.5.13</httpclient.version>
+        <httpcore.version>4.4.4</httpcore.version>
         <jackson.databind.version>2.10.5.1</jackson.databind.version>
         <jackson.mapper.asl.version>1.9.13</jackson.mapper.asl.version>
+        <jline.version>2.12.1</jline.version>
         <joda.version>2.9.6</joda.version>
         <licenses.version>5.2.5-SNAPSHOT</licenses.version>
         <netty.version>4.1.63.Final</netty.version>
         <parquet.version>1.11.0</parquet.version>
-        <httpclient.version>4.5.13</httpclient.version>
-        <httpcore.version>4.4.4</httpcore.version>
-        <jline.version>2.12.1</jline.version>
+        <thrift.version>0.14.1</thrift.version>
     </properties>
 
     <repositories>
@@ -179,6 +180,11 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
                 <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.thrift</groupId>
+                <artifactId>libthrift</artifactId>
+                <version>${thrift.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
