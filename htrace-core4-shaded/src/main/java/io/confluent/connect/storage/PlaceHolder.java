@@ -24,5 +24,4 @@ package io.confluent.connect.storage;
  * The workaround is to introduce this class here, with the intention to remove it during shading
  * by configuring a filter for maven-shade-plugin.
  */
-public class PlaceHolder {
-}
+public class PlaceHolder { }
