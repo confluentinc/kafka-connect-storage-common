@@ -183,11 +183,6 @@
                 <version>${commons.codec.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.confluent</groupId>
-                <artifactId>confluent-log4j</artifactId>
-                <version>${confluent.log4j.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
                 <version>${netty.version}</version>
@@ -235,6 +230,12 @@
             <groupId>jline</groupId>
             <artifactId>jline</artifactId>
             <version>${jline.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>confluent-log4j</artifactId>
+            <version>${confluent.log4j.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
