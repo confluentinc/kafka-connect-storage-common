@@ -65,6 +65,7 @@
     </modules>
 
     <properties>
+        <avro.version>1.10.2</avro.version>
         <commons-io.version>2.4</commons-io.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
         <commons.codec.version>1.15</commons.codec.version>
