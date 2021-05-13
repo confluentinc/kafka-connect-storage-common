@@ -28,7 +28,6 @@ language governing permissions and limitations under the License. -->
 
     <properties>
         <htrace.version>4.1.0-incubating</htrace.version>
-        <jackson.version>2.10.5</jackson.version>
     </properties>
 
     <build>
