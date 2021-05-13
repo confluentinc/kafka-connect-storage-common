@@ -56,6 +56,10 @@
             <version>${hadoop.version}</version>
             <exclusions>
                 <exclusion>
+                    <groupId>commons-collections</groupId>
+                    <artifactId>commons-collections</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>log4j</groupId>
                     <artifactId>log4j</artifactId>
                 </exclusion>
@@ -86,6 +90,10 @@
             <version>${hive.version}</version>
             <classifier>core</classifier>
             <exclusions>
+                <exclusion>
+                    <groupId>commons-collections</groupId>
+                    <artifactId>commons-collections</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>commons-httpclient</groupId>
                     <artifactId>commons-httpclient</artifactId>
