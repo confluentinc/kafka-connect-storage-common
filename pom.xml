@@ -65,23 +65,32 @@
     </modules>
 
     <properties>
-        <kafka.connect.storage.common.version>10.0.6-SNAPSHOT</kafka.connect.storage.common.version>
+        <avro.version>1.10.2</avro.version>
         <commons-io.version>2.4</commons-io.version>
+        <commons.beanutils.version>1.9.4</commons.beanutils.version>
+        <commons.codec.version>1.15</commons.codec.version>
+        <confluent.log4j.version>1.2.17-cp2</confluent.log4j.version>
         <confluent.maven.repo>http://packages.confluent.io/maven/</confluent.maven.repo>
+        <dependency.check.version>6.1.6</dependency.check.version>
         <hadoop.version>2.10.1</hadoop.version>
         <hive.version>2.3.7</hive.version>
-        <joda.version>2.9.6</joda.version>
-        <parquet.version>1.11.1</parquet.version>
         <httpclient.version>4.5.13</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
-        <jline.version>2.12.1</jline.version>
-        <confluent-log4j.version>1.2.17-cp2</confluent-log4j.version>
-        <commons.codec.version>1.15</commons.codec.version>
-        <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
+        <jackson.version>2.10.5</jackson.version>
         <jackson.databind.version>2.10.5.1</jackson.databind.version>
-        <!-- temporary fix by pinning the version until we upgrade to a version of common that contains this or newer version.
-            See https://github.com/confluentinc/common/pull/332 for details -->
-        <dependency.check.version>6.1.6</dependency.check.version>
+        <jackson.mapper.asl.version>1.9.13</jackson.mapper.asl.version>
+        <jetty.version>9.4.40.v20210413</jetty.version>
+        <jline.version>2.12.1</jline.version>
+        <joda.version>2.9.6</joda.version>
+        <json.smart.version>2.4.7</json.smart.version>
+        <kafka.connect.storage.common.version>10.0.6-SNAPSHOT</kafka.connect.storage.common.version>
+        <licenses.version>5.3.5-SNAPSHOT</licenses.version>
+        <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
+        <netty.version>4.1.63.Final</netty.version>
+        <parquet.version>1.11.0</parquet.version>
+        <thrift.version>0.14.1</thrift.version>
+        <tomcat.version>8.5.65</tomcat.version>
+        <zookeeper.version>3.7.0</zookeeper.version>
     </properties>
 
     <repositories>
@@ -156,6 +165,17 @@
                 <version>${junit.version}</version>
                 <scope>test</scope>
             </dependency>
+            <!-- Pinning for CVEs -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.databind.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-beanutils</groupId>
+                <artifactId>commons-beanutils</artifactId>
+                <version>${commons.beanutils.version}</version>
+            </dependency>
             <dependency>
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
@@ -165,6 +185,51 @@
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
                 <version>${jackson.databind.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-handler</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-transport-native-epoll</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>json-smart</artifactId>
+                <version>${json.smart.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.thrift</groupId>
+                <artifactId>libthrift</artifactId>
+                <version>${thrift.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-core</artifactId>
+                <version>${tomcat.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.zookeeper</groupId>
+                <artifactId>zookeeper</artifactId>
+                <version>${zookeeper.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-mapper-asl</artifactId>
+                <version>${jackson.mapper.asl.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-io</artifactId>
+                <version>${jetty.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -179,6 +244,12 @@
             <groupId>jline</groupId>
             <artifactId>jline</artifactId>
             <version>${jline.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>confluent-log4j</artifactId>
+            <version>${confluent.log4j.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
