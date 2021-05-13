@@ -82,6 +82,7 @@
         <jetty.version>9.4.40.v20210413</jetty.version>
         <jline.version>2.12.1</jline.version>
         <joda.version>2.9.6</joda.version>
+        <json.smart.version>2.4.7</json.smart.version>
         <licenses.version>5.2.5-SNAPSHOT</licenses.version>
         <netty.version>4.1.63.Final</netty.version>
         <parquet.version>1.11.0</parquet.version>
@@ -197,6 +198,11 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-transport-native-epoll</artifactId>
                 <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>json-smart</artifactId>
+                <version>${json.smart.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.thrift</groupId>
