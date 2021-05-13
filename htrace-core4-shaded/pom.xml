@@ -58,6 +58,11 @@ language governing permissions and limitations under the License. -->
                                     <includes>
                                         <include>**</include>
                                     </includes>
+                                    <excludes>
+                                        <exclude>META-INF/services/**</exclude>
+                                        <exclude>META-INF/maven/com.fasterxml.jackson.core/**</exclude>
+                                        <exclude>org/apache/htrace/shaded/fasterxml/jackson/**</exclude>
+                                    </excludes>
                                 </filter>
                                 <filter>
                                     <!-- this filter is a workaround to the fact that maven phases
