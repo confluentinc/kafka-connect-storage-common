@@ -90,7 +90,7 @@
         <licenses.version>5.2.4</licenses.version>
         <netty.version>4.1.63.Final</netty.version>
         <parquet.version>1.11.0</parquet.version>
-        <thrift.version>0.14.1</thrift.version>
+        <thrift.version>0.9.3</thrift.version>
         <tomcat.version>8.5.65</tomcat.version>
         <zookeeper.version>3.7.0</zookeeper.version>
     </properties>
