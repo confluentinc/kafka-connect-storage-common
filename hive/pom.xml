@@ -60,10 +60,6 @@
                     <artifactId>commons-collections</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.codehaus.jackson</groupId>
-                    <artifactId>jackson-mapper-asl</artifactId>
-                </exclusion>
-                <exclusion>
                     <groupId>log4j</groupId>
                     <artifactId>log4j</artifactId>
                 </exclusion>
@@ -89,10 +85,6 @@
                 <exclusion>
                   <groupId>org.apache.hive</groupId>
                   <artifactId>hive-exec</artifactId>
-                </exclusion>
-                <exclusion>
-                  <groupId>org.codehaus.jackson</groupId>
-                  <artifactId>jackson-mapper-asl</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.eclipse.jetty.aggregate</groupId>
