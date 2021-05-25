@@ -78,7 +78,7 @@
         <httpcore.version>4.4.4</httpcore.version>
         <jackson.version>2.10.5</jackson.version>
         <jackson.databind.version>2.10.5.1</jackson.databind.version>
-        <jackson.mapper.asl.version>1.9.13</jackson.mapper.asl.version>
+        <jackson.mapper.asl.version>1.9.14.jdk17-redhat-00001</jackson.mapper.asl.version>
         <jetty.version>9.4.40.v20210413</jetty.version>
         <jline.version>2.12.1</jline.version>
         <joda.version>2.9.6</joda.version>
@@ -96,6 +96,10 @@
             <id>confluent</id>
             <name>Confluent</name>
             <url>${confluent.maven.repo}</url>
+        </repository>
+        <repository>
+            <id>redhat-repo</id>
+            <url>https://maven.repository.redhat.com/ga/</url>
         </repository>
     </repositories>
 
