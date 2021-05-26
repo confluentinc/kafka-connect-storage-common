@@ -88,7 +88,6 @@
         <parquet.version>1.11.0</parquet.version>
         <thrift.version>0.9.3</thrift.version>
         <tomcat.version>8.5.65</tomcat.version>
-        <zookeeper.version>3.7.0</zookeeper.version>
     </properties>
 
     <repositories>
@@ -217,11 +216,6 @@
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-core</artifactId>
                 <version>${tomcat.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.zookeeper</groupId>
-                <artifactId>zookeeper</artifactId>
-                <version>${zookeeper.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
