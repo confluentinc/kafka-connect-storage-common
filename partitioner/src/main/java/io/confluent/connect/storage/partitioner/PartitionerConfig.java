@@ -103,6 +103,12 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final String TIMESTAMP_FIELD_NAME_DEFAULT = "timestamp";
   public static final String TIMESTAMP_FIELD_NAME_DISPLAY = "Record Field for Timestamp Extractor";
 
+  public static final String PARTITIONER_CHAIN_CONFIG = "partitioner.chain";
+  public static final String PARTITIONER_CHAIN_DOC =
+      "The Aliases is used to register for ``ChainedPartitioner`` which can use multiple"
+          + " partitioners.";
+  public static final String PARTITIONER_CHAIN_DISPLAY = "List of Alias for Partitioner Chaining";
+
   /**
    * Create a new configuration definition.
    *
@@ -211,6 +217,17 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           ++orderInGroup,
           Width.LONG,
           TIMESTAMP_FIELD_NAME_DISPLAY);
+
+      configDef.define(PARTITIONER_CHAIN_CONFIG,
+          Type.LIST,
+          "",
+          Importance.MEDIUM,
+          PARTITIONER_CHAIN_DOC,
+          group,
+          ++orderInGroup,
+          Width.LONG,
+          PARTITIONER_CHAIN_DISPLAY,
+          new PartitionerClassDependentsRecommender());
     }
 
     return configDef;
@@ -218,11 +235,11 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
 
   public static class BooleanParentRecommender implements ConfigDef.Recommender {
     protected final String parentConfigName;
-    
+
     public BooleanParentRecommender(String parentConfigName) {
       this.parentConfigName = parentConfigName;
     }
-    
+
     @Override
     public List<Object> validValues(String name, Map<String, Object> connectorConfigs) {
       return new LinkedList<>();
@@ -262,6 +279,9 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
                    || name.equals(LOCALE_CONFIG)
                    || name.equals(TIMEZONE_CONFIG);
           }
+        } else if (ChainedPartitioner.class.isAssignableFrom(partitioner)) {
+          // subclass of ChainedPartitioner
+          return name.equals(PARTITIONER_CHAIN_CONFIG);
         } else {
           // Custom partitioner. Allow all the dependent configs.
           return true;
