@@ -67,6 +67,10 @@
                     <groupId>org.apache.htrace</groupId>
                     <artifactId>htrace-core4</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.apache.thrift</groupId>
+                    <artifactId>libthrift</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -85,6 +89,10 @@
                 <exclusion>
                     <groupId>log4j</groupId>
                     <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.thrift</groupId>
+                    <artifactId>libthrift</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -105,6 +113,10 @@
                 <exclusion>
                     <groupId>log4j</groupId>
                     <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.thrift</groupId>
+                    <artifactId>libthrift</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
