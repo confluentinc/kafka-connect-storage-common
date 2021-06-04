@@ -66,7 +66,7 @@
 
     <properties>
         <avro.version>1.10.2</avro.version>
-        <commons-io.version>2.4</commons-io.version>
+        <commons-io.version>2.7</commons-io.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
         <commons.codec.version>1.15</commons.codec.version>
         <confluent.log4j.version>1.2.17-cp2</confluent.log4j.version>
@@ -181,6 +181,11 @@
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
                 <version>${commons.codec.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
