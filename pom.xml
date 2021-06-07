@@ -23,7 +23,7 @@
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>common</artifactId>
-        <version>5.5.1</version>
+        <version>5.5.1-cp9</version>
     </parent>
 
     <artifactId>kafka-connect-storage-common-parent</artifactId>
@@ -71,11 +71,11 @@
         <commons.codec.version>1.15</commons.codec.version>
         <confluent.log4j.version>1.2.17-cp2</confluent.log4j.version>
         <confluent.maven.repo>http://packages.confluent.io/maven/</confluent.maven.repo>
-        <confluent.version>5.5.1</confluent.version>
+        <confluent.version>5.5.1-cp9</confluent.version>
         <hadoop.version>2.10.1</hadoop.version>
         <hive.version>1.2.2</hive.version>
         <joda.version>2.9.6</joda.version>
-        <licenses.version>5.5.1</licenses.version>
+        <licenses.version>5.5.1-cp9</licenses.version>
         <parquet.version>1.11.0</parquet.version>
         <httpclient.version>4.5.2</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
