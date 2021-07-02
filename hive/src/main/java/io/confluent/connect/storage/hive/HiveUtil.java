@@ -28,18 +28,25 @@ import io.confluent.connect.storage.partitioner.Partitioner;
  */
 public abstract class HiveUtil {
 
-  protected String url;
+  protected final String url;
   protected final HiveMetaStore hiveMetaStore;
   protected final String delim;
 
   public HiveUtil(AbstractConfig connectorConfig, HiveMetaStore hiveMetaStore) {
-    this.url = connectorConfig.getString(StorageCommonConfig.STORE_URL_CONFIG);
+    this(connectorConfig,
+            hiveMetaStore,
+            connectorConfig.getString(StorageCommonConfig.STORE_URL_CONFIG));
+  }
+
+  public HiveUtil(AbstractConfig connectorConfig, HiveMetaStore hiveMetaStore, String url) {
     this.hiveMetaStore = hiveMetaStore;
     this.delim = connectorConfig.getString(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
+    this.url = url;
   }
 
   public abstract void createTable(String database, String tableName, Schema schema,
-                                   Partitioner<FieldSchema> partitioner);
+                                   Partitioner<FieldSchema> partitioner,
+                                   String topic);
 
   public abstract void alterSchema(String database, String tableName, Schema schema);
 
