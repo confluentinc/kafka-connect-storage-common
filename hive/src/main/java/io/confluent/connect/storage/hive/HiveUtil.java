@@ -33,9 +33,11 @@ public abstract class HiveUtil {
   protected final String delim;
 
   public HiveUtil(AbstractConfig connectorConfig, HiveMetaStore hiveMetaStore) {
-    this(connectorConfig,
-            hiveMetaStore,
-            connectorConfig.getString(StorageCommonConfig.STORE_URL_CONFIG));
+    this(
+      connectorConfig,
+      hiveMetaStore,
+      connectorConfig.getString(StorageCommonConfig.STORE_URL_CONFIG)
+    );
   }
 
   public HiveUtil(AbstractConfig connectorConfig, HiveMetaStore hiveMetaStore, String url) {
