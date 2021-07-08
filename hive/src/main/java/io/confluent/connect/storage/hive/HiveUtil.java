@@ -34,9 +34,9 @@ public abstract class HiveUtil {
 
   public HiveUtil(AbstractConfig connectorConfig, HiveMetaStore hiveMetaStore) {
     this(
-      connectorConfig,
-      hiveMetaStore,
-      connectorConfig.getString(StorageCommonConfig.STORE_URL_CONFIG)
+        connectorConfig,
+        hiveMetaStore,
+        connectorConfig.getString(StorageCommonConfig.STORE_URL_CONFIG)
     );
   }
 
