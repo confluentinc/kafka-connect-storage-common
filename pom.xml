@@ -84,6 +84,10 @@
             <name>Confluent</name>
             <url>${confluent.maven.repo}</url>
         </repository>
+        <repository>
+            <id>pentaho</id>
+            <url>https://public.nexus.pentaho.org/repository/proxy-public-3rd-party-release</url>
+        </repository>
     </repositories>
 
     <dependencyManagement>
