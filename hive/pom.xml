@@ -31,7 +31,6 @@
 
     <properties>
         <commons.lang3.version>3.1</commons.lang3.version>
-        <commons.compress.version>1.21</commons.compress.version>
         <kryo.version>2.22</kryo.version>
     </properties>
 
