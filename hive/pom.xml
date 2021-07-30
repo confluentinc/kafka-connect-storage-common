@@ -123,11 +123,6 @@
             <version>${commons.lang3.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-            <version>${commons.compress.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.esotericsoftware.kryo</groupId>
             <artifactId>kryo</artifactId>
             <version>${kryo.version}</version>
