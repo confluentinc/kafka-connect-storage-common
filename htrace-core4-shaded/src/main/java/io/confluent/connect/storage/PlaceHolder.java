@@ -20,7 +20,7 @@ package io.confluent.connect.storage;
  * with maven fails if there's no source code in the project (the produced jar is empty).
  * @see <a href="http://mail-archives.apache.org/mod_mbox/maven-users/201608.mbox/%3c20160805151905.500d5c45@copperhead.int.arc7.info%3e">
  *   mvn clean verify deploy causes jar plugin to execute twice </a>
- * <br>
+ *      <br>
  *      This fact subsequently fails the attempt to re-shade the dependencies without adding new
  *      code. The workaround is to introduce this class here, with the intention to remove it
  *      during shading by configuring a filter for maven-shade-plugin.
