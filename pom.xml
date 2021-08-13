@@ -80,7 +80,7 @@
         <jackson.version>2.10.5</jackson.version>
         <jackson.databind.version>2.10.5.1</jackson.databind.version>
         <jackson.mapper.asl.version>1.9.14.jdk17-redhat-00001</jackson.mapper.asl.version>
-        <jetty.version>9.4.40.v20210413</jetty.version>
+        <jetty.version>9.4.43.v20210629</jetty.version>
         <jline.version>2.12.1</jline.version>
         <joda.version>2.9.6</joda.version>
         <kafka.connect.storage.common.version>10.1.3-SNAPSHOT</kafka.connect.storage.common.version>
@@ -237,6 +237,11 @@
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-io</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
         </dependencies>
