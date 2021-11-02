@@ -85,7 +85,7 @@
         <joda.version>2.9.6</joda.version>
         <kafka.connect.storage.common.version>10.3.0-SNAPSHOT</kafka.connect.storage.common.version>
         <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
-        <netty.version>4.1.63.Final</netty.version>
+        <netty.version>4.1.68.Final</netty.version>
         <parquet.version>1.11.1</parquet.version>
         <json.smart.version>2.4.7</json.smart.version>
         <thrift.version>0.13.0</thrift.version>
