@@ -3,4 +3,5 @@ common {
   slackChannel = '#connect-warn'
   upstreamProjects = ['confluentinc/common','confluentinc/schema-registry']
   pintMerge = true
+  disableConcurrentBuilds = true
 }
