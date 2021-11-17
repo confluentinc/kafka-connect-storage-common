@@ -26,4 +26,13 @@
     <artifactId>kafka-connect-storage-wal</artifactId>
     <packaging>jar</packaging>
     <name>kafka-connect-storage-wal</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
 </project>
