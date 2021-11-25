@@ -72,6 +72,8 @@ language governing permissions and limitations under the License. -->
                                     <include>io.netty:*</include>
                                     <include>io.projectreactor.netty:*</include>
                                     <include>io.projectreactor:*</include>
+                                    <include>org.codehaus.woodstox:*</include>
+                                    <include>com.fasterxml.woodstox:*</include>
                                 </includes>
                             </artifactSet>
                             <filters>
@@ -111,6 +113,14 @@ language governing permissions and limitations under the License. -->
                                 <relocation>
                                     <pattern>org.reactivestreams</pattern>
                                     <shadedPattern>org.reactivestreams.shaded</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.codehaus.woodstox</pattern>
+                                    <shadedPattern>org.codehaus.woodstox.shaded</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.fasterxml.woodstox</pattern>
+                                    <shadedPattern>com.fasterxml.woodstox.shaded</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
