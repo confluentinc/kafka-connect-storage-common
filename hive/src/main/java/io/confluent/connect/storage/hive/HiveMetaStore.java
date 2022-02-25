@@ -223,6 +223,7 @@ public class HiveMetaStore {
     doAction(create);
   }
 
+  @SuppressWarnings("deprecation")
   public void alterTable(final Table table, final boolean cascade) throws HiveMetaStoreException {
     ClientAction<Void> alter = new ClientAction<Void>() {
       @Override
