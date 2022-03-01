@@ -21,7 +21,7 @@
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>common</artifactId>
-        <version>6.0.3</version>
+        <version>6.1.4</version>
     </parent>
 
     <artifactId>kafka-connect-storage-common-parent</artifactId>
@@ -90,6 +90,7 @@
         <json.smart.version>2.4.7</json.smart.version>
         <thrift.version>0.13.0</thrift.version>
         <tomcat.version>8.5.65</tomcat.version>
+        <io.confluent.kafka-connect-avro-data.version>${confluent.version.range}</io.confluent.kafka-connect-avro-data.version>
     </properties>
 
     <repositories>
@@ -135,7 +136,7 @@
             <dependency>
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-connect-avro-data</artifactId>
-                <version>${confluent.version}</version>
+                <version>${io.confluent.kafka-connect-avro-data.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.parquet</groupId>

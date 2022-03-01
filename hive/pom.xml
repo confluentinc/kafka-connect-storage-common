@@ -48,7 +48,7 @@
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-avro-data</artifactId>
-            <version>${confluent.version}</version>
+            <version>${io.confluent.kafka-connect-avro-data.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
