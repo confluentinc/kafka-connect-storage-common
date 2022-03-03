@@ -90,7 +90,6 @@
         <json.smart.version>2.4.7</json.smart.version>
         <thrift.version>0.13.0</thrift.version>
         <tomcat.version>8.5.65</tomcat.version>
-        <io.confluent.kafka-connect-avro-data.version>${confluent.version.range}</io.confluent.kafka-connect-avro-data.version>
     </properties>
 
     <repositories>
@@ -136,7 +135,7 @@
             <dependency>
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-connect-avro-data</artifactId>
-                <version>${io.confluent.kafka-connect-avro-data.version}</version>
+                <version>${confluent.version.range}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.parquet</groupId>
