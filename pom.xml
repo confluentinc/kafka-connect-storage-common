@@ -49,7 +49,7 @@
         <connection>scm:git:git://github.com/confluentinc/kafka-connect-storage-common.git</connection>
         <developerConnection>scm:git:git@github.com:confluentinc/kafka-connect-storage-common.git</developerConnection>
         <url>https://github.com/confluentinc/kafka-connect-storage-common</url>
-        <tag>HEAD</tag>
+        <tag>11.1.0</tag>
     </scm>
 
     <modules>
