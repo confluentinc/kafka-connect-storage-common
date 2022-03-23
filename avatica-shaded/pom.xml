@@ -28,7 +28,6 @@ language governing permissions and limitations under the License. -->
 
     <properties>
         <avatica.version>1.9.0</avatica.version>
-        <protobuf.version>3.4.0</protobuf.version>
     </properties>
 
     <build>
