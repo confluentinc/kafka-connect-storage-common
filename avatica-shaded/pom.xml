@@ -28,7 +28,6 @@ language governing permissions and limitations under the License. -->
 
     <properties>
         <avatica.version>1.8.0</avatica.version>
-        <jackson.version>2.10.5</jackson.version>
     </properties>
 
     <build>
