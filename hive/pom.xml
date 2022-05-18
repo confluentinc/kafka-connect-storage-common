@@ -32,14 +32,6 @@
         <kryo.version>2.22</kryo.version>
         <xml-apis.version>1.4.01</xml-apis.version>
         <jamon.runtime.version>2.4.1</jamon.runtime.version>
-        <!--
-        Note: The following three properties are used to change the version of the
-        respective dependencies within hive. They are changed from the ones inherited from
-        hive for fixing CVEs.
-        -->
-        <groovy.override.version>2.4.21</groovy.override.version>
-        <derby.override.version>10.14.1.0</derby.override.version>
-        <orc-core.override.version>1.4.3</orc-core.override.version>
     </properties>
 
     <dependencies>
@@ -190,25 +182,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.codehaus.groovy</groupId>
-                <artifactId>groovy-all</artifactId>
-                <version>${groovy.override.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.derby</groupId>
-                <artifactId>derby</artifactId>
-                <version>${derby.override.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.orc</groupId>
-                <artifactId>orc-core</artifactId>
-                <version>${orc-core.override.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
 </project>

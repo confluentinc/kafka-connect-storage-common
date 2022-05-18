@@ -85,12 +85,20 @@
         <joda.version>2.9.6</joda.version>
         <kafka.connect.storage.common.version>11.0.6-SNAPSHOT</kafka.connect.storage.common.version>
         <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
-        <netty.version>4.1.68.Final</netty.version>
+        <netty.version>4.1.71.Final</netty.version>
         <parquet.version>1.11.1</parquet.version>
         <json.smart.version>2.4.7</json.smart.version>
         <thrift.version>0.13.0</thrift.version>
         <tomcat.version>8.5.65</tomcat.version>
         <protobuf.version>3.19.4</protobuf.version>
+        <!--
+        Note: The following three properties are used to change the version of the
+        respective dependencies within hive. They are changed from the ones inherited from
+        hive for fixing CVEs.
+        -->
+        <groovy.override.version>2.4.21</groovy.override.version>
+        <derby.override.version>10.14.1.0</derby.override.version>
+        <orc-core.override.version>1.4.3</orc-core.override.version>
     </properties>
 
     <repositories>
@@ -276,6 +284,21 @@
                 <groupId>com.google.protobuf</groupId>
                 <artifactId>protobuf-java</artifactId>
                 <version>${protobuf.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.codehaus.groovy</groupId>
+                <artifactId>groovy-all</artifactId>
+                <version>${groovy.override.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.derby</groupId>
+                <artifactId>derby</artifactId>
+                <version>${derby.override.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.orc</groupId>
+                <artifactId>orc-core</artifactId>
+                <version>${orc-core.override.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
