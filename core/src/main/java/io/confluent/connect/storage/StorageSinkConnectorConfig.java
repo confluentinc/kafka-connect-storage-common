@@ -68,6 +68,15 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final long ROTATE_SCHEDULE_INTERVAL_MS_DEFAULT = -1L;
   public static final String ROTATE_SCHEDULE_INTERVAL_MS_DISPLAY = "Rotate Schedule Interval (ms)";
 
+  public static final String ROTATE_MULTIPLE_SCHEMA_CONFIG = "rotate.multiple.schema";
+  public static final boolean ROTATE_MULTIPLE_SCHEMA_DEFAULT = true;
+  public static final String ROTATE_MULTIPLE_SCHEMA_DOC =
+      "The strategy to invoke file commits. This configuration ensures that file commits whether "
+      + "are invoked at multiple schemas from the time interval. The value ``true`` means that "
+      + "rotate file, and the value ``false`` means that don't rotate file until reach the time "
+      + "interval or flush size.";
+  public static final String ROTATE_MULTIPLE_SCHEMA_DISPLAY = "Rotate Multiple Schema (boolean)";
+
   public static final String RETRY_BACKOFF_CONFIG = "retry.backoff.ms";
   public static final String
       RETRY_BACKOFF_DOC =
@@ -205,6 +214,18 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           ++orderInGroup,
           Width.MEDIUM,
           ROTATE_SCHEDULE_INTERVAL_MS_DISPLAY
+      );
+
+      configDef.define(
+          ROTATE_MULTIPLE_SCHEMA_CONFIG,
+          Type.BOOLEAN,
+          ROTATE_MULTIPLE_SCHEMA_DEFAULT,
+          Importance.LOW,
+          ROTATE_MULTIPLE_SCHEMA_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          ROTATE_MULTIPLE_SCHEMA_DISPLAY
       );
 
       configDef.define(
