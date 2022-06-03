@@ -71,10 +71,6 @@
                     <groupId>org.apache.htrace</groupId>
                     <artifactId>htrace-core4</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>com.google.protobuf</groupId>
-                    <artifactId>protobuf-java</artifactId>
-                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -161,10 +157,6 @@
             <groupId>org.jamon</groupId>
             <artifactId>jamon-runtime</artifactId>
             <version>${jamon.runtime.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

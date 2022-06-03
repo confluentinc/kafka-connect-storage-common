@@ -148,20 +148,5 @@ language governing permissions and limitations under the License. -->
             <artifactId>commons-codec</artifactId>
             <version>${commons.codec.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-        </dependency>
     </dependencies>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.google.protobuf</groupId>
-                <artifactId>protobuf-java</artifactId>
-                <version>${protobuf.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
 </project>
