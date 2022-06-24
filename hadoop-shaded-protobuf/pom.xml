@@ -4,15 +4,13 @@
      Copyright [2019 - 2019] Confluent Inc.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>kafka-connect-storage-common-parent</artifactId>
-        <version>11.0.8-SNAPSHOT</version>
+        <version>11.0.8</version>
     </parent>
 
     <artifactId>kafka-connect-storage-common-hadoop-shaded-protobuf</artifactId>
@@ -90,15 +88,13 @@
                                 </relocation>
                             </relocations>
                             <transformers>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.DontIncludeResourceTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.DontIncludeResourceTransformer">
                                     <resources>
                                         <resource>NOTICE</resource>
                                         <resource>LICENSE</resource>
                                     </resources>
                                 </transformer>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
                                     <resource>META-INF/LICENSE.txt</resource>
                                     <file>${basedir}/../LICENSE-binary</file>
                                 </transformer>
