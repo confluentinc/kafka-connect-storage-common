@@ -91,6 +91,7 @@
         <json.smart.version>2.4.7</json.smart.version>
         <thrift.version>0.13.0</thrift.version>
         <tomcat.version>8.5.65</tomcat.version>
+        <slf4j-reload4j.version>1.7.36</slf4j-reload4j.version>
         <protobuf.version>3.19.4</protobuf.version>
         <!--
         Note: The following three properties are used to change the version of the
@@ -177,6 +178,12 @@
                 <artifactId>junit</artifactId>
                 <version>${junit.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <!-- Pinning for CVEs -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-reload4j</artifactId>
+                <version>${slf4j-reload4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
