@@ -14,20 +14,19 @@
   ~ WARRANTIES OF ANY KIND, either express or implied.  See the License for the
   ~ specific language governing permissions and limitations under the License.
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>common</artifactId>
-        <version>5.5.12-SNAPSHOT</version>
+        <version>6.1.6</version>
     </parent>
 
     <artifactId>kafka-connect-storage-common-parent</artifactId>
     <packaging>pom</packaging>
+    <version>10.0.16-SNAPSHOT</version>
     <name>kafka-connect-storage-common-parent</name>
     <organization>
         <name>Confluent, Inc.</name>
@@ -50,7 +49,7 @@
         <connection>scm:git:git://github.com/confluentinc/kafka-connect-storage-common.git</connection>
         <developerConnection>scm:git:git@github.com:confluentinc/kafka-connect-storage-common.git</developerConnection>
         <url>https://github.com/confluentinc/kafka-connect-storage-common</url>
-        <tag>HEAD</tag>
+        <tag>10.0.x</tag>
     </scm>
 
     <modules>
@@ -61,6 +60,8 @@
         <module>format</module>
         <module>hive</module>
         <module>htrace-core4-shaded</module>
+        <module>avatica-shaded</module>
+        <module>hadoop-shaded-protobuf</module>
         <module>package-kafka-connect-storage-common</module>
     </modules>
 
@@ -70,14 +71,11 @@
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
         <commons.codec.version>1.15</commons.codec.version>
         <commons.compress.version>1.21</commons.compress.version>
-        <confluent.log4j.version>1.2.17-cp2</confluent.log4j.version>
+        <confluent.log4j.version>1.2.17-cp8</confluent.log4j.version>
         <confluent.maven.repo>http://packages.confluent.io/maven/</confluent.maven.repo>
-        <confluent.version>5.5.12-SNAPSHOT</confluent.version>
+        <dependency.check.version>6.1.6</dependency.check.version>
         <hadoop.version>2.10.1</hadoop.version>
-        <hive.version>1.2.2</hive.version>
-        <joda.version>2.9.6</joda.version>
-        <licenses.version>5.5.12-SNAPSHOT</licenses.version>
-        <parquet.version>1.12.3</parquet.version>
+        <hive.version>2.3.9</hive.version>
         <httpclient.version>4.5.13</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
         <jackson.version>2.13.2</jackson.version>
@@ -85,11 +83,16 @@
         <jackson.mapper.asl.version>1.9.14.jdk17-redhat-00001</jackson.mapper.asl.version>
         <jetty.version>9.4.43.v20210629</jetty.version>
         <jline.version>2.12.1</jline.version>
+        <joda.version>2.9.6</joda.version>
+        <kafka.connect.storage.common.version>10.0.16-SNAPSHOT</kafka.connect.storage.common.version>
+        <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
         <netty.version>4.1.68.Final</netty.version>
+        <parquet.version>1.12.3</parquet.version>
         <json.smart.version>2.4.7</json.smart.version>
         <thrift.version>0.13.0</thrift.version>
         <tomcat.version>8.5.65</tomcat.version>
         <slf4j-reload4j.version>1.7.36</slf4j-reload4j.version>
+        <protobuf.version>3.19.4</protobuf.version>
     </properties>
 
     <repositories>
@@ -110,32 +113,32 @@
             <dependency>
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-connect-storage-common</artifactId>
-                <version>${project.version}</version>
+                <version>${kafka.connect.storage.common.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-connect-storage-core</artifactId>
-                <version>${project.version}</version>
+                <version>${kafka.connect.storage.common.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-connect-storage-format</artifactId>
-                <version>${project.version}</version>
+                <version>${kafka.connect.storage.common.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-connect-storage-partitioner</artifactId>
-                <version>${project.version}</version>
+                <version>${kafka.connect.storage.common.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-connect-storage-wal</artifactId>
-                <version>${project.version}</version>
+                <version>${kafka.connect.storage.common.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-connect-avro-data</artifactId>
-                <version>${confluent.version}</version>
+                <version>${confluent.version.range}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.parquet</groupId>
@@ -176,11 +179,6 @@
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.databind.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-core</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
@@ -188,6 +186,13 @@
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
                 <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
             </dependency>
             <dependency>
                 <groupId>commons-beanutils</groupId>
@@ -208,6 +213,11 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-compress</artifactId>
                 <version>${commons.compress.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.databind.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
@@ -254,6 +264,11 @@
                 <artifactId>jetty-server</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobuf.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -285,7 +300,7 @@
                 <configuration>
                     <showWarnings>true</showWarnings>
                     <compilerArgs>
-                        <arg>-Xlint:all</arg>
+                        <arg>-Xlint:-processing</arg>
                         <arg>-Werror</arg>
                     </compilerArgs>
                 </configuration>
@@ -313,6 +328,16 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>${maven.release.plugin.version}</version>
+                <configuration>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <remoteTagging>false</remoteTagging>
+                    <tagNameFormat>v@{project.version}</tagNameFormat>
+                </configuration>
             </plugin>
         </plugins>
     </build>

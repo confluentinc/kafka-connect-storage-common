@@ -13,16 +13,14 @@
   ~ specific language governing permissions and limitations under the License.
   -->
 
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>kafka-connect-storage-common-parent</artifactId>
-        <version>5.5.12-SNAPSHOT</version>
+        <version>10.0.16-SNAPSHOT</version>
     </parent>
 
     <artifactId>kafka-connect-storage-hive</artifactId>
@@ -32,23 +30,25 @@
     <properties>
         <commons.lang3.version>3.1</commons.lang3.version>
         <kryo.version>2.22</kryo.version>
+        <xml-apis.version>1.4.01</xml-apis.version>
+        <jamon.runtime.version>2.4.1</jamon.runtime.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-storage-common</artifactId>
-            <version>${confluent.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-storage-partitioner</artifactId>
-            <version>${confluent.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-avro-data</artifactId>
-            <version>${confluent.version}</version>
+            <version>${confluent.version.range}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
@@ -67,6 +67,14 @@
                     <groupId>org.apache.htrace</groupId>
                     <artifactId>htrace-core4</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.apache.htrace</groupId>
+                    <artifactId>htrace-core4</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.protobuf</groupId>
+                    <artifactId>protobuf-java</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -75,22 +83,36 @@
             <version>${hive.version}</version>
             <exclusions>
                 <exclusion>
+                  <groupId>jdk.tools</groupId>
+                  <artifactId>jdk.tools</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>log4j</groupId>
                     <artifactId>log4j</artifactId>
                 </exclusion>
-              <exclusion>
-                <groupId>org.apache.hive</groupId>
-                <artifactId>hive-exec</artifactId>
-              </exclusion>
+                <exclusion>
+                  <groupId>org.apache.hive</groupId>
+                  <artifactId>hive-exec</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>org.eclipse.jetty.aggregate</groupId>
                     <artifactId>jetty-all</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
+                    <groupId>org.jamon</groupId>
+                    <artifactId>jamon-runtime</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-core</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <!-- Explicitly include working version of xml-apis -->
+        <dependency>
+            <groupId>xml-apis</groupId>
+            <artifactId>xml-apis</artifactId>
+            <version>${xml-apis.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hive</groupId>
@@ -109,6 +131,10 @@
                 <exclusion>
                     <groupId>log4j</groupId>
                     <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-core</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.apache.hadoop</groupId>
@@ -130,6 +156,16 @@
             <groupId>org.apache.avro</groupId>
             <artifactId>avro-mapred</artifactId>
             <version>${avro.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jamon</groupId>
+            <artifactId>jamon-runtime</artifactId>
+            <version>${jamon.runtime.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protobuf.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

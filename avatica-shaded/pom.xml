@@ -19,15 +19,15 @@ language governing permissions and limitations under the License. -->
         <version>10.0.16-SNAPSHOT</version>
     </parent>
 
-    <artifactId>kafka-connect-storage-common-htrace-core4-shaded</artifactId>
+    <artifactId>kafka-connect-storage-common-avatica-shaded</artifactId>
     <packaging>jar</packaging>
-    <name>kafka-connect-storage-common-htrace-core4-shaded</name>
-    
-    <description>htrace-core4 shaded to replace jackson dependencies without CVEs</description>
+    <name>kafka-connect-storage-common-avatica-shaded</name>
+
+    <description>avatica shaded package to replace jackson dependencies without CVEs</description>
     <inceptionYear>2020</inceptionYear>
 
     <properties>
-        <htrace.version>4.1.0-incubating</htrace.version>
+        <avatica.version>1.21.0</avatica.version>
     </properties>
 
     <build>
@@ -48,20 +48,26 @@ language governing permissions and limitations under the License. -->
                         <configuration>
                             <artifactSet>
                                 <includes>
-                                    <include>org.apache.htrace:*</include>
+                                    <include>org.apache.calcite.avatica:*</include>
                                     <include>com.fasterxml.jackson.core:*</include>
+                                    <include>org.apache.httpcomponents</include>
+                                    <include>commons-codec</include>
                                 </includes>
                             </artifactSet>
                             <filters>
                                 <filter>
-                                    <artifact>org.apache.htrace:htrace-core4</artifact>
+                                    <artifact>org.apache.calcite.avatica:avatica</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>
                                     <excludes>
-                                        <exclude>META-INF/services/**</exclude>
+                                        <exclude>META-INF/services/com.fasterxml.jackson.core*</exclude>
                                         <exclude>META-INF/maven/com.fasterxml.jackson.core/**</exclude>
-                                        <exclude>org/apache/htrace/shaded/fasterxml/jackson/**</exclude>
+                                        <exclude>com/fasterxml/jackson/**</exclude>
+                                        <exclude>META-INF/maven/org.apache.httpcomponents/**</exclude>
+                                        <exclude>org/apache/calcite/avatica/org/apache/http/**</exclude>
+                                        <exclude>org/apache/calcite/avatica/org/apache/commons/codec/**</exclude>
+                                        <exclude>META-INF/maven/commons-codec/commons-codec/**</exclude>
                                     </excludes>
                                 </filter>
                                 <filter>
@@ -86,13 +92,29 @@ language governing permissions and limitations under the License. -->
                                         <exclude>META-INF/NOTICE</exclude>
                                     </excludes>
                                 </filter>
+                                <filter>
+                                    <artifact>org.apache.httpcomponents:httpclient</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>META-INF/LICENSE</exclude>
+                                        <exclude>META-INF/NOTICE</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>commons-codec:commons-codec</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>META-INF/LICENSE</exclude>
+                                        <exclude>META-INF/NOTICE</exclude>
+                                    </excludes>
+                                </filter>
                             </filters>
-                            <relocations>
-                                <relocation>
-                                    <pattern>com.fasterxml.jackson</pattern>
-                                    <shadedPattern>org.apache.htrace.shaded.fasterxml.jackson</shadedPattern>
-                                </relocation>
-                            </relocations>
                         </configuration>
                     </execution>
                 </executions>
@@ -102,9 +124,9 @@ language governing permissions and limitations under the License. -->
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.htrace</groupId>
-            <artifactId>htrace-core4</artifactId>
-            <version>${htrace.version}</version>
+            <groupId>org.apache.calcite.avatica</groupId>
+            <artifactId>avatica</artifactId>
+            <version>${avatica.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -116,5 +138,31 @@ language governing permissions and limitations under the License. -->
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.databind.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${httpclient.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>${commons.codec.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protobuf.version}</version>
+        </dependency>
     </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobuf.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
 </project>
