@@ -23,7 +23,7 @@
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>common</artifactId>
-        <version>5.4.10-SNAPSHOT</version>
+        <version>5.5.12-SNAPSHOT</version>
     </parent>
 
     <artifactId>kafka-connect-storage-common-parent</artifactId>
@@ -72,12 +72,12 @@
         <commons.compress.version>1.21</commons.compress.version>
         <confluent.log4j.version>1.2.17-cp2</confluent.log4j.version>
         <confluent.maven.repo>http://packages.confluent.io/maven/</confluent.maven.repo>
-        <confluent.version>5.4.10-SNAPSHOT</confluent.version>
+        <confluent.version>5.5.12-SNAPSHOT</confluent.version>
         <hadoop.version>2.10.1</hadoop.version>
         <hive.version>1.2.2</hive.version>
         <joda.version>2.9.6</joda.version>
-        <licenses.version>5.4.10-SNAPSHOT</licenses.version>
         <parquet.version>1.12.3</parquet.version>
+        <licenses.version>5.5.12-SNAPSHOT</licenses.version>
         <httpclient.version>4.5.13</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
         <jackson.version>2.13.2</jackson.version>
@@ -85,7 +85,6 @@
         <jackson.mapper.asl.version>1.9.14.jdk17-redhat-00001</jackson.mapper.asl.version>
         <jetty.version>9.4.43.v20210629</jetty.version>
         <jline.version>2.12.1</jline.version>
-        <joda.version>2.9.6</joda.version>
         <netty.version>4.1.68.Final</netty.version>
         <json.smart.version>2.4.7</json.smart.version>
         <thrift.version>0.13.0</thrift.version>
@@ -135,8 +134,8 @@
             </dependency>
             <dependency>
                 <groupId>io.confluent</groupId>
-                <artifactId>kafka-connect-avro-converter</artifactId>
-                <version>${project.version}</version>
+                <artifactId>kafka-connect-avro-data</artifactId>
+                <version>${confluent.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.parquet</groupId>
