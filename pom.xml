@@ -73,7 +73,7 @@
         <confluent.log4j.version>1.2.17-cp2</confluent.log4j.version>
         <confluent.maven.repo>http://packages.confluent.io/maven/</confluent.maven.repo>
         <confluent.version>5.4.10-SNAPSHOT</confluent.version>
-        <hadoop.version>2.10.1</hadoop.version>
+        <hadoop.version>2.10.2</hadoop.version>
         <hive.version>1.2.2</hive.version>
         <joda.version>2.9.6</joda.version>
         <licenses.version>5.4.10-SNAPSHOT</licenses.version>
