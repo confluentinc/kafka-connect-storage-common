@@ -27,7 +27,7 @@ language governing permissions and limitations under the License. -->
     <inceptionYear>2020</inceptionYear>
 
     <properties>
-        <avatica.version>1.21.0</avatica.version>
+        <avatica.version>1.22.0</avatica.version>
     </properties>
 
     <build>
