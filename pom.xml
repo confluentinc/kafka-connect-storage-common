@@ -71,7 +71,7 @@
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
         <commons.codec.version>1.15</commons.codec.version>
         <commons.compress.version>1.21</commons.compress.version>
-        <confluent.maven.repo>http://packages.confluent.io/maven/</confluent.maven.repo>
+        <confluent.maven.repo>https://packages.confluent.io/maven/</confluent.maven.repo>
         <dependency.check.version>6.1.6</dependency.check.version>
         <hadoop.version>2.10.2</hadoop.version>
         <hive.version>2.3.9</hive.version>
