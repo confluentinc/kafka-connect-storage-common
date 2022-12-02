@@ -71,7 +71,7 @@
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
         <commons.codec.version>1.15</commons.codec.version>
         <commons.compress.version>1.21</commons.compress.version>
-        <confluent.maven.repo>http://packages.confluent.io/maven/</confluent.maven.repo>
+        <confluent.maven.repo>https://packages.confluent.io/maven/</confluent.maven.repo>
         <dependency.check.version>6.1.6</dependency.check.version>
         <hadoop.version>2.10.2</hadoop.version>
         <hive.version>2.3.9</hive.version>
@@ -83,7 +83,7 @@
         <joda.version>2.9.6</joda.version>
         <kafka.connect.storage.common.version>11.1.0-SNAPSHOT</kafka.connect.storage.common.version>
         <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
-        <netty.version>4.1.71.Final</netty.version>
+        <netty.version>4.1.79.Final</netty.version>
         <parquet.version>1.11.2</parquet.version>
         <json.smart.version>2.4.7</json.smart.version>
         <thrift.version>0.13.0</thrift.version>
