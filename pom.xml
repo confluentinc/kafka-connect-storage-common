@@ -21,7 +21,7 @@
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>common</artifactId>
-        <version>7.2.1</version>
+        <version>[7.2.4, 7.2.5)</version>
     </parent>
 
     <artifactId>kafka-connect-storage-common-parent</artifactId>
@@ -278,11 +278,6 @@
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-server</artifactId>
                 <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.protobuf</groupId>
-                <artifactId>protobuf-java</artifactId>
-                <version>${protobuf.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.codehaus.groovy</groupId>
