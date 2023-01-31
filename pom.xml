@@ -83,7 +83,7 @@
         <jackson.mapper.asl.version>1.9.14.jdk17-redhat-00001</jackson.mapper.asl.version>
         <jetty.version>9.4.43.v20210629</jetty.version>
         <jline.version>2.12.1</jline.version>
-        <netty.version>4.1.68.Final</netty.version>
+        <netty.version>4.1.86.Final</netty.version>
 	<json.smart.version>2.4.7</json.smart.version>
         <thrift.version>0.13.0</thrift.version>
         <tomcat.version>8.5.65</tomcat.version>
