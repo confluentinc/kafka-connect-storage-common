@@ -21,16 +21,22 @@ public class HiveSchemaConverterTest {
     // The only decimal type supported by Hive with parquet is decimal,
     // All other types should be parsed as primitive.
     Schema dateSchema = SchemaBuilder.int32().name(Date.LOGICAL_NAME).build();
-    assertEquals(TypeInfoFactory.intTypeInfo,
+    assertEquals(TypeInfoFactory.dateTypeInfo,
         HiveSchemaConverter.convertPrimitiveMaybeLogical(dateSchema));
+
 
     // logical type time is not supported by Hive serde, convert it to Hive INT
     Schema timeSchema = SchemaBuilder.int32().name(Time.LOGICAL_NAME).build();
     assertEquals(TypeInfoFactory.intTypeInfo,
         HiveSchemaConverter.convertPrimitiveMaybeLogical(timeSchema));
 
-    Schema timestampSchema = SchemaBuilder.int64().name(Timestamp.LOGICAL_NAME).build();
+    // time when represented in microseconds is long
+    Schema timeSchema64 = SchemaBuilder.int64().name(Time.LOGICAL_NAME).build();
     assertEquals(TypeInfoFactory.longTypeInfo,
+        HiveSchemaConverter.convertPrimitiveMaybeLogical(timeSchema64));
+
+    Schema timestampSchema = SchemaBuilder.int64().name(Timestamp.LOGICAL_NAME).build();
+    assertEquals(TypeInfoFactory.timestampTypeInfo,
         HiveSchemaConverter.convertPrimitiveMaybeLogical(timestampSchema));
   }
 
