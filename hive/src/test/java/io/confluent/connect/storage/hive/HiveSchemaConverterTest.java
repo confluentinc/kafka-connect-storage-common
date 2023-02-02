@@ -3,8 +3,12 @@ package io.confluent.connect.storage.hive;
 import static org.junit.Assert.assertEquals;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
 import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.kafka.connect.data.Date;
 import org.apache.kafka.connect.data.Decimal;
@@ -120,5 +124,59 @@ public class HiveSchemaConverterTest {
 
     assertEquals(TypeInfoFactory.binaryTypeInfo,
         HiveSchemaConverter.convertPrimitiveMaybeLogical(decimalSchema));
+  }
+
+  private Schema createLogicalSchema() {
+    return SchemaBuilder.struct().version(1)
+        .field("timeInt", Time.SCHEMA)
+        .field("timestamp", Timestamp.SCHEMA)
+        .field("date", Date.SCHEMA)
+        .field("decimal", Decimal.schema(2))
+        .build();
+  }
+  @Test
+  public void convertLogicalPrimitivesStruct() {
+
+    Schema schema = createLogicalSchema();
+
+    TypeInfo typeInfo = HiveSchemaConverter.convertMaybeLogical(schema);
+    assertEquals(typeInfo.getCategory(), Category.STRUCT);
+
+    List<TypeInfo> tp = ((StructTypeInfo) typeInfo).getAllStructFieldTypeInfos();
+    for (int i = 0; i < tp.size(); i++) {
+      assertEquals(tp.get(i).getTypeName(), HiveSchemaConverter.convertPrimitiveMaybeLogical(
+          schema.fields().get(i).schema()).getTypeName());
+    }
+  }
+
+  @Test
+  public void convertNestedLogicalSchemas() {
+
+    Schema innerSchema = createLogicalSchema();
+    Schema schema = SchemaBuilder.struct().version(1)
+        .field("innerStruct", innerSchema)
+        .field("int", Schema.INT32_SCHEMA)
+        .field("string", Schema.STRING_SCHEMA)
+        .build();
+
+    TypeInfo typeInfo = HiveSchemaConverter.convertMaybeLogical(schema);
+    assertEquals(typeInfo.getCategory(), Category.STRUCT);
+
+    List<TypeInfo> tp = ((StructTypeInfo) typeInfo).getAllStructFieldTypeInfos();
+    TypeInfo innerStruct = tp.get(0);
+    assertEquals(innerStruct.getCategory(), Category.STRUCT);
+
+    List<TypeInfo> innerFields = ((StructTypeInfo) innerStruct).getAllStructFieldTypeInfos();
+    for (int i = 0; i < innerFields.size(); i++) {
+      assertEquals(HiveSchemaConverter.convertPrimitiveMaybeLogical(
+          innerSchema.fields().get(i).schema()).getTypeName(), innerFields.get(i).getTypeName()
+      );
+    }
+
+    for (int i = 1; i < schema.fields().size(); i++) {
+      assertEquals(HiveSchemaConverter.convertPrimitiveMaybeLogical(
+          schema.fields().get(i).schema()).getTypeName(), tp.get(i).getTypeName()
+      );
+    }
   }
 }

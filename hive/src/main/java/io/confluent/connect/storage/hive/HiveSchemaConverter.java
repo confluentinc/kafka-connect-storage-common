@@ -79,51 +79,58 @@ public class HiveSchemaConverter {
     return columns;
   }
 
-  public static TypeInfo convert(Schema schema) {
+  public static TypeInfo convert(Schema schema, boolean convertLogical) {
     // TODO: throw an error on recursive types
     switch (schema.type()) {
       case STRUCT:
-        return convertStruct(schema);
+        return convertStruct(schema, convertLogical);
       case ARRAY:
-        return convertArray(schema);
+        return convertArray(schema, convertLogical);
       case MAP:
-        return convertMap(schema);
+        return convertMap(schema, convertLogical);
       default:
-        return convertPrimitive(schema);
+        return convertLogical ? convertPrimitiveMaybeLogical(schema) : convertPrimitive(schema);
     }
+  }
+
+  public static TypeInfo convert(Schema schema) {
+    return convert(schema, false);
   }
 
   public static TypeInfo convertMaybeLogical(Schema schema) {
-    switch (schema.type()) {
-      case STRUCT:
-        return convertStruct(schema);
-      case ARRAY:
-        return convertArray(schema);
-      case MAP:
-        return convertMap(schema);
-      default:
-        return convertPrimitiveMaybeLogical(schema);
-    }
+    return convert(schema, true);
   }
 
-  public static TypeInfo convertStruct(Schema schema) {
+  public static TypeInfo convertStruct(Schema schema, boolean convertLogical) {
     final List<Field> fields = schema.fields();
     final List<String> names = new ArrayList<>(fields.size());
     final List<TypeInfo> types = new ArrayList<>(fields.size());
     for (Field field : fields) {
       names.add(field.name());
-      types.add(convert(field.schema()));
+      types.add(convert(field.schema(), convertLogical));
     }
     return TypeInfoFactory.getStructTypeInfo(names, types);
   }
 
+  public static TypeInfo convertStruct(Schema schema) {
+    return convertStruct(schema, false);
+  }
+
+  public static TypeInfo convertArray(Schema schema, boolean convertLogical) {
+    return TypeInfoFactory.getListTypeInfo(convert(schema.valueSchema(), convertLogical));
+  }
+
   public static TypeInfo convertArray(Schema schema) {
-    return TypeInfoFactory.getListTypeInfo(convert(schema.valueSchema()));
+    return convertArray(schema, false);
+  }
+
+  public static TypeInfo convertMap(Schema schema, boolean convertLogical) {
+    return TypeInfoFactory.getMapTypeInfo(
+        convert(schema.keySchema(), convertLogical), convert(schema.valueSchema(), convertLogical));
   }
 
   public static TypeInfo convertMap(Schema schema) {
-    return TypeInfoFactory.getMapTypeInfo(
-        convert(schema.keySchema()), convert(schema.valueSchema()));
+    return convertMap(schema, false);
   }
 
   public static TypeInfo convertPrimitive(Schema schema) {
