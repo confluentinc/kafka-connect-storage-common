@@ -69,7 +69,6 @@
         <parquet.version>1.7.0</parquet.version>
         <commons-io.version>2.4</commons-io.version>
         <joda.version>2.9.6</joda.version>
-        <confluent.maven.repo>http://packages.confluent.io/maven/</confluent.maven.repo>
         <licenses.version>3.2.5-SNAPSHOT</licenses.version>
         <maven-assembly.version>2.6</maven-assembly.version>
         <maven-site-plugin.version>3.7.1</maven-site-plugin.version>
@@ -81,7 +80,7 @@
         <repository>
             <id>confluent</id>
             <name>Confluent</name>
-            <url>${confluent.maven.repo}</url>
+            <url>https://packages.confluent.io/maven/</url>
         </repository>
     </repositories>
 
