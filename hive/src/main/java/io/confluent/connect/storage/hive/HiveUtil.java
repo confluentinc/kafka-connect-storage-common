@@ -17,6 +17,7 @@
 package io.confluent.connect.storage.hive;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.connect.data.Schema;
 
@@ -42,6 +43,10 @@ public abstract class HiveUtil {
                                    Partitioner<FieldSchema> partitioner);
 
   public abstract void alterSchema(String database, String tableName, Schema schema);
+
+  public Table newTable(String database, String table) {
+    return new Table(database, hiveMetaStore.tableNameConverter(table));
+  }
 
   public String hiveDirectoryName(String url, String topicsDir, String topic) {
     return url + delim + topicsDir + delim + topic + delim;

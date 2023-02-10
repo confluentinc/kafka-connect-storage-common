@@ -27,7 +27,6 @@ import java.util.Map;
 public class StorageCommonConfig extends AbstractConfig implements ComposableConfig {
 
   // Common group
-
   public static final String STORAGE_CLASS_CONFIG = "storage.class";
   public static final String STORAGE_CLASS_DOC = "The underlying storage layer.";
   public static final String STORAGE_CLASS_DISPLAY = "Storage Class";
@@ -38,7 +37,8 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
   public static final String STORE_URL_DISPLAY = "Store URL";
 
   public static final String TOPICS_DIR_CONFIG = "topics.dir";
-  public static final String TOPICS_DIR_DOC = "Top level directory to store the data ingested from Kafka.";
+  public static final String TOPICS_DIR_DOC =
+      "Top level directory to store the data ingested from Kafka.";
   public static final String TOPICS_DIR_DEFAULT = "topics";
   public static final String TOPICS_DIR_DISPLAY = "Topics directory";
 
@@ -52,24 +52,35 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
   public static final String FILE_DELIM_DEFAULT = "+";
   public static final String FILE_DELIM_DISPLAY = "File Delimiter";
 
-  protected static final ConfigDef CONFIG_DEF = new ConfigDef();
-
-  static {
+  /**
+   * Create a new configuration definition.
+   *
+   * @param storageClassRecommender A recommender for storage classes shipping out-of-the-box
+   *     with a connector. The recommender should not prevent additional custom classes from being
+   *     added during runtime.
+   * @return the newly created configuration definition.
+   */
+  public static ConfigDef newConfigDef(ConfigDef.Recommender storageClassRecommender) {
+    ConfigDef configDef = new ConfigDef();
     {
       // Define Store's basic configuration group
       final String group = "Storage";
       int orderInGroup = 0;
 
-      CONFIG_DEF.define(STORAGE_CLASS_CONFIG,
+      configDef.define(
+          STORAGE_CLASS_CONFIG,
           Type.CLASS,
           Importance.HIGH,
           STORAGE_CLASS_DOC,
           group,
           ++orderInGroup,
           Width.NONE,
-          STORAGE_CLASS_DISPLAY);
+          STORAGE_CLASS_DISPLAY,
+          storageClassRecommender
+      );
 
-      CONFIG_DEF.define(TOPICS_DIR_CONFIG,
+      configDef.define(
+          TOPICS_DIR_CONFIG,
           Type.STRING,
           TOPICS_DIR_DEFAULT,
           Importance.HIGH,
@@ -77,9 +88,11 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           group,
           ++orderInGroup,
           Width.NONE,
-          TOPICS_DIR_DISPLAY);
+          TOPICS_DIR_DISPLAY
+      );
 
-      CONFIG_DEF.define(STORE_URL_CONFIG,
+      configDef.define(
+          STORE_URL_CONFIG,
           Type.STRING,
           STORE_URL_DEFAULT,
           Importance.HIGH,
@@ -87,9 +100,11 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           group,
           ++orderInGroup,
           Width.NONE,
-          STORE_URL_DISPLAY);
+          STORE_URL_DISPLAY
+      );
 
-      CONFIG_DEF.define(DIRECTORY_DELIM_CONFIG,
+      configDef.define(
+          DIRECTORY_DELIM_CONFIG,
           Type.STRING,
           DIRECTORY_DELIM_DEFAULT,
           Importance.MEDIUM,
@@ -97,9 +112,11 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           group,
           ++orderInGroup,
           Width.LONG,
-          DIRECTORY_DELIM_DISPLAY);
+          DIRECTORY_DELIM_DISPLAY
+      );
 
-      CONFIG_DEF.define(FILE_DELIM_CONFIG,
+      configDef.define(
+          FILE_DELIM_CONFIG,
           Type.STRING,
           FILE_DELIM_DEFAULT,
           Importance.MEDIUM,
@@ -107,12 +124,10 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           group,
           ++orderInGroup,
           Width.LONG,
-          FILE_DELIM_DISPLAY);
+          FILE_DELIM_DISPLAY
+      );
     }
-  }
-
-  private static boolean classNameEquals(String className, Class<?> clazz) {
-    return className.equals(clazz.getSimpleName()) || className.equals(clazz.getCanonicalName());
+    return configDef;
   }
 
   @Override
@@ -120,15 +135,7 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
     return super.get(key);
   }
 
-  public static ConfigDef getConfig() {
-    return CONFIG_DEF;
-  }
-
-  public StorageCommonConfig(Map<String, String> props) {
-    super(CONFIG_DEF, props);
-  }
-
-  public static void main(String[] args) {
-    System.out.println(CONFIG_DEF.toRst());
+  public StorageCommonConfig(ConfigDef configDef, Map<String, String> props) {
+    super(configDef, props);
   }
 }

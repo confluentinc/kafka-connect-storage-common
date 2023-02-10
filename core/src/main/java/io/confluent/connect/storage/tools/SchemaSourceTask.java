@@ -58,7 +58,8 @@ public class SchemaSourceTask extends SourceTask {
   private int partitionCount;
   private boolean isOutputEnabled;
 
-  // Until we can use ThroughputThrottler from Kafka, use a fixed sleep interval. This isn't perfect, but close enough
+  // Until we can use ThroughputThrottler from Kafka, use a fixed
+  // sleep interval. This isn't perfect, but close enough
   // for system testing purposes
   private long intervalMs;
   private int intervalNanos;
@@ -98,10 +99,16 @@ public class SchemaSourceTask extends SourceTask {
       topic = props.get(TOPIC_CONFIG);
       maxNumMsgs = Long.parseLong(props.get(NUM_MSGS_CONFIG));
       multipleSchema = Boolean.parseBoolean(props.get(MULTIPLE_SCHEMA_CONFIG));
-      partitionCount = Integer.parseInt(props.containsKey(PARTITION_COUNT_CONFIG) ?
-                                        props.get(PARTITION_COUNT_CONFIG) : "1");
-      isOutputEnabled = Boolean.parseBoolean(props.containsKey(ENABLE_STDOUT_CONFIG) ?
-                                        props.get(ENABLE_STDOUT_CONFIG) : "true");
+      partitionCount = Integer.parseInt(
+          props.containsKey(PARTITION_COUNT_CONFIG)
+          ? props.get(PARTITION_COUNT_CONFIG)
+          : "1"
+      );
+      isOutputEnabled = Boolean.parseBoolean(
+          props.containsKey(ENABLE_STDOUT_CONFIG)
+          ? props.get(ENABLE_STDOUT_CONFIG)
+          : "true"
+      );
       String throughputStr = props.get(THROUGHPUT_CONFIG);
       if (throughputStr != null) {
         long throughput = Long.parseLong(throughputStr);
@@ -118,13 +125,20 @@ public class SchemaSourceTask extends SourceTask {
 
     partition = Collections.singletonMap(ID_FIELD, id);
     Map<String, Object> previousOffset = this.context.offsetStorageReader().offset(partition);
-    if (previousOffset != null)
+    if (previousOffset != null) {
       seqno = (Long) previousOffset.get(SEQNO_FIELD) + 1;
-    else
+    } else {
       seqno = 0;
+    }
     startingSeqno = seqno;
     count = 0;
-    log.info("Started SchemaSourceTask {}-{} producing to topic {} resuming from seqno {}", name, id, topic, startingSeqno);
+    log.info(
+        "Started SchemaSourceTask {}-{} producing to topic {} resuming from seqno {}",
+        name,
+        id,
+        topic,
+        startingSeqno
+    );
   }
 
   @Override
@@ -151,8 +165,16 @@ public class SchemaSourceTask extends SourceTask {
             .put("id", id)
             .put("seqno", seqno);
 
-        srcRecord = new SourceRecord(partition, ccOffset, topic, id, Schema.STRING_SCHEMA, "key",
-                             valueSchema, data);
+        srcRecord = new SourceRecord(
+            partition,
+            ccOffset,
+            topic,
+            id,
+            Schema.STRING_SCHEMA,
+            "key",
+            valueSchema,
+            data
+        );
       } else {
         data = new Struct(valueSchema2)
             .put("boolean", true)
@@ -165,7 +187,16 @@ public class SchemaSourceTask extends SourceTask {
             .put("id", id)
             .put("seqno", seqno);
 
-        srcRecord = new SourceRecord(partition, ccOffset, topic, id, Schema.STRING_SCHEMA, "key", valueSchema2, data);
+        srcRecord = new SourceRecord(
+            partition,
+            ccOffset,
+            topic,
+            id,
+            Schema.STRING_SCHEMA,
+            "key",
+            valueSchema2,
+            data
+        );
       }
 
       if (isOutputEnabled) {

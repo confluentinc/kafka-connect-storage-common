@@ -33,14 +33,20 @@ public class DailyPartitioner<T> extends TimeBasedPartitioner<T> {
 
     String localeString = (String) config.get(PartitionerConfig.LOCALE_CONFIG);
     if (localeString.equals("")) {
-      throw new ConfigException(PartitionerConfig.LOCALE_CONFIG,
-                                localeString, "Locale cannot be empty.");
+      throw new ConfigException(
+          PartitionerConfig.LOCALE_CONFIG,
+          localeString,
+          "Locale cannot be empty."
+      );
     }
 
     String timeZoneString = (String) config.get(PartitionerConfig.TIMEZONE_CONFIG);
     if (timeZoneString.equals("")) {
-      throw new ConfigException(PartitionerConfig.TIMEZONE_CONFIG,
-                                timeZoneString, "Timezone cannot be empty.");
+      throw new ConfigException(
+          PartitionerConfig.TIMEZONE_CONFIG,
+          timeZoneString,
+          "Timezone cannot be empty."
+      );
     }
 
     Locale locale = new Locale(localeString);

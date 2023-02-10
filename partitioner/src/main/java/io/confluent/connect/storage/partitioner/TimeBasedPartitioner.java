@@ -49,8 +49,13 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
   private DateTimeFormatter formatter;
   protected TimestampExtractor timestampExtractor;
 
-  protected void init(long partitionDurationMs, String pathFormat, Locale locale, DateTimeZone timeZone,
-                      Map<String, Object> config) {
+  protected void init(
+      long partitionDurationMs,
+      String pathFormat,
+      Locale locale,
+      DateTimeZone timeZone,
+      Map<String, Object> config
+  ) {
     delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
     this.partitionDurationMs = partitionDurationMs;
     this.pathFormat = pathFormat;
@@ -61,7 +66,13 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
           (String) config.get(PartitionerConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG));
       timestampExtractor.configure(config);
     } catch (IllegalArgumentException e) {
-      throw new ConfigException(PartitionerConfig.PATH_FORMAT_CONFIG, pathFormat, e.getMessage());
+      ConfigException ce = new ConfigException(
+          PartitionerConfig.PATH_FORMAT_CONFIG,
+          pathFormat,
+          e.getMessage()
+      );
+      ce.initCause(e);
+      throw ce;
     }
   }
 
@@ -91,7 +102,7 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
   @Override
   public void configure(Map<String, Object> config) {
     long partitionDurationMsProp =
-        (long) config.get(PartitionerConfig .PARTITION_DURATION_MS_CONFIG);
+        (long) config.get(PartitionerConfig.PARTITION_DURATION_MS_CONFIG);
     if (partitionDurationMsProp < 0) {
       throw new ConfigException(
           PartitionerConfig.PARTITION_DURATION_MS_CONFIG,
@@ -115,14 +126,20 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
 
     String localeString = (String) config.get(PartitionerConfig.LOCALE_CONFIG);
     if (localeString.equals("")) {
-      throw new ConfigException(PartitionerConfig.LOCALE_CONFIG,
-                                localeString, "Locale cannot be empty.");
+      throw new ConfigException(
+          PartitionerConfig.LOCALE_CONFIG,
+          localeString,
+          "Locale cannot be empty."
+      );
     }
 
     String timeZoneString = (String) config.get(PartitionerConfig.TIMEZONE_CONFIG);
     if (timeZoneString.equals("")) {
-      throw new ConfigException(PartitionerConfig.TIMEZONE_CONFIG,
-                                timeZoneString, "Timezone cannot be empty.");
+      throw new ConfigException(
+          PartitionerConfig.TIMEZONE_CONFIG,
+          timeZoneString,
+          "Timezone cannot be empty."
+      );
     }
 
     Locale locale = new Locale(localeString);
@@ -153,11 +170,18 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
     Class<? extends SchemaGenerator<T>> generatorClass = null;
     try {
       generatorClass =
-          (Class<? extends SchemaGenerator<T>>) config.get(PartitionerConfig.SCHEMA_GENERATOR_CLASS_CONFIG);
+          (Class<? extends SchemaGenerator<T>>) config.get(
+              PartitionerConfig.SCHEMA_GENERATOR_CLASS_CONFIG
+          );
       return generatorClass.getConstructor(Map.class).newInstance(config);
-    } catch (ClassCastException | IllegalAccessException | InstantiationException | InvocationTargetException
+    } catch (ClassCastException
+        | IllegalAccessException
+        | InstantiationException
+        | InvocationTargetException
         | NoSuchMethodException e) {
-      throw new ConfigException("Invalid generator class: " + generatorClass);
+      ConfigException ce = new ConfigException("Invalid generator class: " + generatorClass);
+      ce.initCause(e);
+      throw ce;
     }
   }
 
@@ -184,7 +208,11 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
         | ClassCastException
         | IllegalAccessException
         | InstantiationException e) {
-      throw new ConfigException("Invalid timestamp extractor: " + extractorClassName, e);
+      ConfigException ce = new ConfigException(
+          "Invalid timestamp extractor: " + extractorClassName
+      );
+      ce.initCause(e);
+      throw ce;
     }
   }
 

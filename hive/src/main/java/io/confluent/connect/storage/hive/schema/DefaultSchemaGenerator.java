@@ -21,13 +21,24 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import io.confluent.connect.storage.common.SchemaGenerator;
 
 public class DefaultSchemaGenerator implements SchemaGenerator<FieldSchema> {
 
+  public DefaultSchemaGenerator() {
+
+  }
+
+  public DefaultSchemaGenerator(Map<String, Object> config) {
+    // no configs are used
+  }
+
   @Override
   public List<FieldSchema> newPartitionFields(String partitionField) {
-    return Collections.singletonList(new FieldSchema(partitionField, TypeInfoFactory.stringTypeInfo.toString(), ""));
+    return Collections.singletonList(
+        new FieldSchema(partitionField, TypeInfoFactory.stringTypeInfo.toString(), "")
+    );
   }
 }
