@@ -84,7 +84,7 @@
         <kafka.connect.storage.common.version>11.0.20-SNAPSHOT</kafka.connect.storage.common.version>
         <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
         <netty.version>4.1.86.Final</netty.version>
-        <parquet.version>1.12.3</parquet.version>
+        <parquet.version>1.11.2</parquet.version>
         <json.smart.version>2.4.7</json.smart.version>
         <thrift.version>0.13.0</thrift.version>
         <tomcat.version>8.5.65</tomcat.version>
