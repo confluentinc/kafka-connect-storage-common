@@ -77,7 +77,7 @@
         <hive.version>1.2.2</hive.version>
         <joda.version>2.9.6</joda.version>
         <licenses.version>5.4.12-SNAPSHOT</licenses.version>
-        <parquet.version>1.12.3</parquet.version>
+        <parquet.version>1.11.2</parquet.version>
         <httpclient.version>4.5.13</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
         <jackson.mapper.asl.version>1.9.14.jdk17-redhat-00001</jackson.mapper.asl.version>
