@@ -13,16 +13,14 @@
   ~ specific language governing permissions and limitations under the License.
   -->
 
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>kafka-connect-storage-common-parent</artifactId>
-        <version>5.5.14-SNAPSHOT</version>
+        <version>10.0.18-SNAPSHOT</version>
     </parent>
 
     <artifactId>kafka-connect-storage-partitioner</artifactId>
@@ -33,7 +31,7 @@
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-storage-core</artifactId>
-            <version>${confluent.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>joda-time</groupId>
