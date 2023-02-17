@@ -22,7 +22,7 @@
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>kafka-connect-storage-common-parent</artifactId>
-        <version>5.4.12-SNAPSHOT</version>
+        <version>5.5.14-SNAPSHOT</version>
     </parent>
 
     <artifactId>kafka-connect-storage-hive</artifactId>
@@ -47,7 +47,7 @@
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
-            <artifactId>kafka-connect-avro-converter</artifactId>
+            <artifactId>kafka-connect-avro-data</artifactId>
             <version>${confluent.version}</version>
         </dependency>
         <dependency>
