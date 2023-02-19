@@ -32,6 +32,7 @@
         <kryo.version>2.22</kryo.version>
         <xml-apis.version>1.4.01</xml-apis.version>
         <jamon.runtime.version>2.4.1</jamon.runtime.version>
+        <jettison.version>1.5.2</jettison.version>
     </properties>
 
     <dependencies>
@@ -185,6 +186,11 @@
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jettison</groupId>
+            <artifactId>jettison</artifactId>
+            <version>${jettison.version}</version>
         </dependency>
     </dependencies>
 </project>
