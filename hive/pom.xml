@@ -84,6 +84,10 @@
             <version>${hive.version}</version>
             <exclusions>
                 <exclusion>
+                    <groupId>org.codehaus.jettison</groupId>
+                    <artifactId>jettison</artifactId>
+                </exclusion>
+                <exclusion>
                   <groupId>jdk.tools</groupId>
                   <artifactId>jdk.tools</artifactId>
                 </exclusion>
