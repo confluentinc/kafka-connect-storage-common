@@ -32,7 +32,7 @@
         <kryo.version>2.22</kryo.version>
         <xml-apis.version>1.4.01</xml-apis.version>
         <jamon.runtime.version>2.4.1</jamon.runtime.version>
-        <jettison.version>1.5.2</jettison.version>
+        <jettison.version>1.5.3</jettison.version>
     </properties>
 
     <dependencies>
