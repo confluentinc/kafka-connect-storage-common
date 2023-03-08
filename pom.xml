@@ -78,6 +78,7 @@
         <hive.version>2.3.9</hive.version>
         <httpclient.version>4.5.13</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
+        <!-- jackson is defined in common, might be worthwhile to update common then remove this pins here -->
         <jackson.version>2.14.2</jackson.version>
         <jackson.databind.version>2.14.2</jackson.databind.version>
         <jackson.mapper.asl.version>1.9.14.jdk17-redhat-00001</jackson.mapper.asl.version>
@@ -86,6 +87,7 @@
         <joda.version>2.9.6</joda.version>
         <kafka.connect.storage.common.version>10.0.21-SNAPSHOT</kafka.connect.storage.common.version>
         <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
+        <!-- netty is defined in common, might be worthwhile to update common then remove this pins here -->
         <netty.version>4.1.86.Final</netty.version>
         <parquet.version>1.11.2</parquet.version>
         <json.smart.version>2.4.7</json.smart.version>
