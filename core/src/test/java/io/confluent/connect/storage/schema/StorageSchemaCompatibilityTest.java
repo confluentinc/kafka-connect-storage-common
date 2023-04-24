@@ -323,7 +323,7 @@ public class StorageSchemaCompatibilityTest {
   ) {
     assertFalse(
         "Expected " + currentSchema + " to not be change in order to project " + recordSchema,
-        compatibility.validateAndCheck(recordSchema, currentSchema)
+        compatibility.validateAndCheck(recordSchema, currentSchema).isInCompatible()
     );
     assertProjectable(compatibility, recordSchema, currentSchema, isProjectable);
   }
@@ -335,7 +335,7 @@ public class StorageSchemaCompatibilityTest {
   ) {
     assertTrue(
         "Expected " + currentSchema + " to change in order to project " + recordSchema,
-        compatibility.validateAndCheck(recordSchema, currentSchema)
+        compatibility.validateAndCheck(recordSchema, currentSchema).isInCompatible()
     );
     // we don't care whether the schema are able to be projected
   }
