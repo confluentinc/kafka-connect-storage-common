@@ -28,6 +28,13 @@ public class StorageSchemaCompatibilityTest {
   private final StorageSchemaCompatibility forward = StorageSchemaCompatibility.FORWARD;
   private final StorageSchemaCompatibility full = StorageSchemaCompatibility.FULL;
 
+  private final SchemaIncompatibilityType diffSchema = SchemaIncompatibilityType.DIFFERENT_SCHEMA;
+  private final SchemaIncompatibilityType diffType = SchemaIncompatibilityType.DIFFERENT_TYPE;
+  private final SchemaIncompatibilityType diffName = SchemaIncompatibilityType.DIFFERENT_NAME;
+  private final SchemaIncompatibilityType diffParams = SchemaIncompatibilityType.DIFFERENT_PARAMS;
+  private final SchemaIncompatibilityType diffVersion = SchemaIncompatibilityType.DIFFERENT_VERSION;
+  private final SchemaIncompatibilityType na = SchemaIncompatibilityType.NA;
+
   private static SchemaBuilder buildStringSchema(String name, int version) {
     return SchemaBuilder.string()
                         .version(version)
@@ -107,27 +114,27 @@ public class StorageSchemaCompatibilityTest {
 
   @Test
   public void noneCompatibilityShouldConsiderDifferentVersionsAsChanged() {
-    assertChanged(none, SCHEMA_A, SCHEMA_A_NEWER_VERSION);
-    assertChanged(none, SCHEMA_A, SCHEMA_A_OLDER_VERSION);
-    assertChanged(none, SCHEMA_B, SCHEMA_B_OLDER_VERSION);
-    assertChanged(none, SCHEMA_B, SCHEMA_B_PARAMETERED);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_NEWER_VERSION, diffSchema);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_OLDER_VERSION, diffSchema);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_OLDER_VERSION, diffSchema);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_PARAMETERED, diffSchema);
   }
 
   @Test
   public void noneCompatibilityShouldConsiderAnyDifferencesAsChanged() {
-    assertChanged(none, SCHEMA_A, SCHEMA_A_RENAMED);
-    assertChanged(none, SCHEMA_A, SCHEMA_A_RETYPED);
-    assertChanged(none, SCHEMA_A, SCHEMA_A_PARAMETERED);
-    assertChanged(none, SCHEMA_A, SCHEMA_A_WITH_DOC);
-    assertChanged(none, SCHEMA_A, SCHEMA_A_OPTIONAL);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_RENAMED, diffSchema);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_RETYPED, diffSchema);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_PARAMETERED, diffSchema);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_WITH_DOC, diffSchema);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_OPTIONAL, diffSchema);
 
-    assertChanged(none, SCHEMA_B, SCHEMA_B_RENAMED);
-    assertChanged(none, SCHEMA_B, SCHEMA_B_RETYPED);
-    assertChanged(none, SCHEMA_B, SCHEMA_B_PARAMETERED);
-    assertChanged(none, SCHEMA_B, SCHEMA_B_WITH_DOC);
-    assertChanged(none, SCHEMA_B, SCHEMA_B_OPTIONAL);
-    assertChanged(none, SCHEMA_B, SCHEMA_B_EXTRA_REQUIRED_FIELD);
-    assertChanged(none, SCHEMA_B, SCHEMA_B_EXTRA_OPTIONAL_FIELD);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_RENAMED, diffSchema);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_RETYPED, diffSchema);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_PARAMETERED, diffSchema);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_WITH_DOC, diffSchema);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_OPTIONAL, diffSchema);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_EXTRA_REQUIRED_FIELD, diffSchema);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_EXTRA_OPTIONAL_FIELD, diffSchema);
 
     assertUnchanged(none, SCHEMA_A, SCHEMA_A);
     assertUnchanged(none, SCHEMA_A, SCHEMA_A_COPY);
@@ -137,8 +144,8 @@ public class StorageSchemaCompatibilityTest {
 
   @Test
   public void backwardCompatibilityShouldConsiderOlderSchemaVersionsAsChanged() {
-    assertChanged(backward, SCHEMA_A, SCHEMA_A_OLDER_VERSION);
-    assertChanged(backward, SCHEMA_B, SCHEMA_B_OLDER_VERSION);
+    assertChanged(backward, SCHEMA_A, SCHEMA_A_OLDER_VERSION, diffVersion);
+    assertChanged(backward, SCHEMA_B, SCHEMA_B_OLDER_VERSION, diffVersion);
   }
 
   @Test
@@ -151,8 +158,8 @@ public class StorageSchemaCompatibilityTest {
 
   @Test
   public void forwardCompatibilityShouldConsiderNewerSchemaVersionsAsChanged() {
-    assertChanged(forward, SCHEMA_A, SCHEMA_A_NEWER_VERSION);
-    assertChanged(forward, SCHEMA_B, SCHEMA_B_NEWER_VERSION);
+    assertChanged(forward, SCHEMA_A, SCHEMA_A_NEWER_VERSION, diffVersion);
+    assertChanged(forward, SCHEMA_B, SCHEMA_B_NEWER_VERSION, diffVersion);
   }
 
   @Test
@@ -165,8 +172,8 @@ public class StorageSchemaCompatibilityTest {
 
   @Test
   public void fullCompatibilityShouldConsiderOlderSchemaVersionsAsChanged() {
-    assertChanged(full, SCHEMA_A, SCHEMA_A_OLDER_VERSION);
-    assertChanged(full, SCHEMA_B, SCHEMA_B_OLDER_VERSION);
+    assertChanged(full, SCHEMA_A, SCHEMA_A_OLDER_VERSION, diffVersion);
+    assertChanged(full, SCHEMA_B, SCHEMA_B_OLDER_VERSION, diffVersion);
   }
 
   @Test
@@ -202,41 +209,41 @@ public class StorageSchemaCompatibilityTest {
 
   @Test
   public void allCompatibilitiesShouldConsiderDifferentSchemaNamesAsChanged() {
-    assertChanged(none, SCHEMA_A, SCHEMA_A_RENAMED);
-    assertChanged(backward, SCHEMA_A, SCHEMA_A_RENAMED);
-    assertChanged(forward, SCHEMA_A, SCHEMA_A_RENAMED);
-    assertChanged(full, SCHEMA_A, SCHEMA_A_RENAMED);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_RENAMED, diffSchema);
+    assertChanged(backward, SCHEMA_A, SCHEMA_A_RENAMED, diffName);
+    assertChanged(forward, SCHEMA_A, SCHEMA_A_RENAMED, diffName);
+    assertChanged(full, SCHEMA_A, SCHEMA_A_RENAMED, diffName);
 
-    assertChanged(none, SCHEMA_B, SCHEMA_B_RENAMED);
-    assertChanged(backward, SCHEMA_B, SCHEMA_B_RENAMED);
-    assertChanged(forward, SCHEMA_B, SCHEMA_B_RENAMED);
-    assertChanged(full, SCHEMA_B, SCHEMA_B_RENAMED);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_RENAMED, diffSchema);
+    assertChanged(backward, SCHEMA_B, SCHEMA_B_RENAMED, diffName);
+    assertChanged(forward, SCHEMA_B, SCHEMA_B_RENAMED, diffName);
+    assertChanged(full, SCHEMA_B, SCHEMA_B_RENAMED, diffName);
   }
 
   @Test
   public void allCompatibilitiesShouldConsiderDifferentSchemaTypesAsChanged() {
-    assertChanged(none, SCHEMA_A, SCHEMA_A_RETYPED);
-    assertChanged(backward, SCHEMA_A, SCHEMA_A_RETYPED);
-    assertChanged(forward, SCHEMA_A, SCHEMA_A_RETYPED);
-    assertChanged(full, SCHEMA_A, SCHEMA_A_RETYPED);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_RETYPED, diffSchema);
+    assertChanged(backward, SCHEMA_A, SCHEMA_A_RETYPED, diffType);
+    assertChanged(forward, SCHEMA_A, SCHEMA_A_RETYPED, diffType);
+    assertChanged(full, SCHEMA_A, SCHEMA_A_RETYPED, diffType);
 
-    assertChanged(none, SCHEMA_B, SCHEMA_B_RETYPED);
-    assertChanged(backward, SCHEMA_B, SCHEMA_B_RETYPED);
-    assertChanged(forward, SCHEMA_B, SCHEMA_B_RETYPED);
-    assertChanged(full, SCHEMA_B, SCHEMA_B_RETYPED);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_RETYPED, diffSchema);
+    assertChanged(backward, SCHEMA_B, SCHEMA_B_RETYPED, diffType);
+    assertChanged(forward, SCHEMA_B, SCHEMA_B_RETYPED, diffType);
+    assertChanged(full, SCHEMA_B, SCHEMA_B_RETYPED, diffType);
   }
 
   @Test
   public void allCompatibilitiesShouldConsiderDifferentSchemaParametersAsChanged() {
-    assertChanged(none, SCHEMA_A, SCHEMA_A_PARAMETERED);
-    assertChanged(backward, SCHEMA_A, SCHEMA_A_PARAMETERED);
-    assertChanged(forward, SCHEMA_A, SCHEMA_A_PARAMETERED);
-    assertChanged(full, SCHEMA_A, SCHEMA_A_PARAMETERED);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_PARAMETERED, diffSchema);
+    assertChanged(backward, SCHEMA_A, SCHEMA_A_PARAMETERED, diffParams);
+    assertChanged(forward, SCHEMA_A, SCHEMA_A_PARAMETERED, diffParams);
+    assertChanged(full, SCHEMA_A, SCHEMA_A_PARAMETERED, diffParams);
 
-    assertChanged(none, SCHEMA_B, SCHEMA_B_PARAMETERED);
-    assertChanged(backward, SCHEMA_B, SCHEMA_B_PARAMETERED);
-    assertChanged(forward, SCHEMA_B, SCHEMA_B_PARAMETERED);
-    assertChanged(full, SCHEMA_B, SCHEMA_B_PARAMETERED);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_PARAMETERED, diffSchema);
+    assertChanged(backward, SCHEMA_B, SCHEMA_B_PARAMETERED, diffParams);
+    assertChanged(forward, SCHEMA_B, SCHEMA_B_PARAMETERED, diffParams);
+    assertChanged(full, SCHEMA_B, SCHEMA_B_PARAMETERED, diffParams);
   }
 
   @Test
@@ -321,21 +328,31 @@ public class StorageSchemaCompatibilityTest {
       Schema currentSchema,
       boolean isProjectable
   ) {
+    final SchemaCompatibilityResult schemaCompatibilityResult =
+        compatibility.validateAndCheck(recordSchema, currentSchema);
     assertFalse(
         "Expected " + currentSchema + " to not be change in order to project " + recordSchema,
-        compatibility.validateAndCheck(recordSchema, currentSchema).isInCompatible()
+        schemaCompatibilityResult.isInCompatible()
     );
+    assertEquals(na, schemaCompatibilityResult.getSchemaIncompatibilityType());
     assertProjectable(compatibility, recordSchema, currentSchema, isProjectable);
   }
 
   protected void assertChanged(
       StorageSchemaCompatibility compatibility,
       Schema recordSchema,
-      Schema currentSchema
+      Schema currentSchema,
+      SchemaIncompatibilityType schemaIncompatibilityType
   ) {
+    final SchemaCompatibilityResult schemaCompatibilityResult =
+        compatibility.validateAndCheck(recordSchema, currentSchema);
     assertTrue(
         "Expected " + currentSchema + " to change in order to project " + recordSchema,
-        compatibility.validateAndCheck(recordSchema, currentSchema).isInCompatible()
+        schemaCompatibilityResult.isInCompatible()
+    );
+    assertEquals(
+        schemaIncompatibilityType,
+        schemaCompatibilityResult.getSchemaIncompatibilityType()
     );
     // we don't care whether the schema are able to be projected
   }
