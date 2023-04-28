@@ -15,6 +15,13 @@
 
 package io.confluent.connect.storage.schema;
 
+import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.DIFFERENT_NAME;
+import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.DIFFERENT_PARAMS;
+import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.DIFFERENT_SCHEMA;
+import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.DIFFERENT_TYPE;
+import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.DIFFERENT_VERSION;
+import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.NA;
+
 import org.apache.kafka.connect.connector.ConnectRecord;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaProjector;
@@ -60,15 +67,17 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
      *
      * @param originalSchema the original (new) schema; may not be null
      * @param currentSchema  the current schema; may not be null
-     * @return true if the schemas are not equal and therefore incompatible,
+     * @return CompatibilityResult: true if the schemas are not equal and therefore incompatible,
      *         or false if they are equal and therefore compatible
      */
     @Override
-    protected boolean check(
+    protected SchemaCompatibilityResult check(
         Schema originalSchema,
         Schema currentSchema
     ) {
-      return !originalSchema.equals(currentSchema);
+      boolean isInCompatible = !originalSchema.equals(currentSchema);
+      SchemaIncompatibilityType schemaIncompatibilityType = isInCompatible ? DIFFERENT_SCHEMA : NA;
+      return new SchemaCompatibilityResult(isInCompatible, schemaIncompatibilityType);
     }
   },
   BACKWARD,
@@ -82,15 +91,17 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
      *
      * @param originalSchema the original (new) schema; may not be null
      * @param currentSchema  the current schema; may not be null
-     * @return true if the schema are not compatible for projection, or false if they are
-     *         compatible
+     * @return CompatibilityResult true if the schema are not compatible for projection,
+     *         or false if they are compatible
      */
     @Override
-    protected boolean checkVersions(
+    protected SchemaCompatibilityResult checkVersions(
         Schema originalSchema,
         Schema currentSchema
     ) {
-      return (originalSchema.version()).compareTo(currentSchema.version()) < 0;
+      boolean isInCompatible = (originalSchema.version()).compareTo(currentSchema.version()) < 0;
+      SchemaIncompatibilityType schemaIncompatibilityType = isInCompatible ? DIFFERENT_VERSION : NA;
+      return new SchemaCompatibilityResult(isInCompatible, schemaIncompatibilityType);
     }
   },
   FULL;
@@ -131,18 +142,18 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    *
    * @param valueSchema   the schema of the value to be projected; may not be null
    * @param currentSchema the current schema; may not be null
-   * @return true if the schemas are not compatible for projection, or false if they are
-   *         compatible
+   * @return CompatibilityResult: true if the schemas are not compatible for projection,
+   *         or false if they are compatible
    */
-  protected boolean validateAndCheck(
+  protected SchemaCompatibilityResult validateAndCheck(
       Schema valueSchema,
       Schema currentSchema
   ) {
     if (currentSchema == null && valueSchema == null) {
-      return false;
+      return new SchemaCompatibilityResult(false, NA);
     }
     if (currentSchema == valueSchema) {
-      return false;
+      return new SchemaCompatibilityResult(false, NA);
     }
 
     if (currentSchema == null || valueSchema == null) {
@@ -157,7 +168,6 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
           "Schema version required for " + toString() + " compatibility"
       );
     }
-
     return check(valueSchema, currentSchema);
   }
 
@@ -185,21 +195,21 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    *
    * @param originalSchema the original (new) schema; may not be null
    * @param currentSchema  the current schema; may not be null
-   * @return true if the schemas are not compatible for projection, or false if they are
-   *         compatible
+   * @return SchemaCompatibilityResult: true if the schemas are not compatible for projection,
+   *         or false if they are compatible
    */
-  protected boolean check(
+  protected SchemaCompatibilityResult check(
       Schema originalSchema,
       Schema currentSchema
   ) {
     if (checkSchemaTypes(originalSchema, currentSchema)) {
-      return true;
+      return new SchemaCompatibilityResult(true, DIFFERENT_TYPE);
     }
     if (checkSchemaNames(originalSchema, currentSchema)) {
-      return true;
+      return new SchemaCompatibilityResult(true, DIFFERENT_NAME);
     }
     if (checkSchemaParameters(originalSchema, currentSchema)) {
-      return true;
+      return new SchemaCompatibilityResult(true, DIFFERENT_PARAMS);
     }
 
     return checkVersions(originalSchema, currentSchema);
@@ -216,14 +226,16 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    *
    * @param originalSchema the original (new) schema; may not be null
    * @param currentSchema  the current schema; may not be null
-   * @return true if the schema versions are not compatible for projection, or false if they are
-   *         compatible
+   * @return SchemaCompatibilityResult: true if the schema versions are not compatible for
+   *         projection, or false if they are compatible
    */
-  protected boolean checkVersions(
+  protected SchemaCompatibilityResult checkVersions(
       Schema originalSchema,
       Schema currentSchema
   ) {
-    return originalSchema.version().compareTo(currentSchema.version()) > 0;
+    boolean isInCompatible = originalSchema.version().compareTo(currentSchema.version()) > 0;
+    SchemaIncompatibilityType schemaIncompatibilityType = isInCompatible ? DIFFERENT_VERSION : NA;
+    return new SchemaCompatibilityResult(isInCompatible, schemaIncompatibilityType);
   }
 
   /**
@@ -307,11 +319,11 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    * @param record             the next record; may not be null
    * @param currentKeySchema   the current key schema; may be null
    * @param currentValueSchema the current value schema; may be null
-   * @return true if the key or value schema in the supplied record has changed such that it cannot
-   *         be projected to the current key schema and value schema, or false if the record can
-   *         be projected
+   * @return CompatibilityResult: true if the key or value schema in the supplied record has changed
+   *         such that it cannot be projected to the current key schema and value schema, or false
+   *         if the record can be projected
    */
-  public boolean shouldChangeSchema(
+  public SchemaCompatibilityResult shouldChangeSchema(
       ConnectRecord<?> record,
       Schema currentKeySchema,
       Schema currentValueSchema
