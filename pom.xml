@@ -81,14 +81,14 @@
         <jackson.version>2.15.2</jackson.version>
         <jackson.databind.version>2.15.2</jackson.databind.version>
         <jackson.mapper.asl.version>1.9.14.jdk17-redhat-00001</jackson.mapper.asl.version>
-        <jetty.version>9.4.43.v20210629</jetty.version>
+        <jetty.version>9.4.51.v20230217</jetty.version>
         <jline.version>2.12.1</jline.version>
         <joda.version>2.9.6</joda.version>
         <kafka.connect.storage.common.version>10.0.22-SNAPSHOT</kafka.connect.storage.common.version>
         <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
-        <netty.version>4.1.86.Final</netty.version>
+        <netty.version>4.1.96.Final</netty.version>
         <parquet.version>1.11.2</parquet.version>
-        <json.smart.version>2.4.7</json.smart.version>
+        <json.smart.version>2.4.10</json.smart.version>
         <thrift.version>0.13.0</thrift.version>
         <tomcat.version>8.5.65</tomcat.version>
         <slf4j-reload4j.version>1.7.36</slf4j-reload4j.version>
