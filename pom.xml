@@ -61,6 +61,7 @@
         <module>hive</module>
         <module>htrace-core4-shaded</module>
         <module>avatica-shaded</module>
+        <module>hadoop-shaded-guava</module>
         <module>hadoop-shaded-protobuf</module>
         <module>package-kafka-connect-storage-common</module>
     </modules>
