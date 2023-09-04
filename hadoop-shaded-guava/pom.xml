@@ -10,7 +10,7 @@
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>kafka-connect-storage-common-parent</artifactId>
-        <version>11.1.6-SNAPSHOT</version>
+        <version>11.2.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>kafka-connect-storage-common-hadoop-shaded-guava</artifactId>
