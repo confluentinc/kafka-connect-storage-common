@@ -5,4 +5,5 @@ common {
   upstreamProjects = ['confluentinc/common','confluentinc/schema-registry']
   pintMerge = true
   downStreamValidate = false
+  mvnSkipDeploy = true
 }
