@@ -4,5 +4,7 @@ common {
   nodeLabel = 'docker-debian-jdk8'
   upstreamProjects = ['confluentinc/common','confluentinc/schema-registry']
   pintMerge = true
+  downStreamValidate = false
+  mvnSkipDeploy = true
   disableConcurrentBuilds = true
 }
