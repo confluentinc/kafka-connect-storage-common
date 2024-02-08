@@ -107,6 +107,13 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           + " Name awareness";
   public static final String ENHANCED_AVRO_SCHEMA_SUPPORT_DISPLAY = "Enhanced Avro Support";
 
+  public static final String IGNORE_DEFAULT_FOR_NULLABLES_CONFIG = "ignore.default.for.nullables";
+  public static final boolean IGNORE_DEFAULT_FOR_NULLABLES_DEFAULT = false;
+  public static final String IGNORE_DEFAULT_FOR_NULLABLES_DOC =
+      "Use a NULL value for a nullable (optional) column that has a default value configured for"
+      + " it";
+  public static final String IGNORE_DEFAULT_FOR_NULLABLES_DISPLAY = "Ignore Default For Nullables";
+
   public static final String CONNECT_META_DATA_CONFIG = "connect.meta.data";
   public static final boolean CONNECT_META_DATA_DEFAULT = true;
   public static final String CONNECT_META_DATA_DOC =
@@ -239,6 +246,18 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           Width.SHORT,
           ENHANCED_AVRO_SCHEMA_SUPPORT_DISPLAY
       );
+
+      configDef.define(
+        IGNORE_DEFAULT_FOR_NULLABLES_CONFIG,
+        Type.BOOLEAN,
+        IGNORE_DEFAULT_FOR_NULLABLES_DEFAULT,
+        Importance.LOW,
+        IGNORE_DEFAULT_FOR_NULLABLES_DOC,
+        group,
+        ++orderInGroup,
+        Width.SHORT,
+        IGNORE_DEFAULT_FOR_NULLABLES_DISPLAY
+    );
 
       configDef.define(
           CONNECT_META_DATA_CONFIG,
@@ -431,6 +450,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
     props.put(ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG, get(ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG));
     props.put(CONNECT_META_DATA_CONFIG, get(CONNECT_META_DATA_CONFIG));
     props.put(ALLOW_OPTIONAL_MAP_KEYS, get(ALLOW_OPTIONAL_MAP_KEYS));
+    props.put(IGNORE_DEFAULT_FOR_NULLABLES_CONFIG, get(IGNORE_DEFAULT_FOR_NULLABLES_CONFIG));
     return new AvroDataConfig(props);
   }
 }
