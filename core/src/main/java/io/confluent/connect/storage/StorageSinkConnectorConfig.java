@@ -248,16 +248,16 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
       );
 
       configDef.define(
-        IGNORE_DEFAULT_FOR_NULLABLES_CONFIG,
-        Type.BOOLEAN,
-        IGNORE_DEFAULT_FOR_NULLABLES_DEFAULT,
-        Importance.LOW,
-        IGNORE_DEFAULT_FOR_NULLABLES_DOC,
-        group,
-        ++orderInGroup,
-        Width.SHORT,
-        IGNORE_DEFAULT_FOR_NULLABLES_DISPLAY
-    );
+          IGNORE_DEFAULT_FOR_NULLABLES_CONFIG,
+          Type.BOOLEAN,
+          IGNORE_DEFAULT_FOR_NULLABLES_DEFAULT,
+          Importance.LOW,
+          IGNORE_DEFAULT_FOR_NULLABLES_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          IGNORE_DEFAULT_FOR_NULLABLES_DISPLAY
+      );
 
       configDef.define(
           CONNECT_META_DATA_CONFIG,
