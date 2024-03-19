@@ -37,11 +37,13 @@ public class DefaultPartitioner<T> implements Partitioner<T> {
   protected Map<String, Object> config;
   protected List<T> partitionFields = null;
   protected String delim;
+  protected boolean includeTopicInPath;
 
   @Override
   public void configure(Map<String, Object> config) {
     this.config = config;
     delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
+    includeTopicInPath = (boolean) config.get(StorageCommonConfig.PATH_INCLUDE_TOPICNAME_CONFIG);
   }
 
   @Override
@@ -51,7 +53,11 @@ public class DefaultPartitioner<T> implements Partitioner<T> {
 
   @Override
   public String generatePartitionedPath(String topic, String encodedPartition) {
-    return topic + delim + encodedPartition;
+    if (includeTopicInPath) {
+      return topic + delim + encodedPartition;
+    } else {
+      return encodedPartition;
+    }
   }
 
   @Override
