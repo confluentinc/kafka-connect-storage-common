@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor
+license agreements. See the NOTICE file distributed with this work for additional
+information regarding copyright ownership. The ASF licenses this file to
+You under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of
+the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required
+by applicable law or agreed to in writing, software distributed under the
+License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+OF ANY KIND, either express or implied. See the License for the specific
+language governing permissions and limitations under the License. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.confluent</groupId>
+        <artifactId>kafka-connect-storage-common-parent</artifactId>
+        <version>11.3.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>kafka-connect-storage-common-hive-exec-slim</artifactId>
+    <packaging>jar</packaging>
+    <name>kafka-connect-storage-common-hive-exec-slim</name>
+    
+    <description>hive-exec fat jar pruned to remove vulnerable dependencies</description>
+    <inceptionYear>2020</inceptionYear>
+
+    <properties>
+        <hive.exec.version>4.0.0</hive.exec.version>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-exec</artifactId>
+            <version>${hive.exec.version}</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                        <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <artifactSet>
+                                <includes>
+                                    <include>org.apache.hive:hive-exec</include>
+                                </includes>
+                            </artifactSet>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                </transformer>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>org.apache.hive:hive-exec</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>META-INF/maven/com.google.guava/**</exclude>
+                                        <exclude>com/google/protobuf/**</exclude>
+                                        <exclude>google/protobuf/**</exclude>
+                                        <exclude>META-INF/maven/org.apache.calcite.avatica/**</exclude>
+                                        <exclude>org/apache/calcite/avatica/**</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>io.confluent:*</artifact>
+                                    <excludes>
+                                        <exlude>**</exlude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
