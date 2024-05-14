@@ -21,7 +21,7 @@
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>common</artifactId>
-        <version>6.1.12</version>
+        <version>6.1.16-14</version>
     </parent>
 
     <artifactId>kafka-connect-storage-common-parent</artifactId>
@@ -80,7 +80,7 @@
         <httpclient.version>4.5.13</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
         <jackson.version>2.15.2</jackson.version>
-        <jackson.databind.version>2.15.2</jackson.databind.version>
+        <jackson.databind.version>2.16.1</jackson.databind.version>
         <jackson.mapper.asl.version>1.9.14.jdk17-redhat-00001</jackson.mapper.asl.version>
         <jetty.version>9.4.51.v20230217</jetty.version>
         <jline.version>2.12.1</jline.version>
