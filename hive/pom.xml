@@ -33,6 +33,7 @@
         <xml-apis.version>1.4.01</xml-apis.version>
         <jamon.runtime.version>2.4.1</jamon.runtime.version>
         <jettison.version>1.5.3</jettison.version>
+        <netty.all.version>4.1.109.Final</netty.all.version>
     </properties>
 
     <dependencies>
@@ -45,6 +46,11 @@
             <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-storage-partitioner</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>${netty.all.version}</version>
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
@@ -83,6 +89,10 @@
             <artifactId>hive-hcatalog-core</artifactId>
             <version>${hive.version}</version>
             <exclusions>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-all</artifactId>
+                </exclusion>
                 <exclusion>
                   <groupId>jdk.tools</groupId>
                   <artifactId>jdk.tools</artifactId>
