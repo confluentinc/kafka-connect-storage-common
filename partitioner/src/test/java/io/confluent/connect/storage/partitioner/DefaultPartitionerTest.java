@@ -35,6 +35,7 @@ public class DefaultPartitionerTest extends StorageSinkTestBase {
   public void testDefaultPartitioner() {
     Map<String, Object> config = new HashMap<>();
     config.put(StorageCommonConfig.DIRECTORY_DELIM_CONFIG, StorageCommonConfig.DIRECTORY_DELIM_DEFAULT);
+    config.put(StorageCommonConfig.PATH_INCLUDE_TOPICNAME_CONFIG, StorageCommonConfig.PATH_INCLUDE_TOPICNAME_DEFAULT);
 
     DefaultPartitioner<String> partitioner = new DefaultPartitioner<>();
     partitioner.configure(config);

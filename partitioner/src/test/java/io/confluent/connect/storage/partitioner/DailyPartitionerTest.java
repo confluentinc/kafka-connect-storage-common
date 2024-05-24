@@ -37,6 +37,7 @@ public class DailyPartitionerTest extends StorageSinkTestBase {
   public void testDailyPartitioner() {
     Map<String, Object> config = new HashMap<>();
     config.put(StorageCommonConfig.DIRECTORY_DELIM_CONFIG, StorageCommonConfig.DIRECTORY_DELIM_DEFAULT);
+    config.put(StorageCommonConfig.PATH_INCLUDE_TOPICNAME_CONFIG, StorageCommonConfig.PATH_INCLUDE_TOPICNAME_DEFAULT);
     config.put(PartitionerConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG, "Record");
     config.put(PartitionerConfig.LOCALE_CONFIG, Locale.US.toString());
     config.put(PartitionerConfig.TIMEZONE_CONFIG, DATE_TIME_ZONE.toString());

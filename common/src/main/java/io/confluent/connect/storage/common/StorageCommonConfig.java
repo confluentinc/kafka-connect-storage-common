@@ -46,6 +46,15 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
   public static final String DIRECTORY_DELIM_DEFAULT = "/";
   public static final String DIRECTORY_DELIM_DISPLAY = "Directory Delimiter";
 
+  public static final String PATH_INCLUDE_TOPICNAME_CONFIG = "path.include.topicname";
+  public static final String PATH_INCLUDE_TOPICNAME_DOC = "Whether to append the topic"
+      + " name to the topics.dir parameter. If true the full path will be composed"
+      + " of topics.dir + delim + topic_name + delim + partitioner_path. If false"
+      + " topics.dir + delim + partitioner_path";
+  public static final Boolean PATH_INCLUDE_TOPICNAME_DEFAULT = true;
+  public static final String PATH_INCLUDE_TOPICNAME_DISPLAY =
+      "Whether to append the topic name to the topics.dir parameter";
+
   public static final String FILE_DELIM_CONFIG = "file.delim";
   public static final String FILE_DELIM_DOC = "File delimiter pattern";
   public static final String FILE_DELIM_DEFAULT = "+";
@@ -125,6 +134,16 @@ public class StorageCommonConfig extends AbstractConfig implements ComposableCon
           Width.LONG,
           FILE_DELIM_DISPLAY
       );
+
+      configDef.define(PATH_INCLUDE_TOPICNAME_CONFIG,
+          Type.BOOLEAN,
+          PATH_INCLUDE_TOPICNAME_DEFAULT,
+          Importance.MEDIUM,
+          PATH_INCLUDE_TOPICNAME_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          PATH_INCLUDE_TOPICNAME_DISPLAY);
     }
     return configDef;
   }
