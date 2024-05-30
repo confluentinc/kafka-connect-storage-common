@@ -16,7 +16,7 @@ language governing permissions and limitations under the License. -->
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>kafka-connect-storage-common-parent</artifactId>
-        <version>11.2.15</version>
+        <version>11.2.16-SNAPSHOT</version>
     </parent>
 
     <artifactId>kafka-connect-storage-common-avatica-shaded</artifactId>
