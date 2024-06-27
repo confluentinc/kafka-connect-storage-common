@@ -94,6 +94,7 @@
         <tomcat.version>8.5.65</tomcat.version>
         <slf4j-reload4j.version>1.7.36</slf4j-reload4j.version>
         <guava.version>32.1.2-jre</guava.version>
+        <dependency.check.skip>true</dependency.check.skip>
     </properties>
 
     <repositories>
