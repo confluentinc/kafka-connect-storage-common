@@ -75,7 +75,7 @@
         <confluent.maven.repo>https://packages.confluent.io/maven/</confluent.maven.repo>
         <dependency.check.version>6.1.6</dependency.check.version>
         <hadoop.version>2.10.2</hadoop.version>
-        <hive.version>2.3.9</hive.version>
+        <hive.version>2.3.10</hive.version>
         <httpclient.version>4.5.13</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
         <jackson.version>2.16.1</jackson.version>
