@@ -21,12 +21,12 @@
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>common</artifactId>
-        <version>6.1.15</version>
+        <version>[7.2.7, 7.2.8)</version>
     </parent>
 
     <artifactId>kafka-connect-storage-common-parent</artifactId>
     <packaging>pom</packaging>
-    <version>10.2.21-SNAPSHOT</version>
+    <version>11.0.30-SNAPSHOT</version>
     <name>kafka-connect-storage-common-parent</name>
     <organization>
         <name>Confluent, Inc.</name>
@@ -49,7 +49,7 @@
         <connection>scm:git:git://github.com/confluentinc/kafka-connect-storage-common.git</connection>
         <developerConnection>scm:git:git@github.com:confluentinc/kafka-connect-storage-common.git</developerConnection>
         <url>https://github.com/confluentinc/kafka-connect-storage-common</url>
-        <tag>10.2.x</tag>
+        <tag>11.0.x</tag>
     </scm>
 
     <modules>
@@ -68,33 +68,39 @@
 
     <properties>
         <avro.version>1.10.2</avro.version>
-        <commons-io.version>2.7</commons-io.version>
+        <commons-io.version>2.8.0</commons-io.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
         <commons.codec.version>1.15</commons.codec.version>
         <commons.compress.version>1.26.1</commons.compress.version>
-        <confluent.log4j.version>1.2.17-cp8</confluent.log4j.version>
-        <confluent.maven.repo>http://packages.confluent.io/maven/</confluent.maven.repo>
+        <confluent.maven.repo>https://packages.confluent.io/maven/</confluent.maven.repo>
         <dependency.check.version>6.1.6</dependency.check.version>
         <hadoop.version>2.10.2</hadoop.version>
         <hive.version>2.3.10</hive.version>
         <httpclient.version>4.5.13</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
-        <jackson.version>2.15.2</jackson.version>
+        <jackson.version>2.16.1</jackson.version>
         <jackson.databind.version>2.16.1</jackson.databind.version>
         <jackson.mapper.asl.version>1.9.14.jdk17-redhat-00001</jackson.mapper.asl.version>
         <jetty.version>9.4.53.v20231009</jetty.version>
         <jline.version>2.12.1</jline.version>
         <joda.version>2.9.6</joda.version>
-        <kafka.connect.storage.common.version>10.2.21-SNAPSHOT</kafka.connect.storage.common.version>
+        <kafka.connect.storage.common.version>11.0.30-SNAPSHOT</kafka.connect.storage.common.version>
         <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
-        <netty.version>4.1.107.Final</netty.version>
+        <netty.version>4.1.108.Final</netty.version>
         <parquet.version>1.11.2</parquet.version>
         <json.smart.version>2.4.10</json.smart.version>
         <thrift.version>0.13.0</thrift.version>
         <tomcat.version>8.5.65</tomcat.version>
         <slf4j-reload4j.version>1.7.36</slf4j-reload4j.version>
-        <guava.version>32.1.2-jre</guava.version>
         <dependency.check.skip>true</dependency.check.skip>
+        <!--
+        Note: The following three properties are used to change the version of the
+        respective dependencies within hive. They are changed from the ones inherited from
+        hive for fixing CVEs.
+        -->
+        <groovy.override.version>2.4.21</groovy.override.version>
+        <derby.override.version>10.14.2.0</derby.override.version>
+        <orc-core.override.version>1.4.3</orc-core.override.version>
     </properties>
 
     <repositories>
@@ -190,6 +196,16 @@
                 <version>${jackson.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobuf.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java-util</artifactId>
+                <version>${protobuf.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.fasterxml.jackson</groupId>
                 <artifactId>jackson-bom</artifactId>
                 <version>${jackson.version}</version>
@@ -267,9 +283,19 @@
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.google.protobuf</groupId>
-                <artifactId>protobuf-java</artifactId>
-                <version>${protobuf.version}</version>
+                <groupId>org.codehaus.groovy</groupId>
+                <artifactId>groovy-all</artifactId>
+                <version>${groovy.override.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.derby</groupId>
+                <artifactId>derby</artifactId>
+                <version>${derby.override.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.orc</groupId>
+                <artifactId>orc-core</artifactId>
+                <version>${orc-core.override.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -286,15 +312,9 @@
             <version>${jline.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.confluent</groupId>
-            <artifactId>confluent-log4j</artifactId>
-            <version>${confluent.log4j.version}</version>
+            <groupId>ch.qos.reload4j</groupId>
+            <artifactId>reload4j</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
         </dependency>
     </dependencies>
 
@@ -347,5 +367,26 @@
                 </configuration>
             </plugin>
         </plugins>
+        <extensions>
+            <extension>
+                <groupId>org.springframework.build</groupId>
+                <artifactId>aws-maven</artifactId>
+                <version>5.0.0.RELEASE</version>
+            </extension>
+        </extensions>
     </build>
+    <distributionManagement>
+        <repository>
+            <id>aws-release</id>
+            <name>AWS Release Repository</name>
+            <!-- defined as needed -->
+            <url>${confluent.release.repo}</url>
+        </repository>
+        <snapshotRepository>
+            <id>aws-snapshot</id>
+            <name>AWS Snapshot Repository</name>
+            <!-- defined as needed -->
+            <url>${confluent.snapshot.repo}</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
