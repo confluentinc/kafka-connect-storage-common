@@ -23,6 +23,8 @@ import org.apache.kafka.connect.sink.SinkRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +33,8 @@ import io.confluent.connect.storage.errors.PartitionException;
 
 public class FieldPartitioner<T> extends DefaultPartitioner<T> {
   private static final Logger log = LoggerFactory.getLogger(FieldPartitioner.class);
+  private static final SimpleDateFormat SIMPLE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+
   private List<String> fieldNames;
 
 
@@ -60,9 +64,11 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
           case INT8:
           case INT16:
           case INT32:
-          case INT64:
             Number record = (Number) partitionKey;
             builder.append(fieldName + "=" + record.toString());
+            break;
+          case INT64:
+            builder.append(fieldName + "=" + formatInt64(partitionKey));
             break;
           case STRING:
             builder.append(fieldName + "=" + (String) partitionKey);
@@ -91,5 +97,14 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
       );
     }
     return partitionFields;
+  }
+
+  private String formatInt64(Object partitionKey) {
+    if (partitionKey instanceof Date) {
+      Date record = (Date) partitionKey;
+      return SIMPLE_FORMAT.format(record);
+    }
+    Number record = (Number) partitionKey;
+    return record.toString();
   }
 }
