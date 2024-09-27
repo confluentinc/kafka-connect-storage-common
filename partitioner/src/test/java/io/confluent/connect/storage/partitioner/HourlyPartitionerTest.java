@@ -29,6 +29,7 @@ import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 
 public class HourlyPartitionerTest extends StorageSinkTestBase {
   protected static final DateTimeZone DATE_TIME_ZONE = DateTimeZone.forID("America/Los_Angeles");
@@ -61,4 +62,26 @@ public class HourlyPartitionerTest extends StorageSinkTestBase {
     assertThat(encodedPartition, is(generateEncodedPartitionFromMap(m)));
   }
 
+  @Test
+  public void testHourlyPartionerWithDaylightSavings() {
+    Map<String, Object> props = new HashMap<>();
+    props.put(PartitionerConfig.TIMEZONE_CONFIG, "America/Santiago");
+
+    props.put(PartitionerConfig.LOCALE_CONFIG, "es_CL");
+    props.put(StorageCommonConfig.DIRECTORY_DELIM_CONFIG, StorageCommonConfig.DIRECTORY_DELIM_DEFAULT);
+    props.put(PartitionerConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG, "Record");
+
+    HourlyPartitioner<String> partitioner = new HourlyPartitioner<>();
+    partitioner.configure(props);
+
+    // Daylight savings
+    SinkRecord sinkRecord = createSinkRecord(1715224653000L); // 2024/05/09 03:17:33 UTC
+    String encodedPartition = partitioner.encodePartition(sinkRecord);
+    assertEquals("year=2024/month=05/day=08/hour=23", encodedPartition); //UTC-04:00
+
+    // No daylight savings
+    sinkRecord = createSinkRecord(1706411853000L); // 2024/01/28 03:17:33 UTC
+    encodedPartition = partitioner.encodePartition(sinkRecord);
+    assertEquals("year=2024/month=01/day=28/hour=00", encodedPartition); //UTC-03:00
+  }
 }
