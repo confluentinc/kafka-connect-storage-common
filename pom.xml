@@ -81,7 +81,7 @@
         <jackson.version>2.16.1</jackson.version>
         <jackson.databind.version>2.16.1</jackson.databind.version>
         <jackson.mapper.asl.version>1.9.14.jdk17-redhat-00001</jackson.mapper.asl.version>
-        <jetty.version>9.4.53.v20231009</jetty.version>
+        <jetty.version>9.4.56.v20240826</jetty.version>
         <jline.version>2.12.1</jline.version>
         <joda.version>2.9.6</joda.version>
         <kafka.connect.storage.common.version>11.1.13-SNAPSHOT</kafka.connect.storage.common.version>
