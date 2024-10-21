@@ -12,3 +12,7 @@ semaphore:
   extra_deploy_args: -Dcloud -Pjenkins
   extra_build_args: -Dcloud -Pjenkins
   run_pint_merge: true
+code_artifact:
+  enable: true
+  package_paths:
+    - maven-snapshots/maven/io.confluent/kafka-connect-storage-*
