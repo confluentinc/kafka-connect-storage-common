@@ -27,7 +27,7 @@ language governing permissions and limitations under the License. -->
     <inceptionYear>2020</inceptionYear>
 
     <properties>
-        <htrace.version>4.1.0-incubating</htrace.version>
+        <htrace.version>4.2.0-incubating</htrace.version>
     </properties>
 
     <build>
@@ -38,7 +38,7 @@ language governing permissions and limitations under the License. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
