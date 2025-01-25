@@ -21,7 +21,7 @@
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>common</artifactId>
-        <version>[7.7.2, 7.7.3)</version>
+        <version>[7.9.0,7.10.0)</version>
     </parent>
 
     <artifactId>kafka-connect-storage-common-parent</artifactId>
@@ -67,40 +67,40 @@
     </modules>
 
     <properties>
-        <avro.version>1.11.4</avro.version>
-        <commons-io.version>2.17.0</commons-io.version>
-        <commons.beanutils.version>1.9.4</commons.beanutils.version>
-        <commons.codec.version>1.15</commons.codec.version>
-        <commons.compress.version>1.26.1</commons.compress.version>
+        <avro.version>1.12.0</avro.version>
+        <commons-io.version>2.18.0</commons-io.version>
+        <commons.beanutils.version>1.10.0</commons.beanutils.version>
+        <commons.codec.version>1.17.2</commons.codec.version>
+        <commons.compress.version>1.27.1.redhat-00001</commons.compress.version>
         <confluent.maven.repo>https://packages.confluent.io/maven/</confluent.maven.repo>
         <dependency.check.version>6.1.6</dependency.check.version>
         <hadoop.version>2.10.2</hadoop.version>
         <hive.version>2.3.10</hive.version>
-        <httpclient.version>4.5.13</httpclient.version>
-        <httpcore.version>4.4.4</httpcore.version>
-        <jackson.version>2.16.1</jackson.version>
-        <jackson.databind.version>2.16.1</jackson.databind.version>
+        <httpclient.version>4.5.14.redhat-00012</httpclient.version>
+        <httpcore.version>4.4.16.redhat-00010</httpcore.version>
+        <jackson.version>2.18.2</jackson.version>
+        <jackson.databind.version>2.18.2</jackson.databind.version>
         <jackson.mapper.asl.version>1.9.14.jdk17-redhat-00001</jackson.mapper.asl.version>
-        <jetty.version>9.4.56.v20240826</jetty.version>
-        <jline.version>2.12.1</jline.version>
-        <joda.version>2.10.1</joda.version>
+        <jetty.version>9.4.57.v20241219</jetty.version>
+        <jline.version>2.14.6</jline.version>
+        <joda.version>2.13.0</joda.version>
         <kafka.connect.storage.common.version>11.3.0-SNAPSHOT</kafka.connect.storage.common.version>
         <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
-        <netty.version>4.1.108.Final</netty.version>
-        <parquet.version>1.11.2</parquet.version>
-        <json.smart.version>2.4.10</json.smart.version>
+        <netty.version>4.1.117.Final</netty.version>
+        <parquet.version>1.15.0</parquet.version>
+        <json.smart.version>2.5.1.redhat-00001</json.smart.version>
         <thrift.version>0.13.0</thrift.version>
         <tomcat.version>8.5.65</tomcat.version>
-        <slf4j-reload4j.version>1.7.36</slf4j-reload4j.version>
+        <slf4j-reload4j.version>1.7.36.redhat-00005</slf4j-reload4j.version>
         <dependency.check.skip>true</dependency.check.skip>
         <!--
         Note: The following three properties are used to change the version of the
         respective dependencies within hive. They are changed from the ones inherited from
         hive for fixing CVEs.
         -->
-        <groovy.override.version>2.4.21</groovy.override.version>
+        <groovy.override.version>2.5.23</groovy.override.version>
         <derby.override.version>10.14.2.0</derby.override.version>
-        <orc-core.override.version>1.4.3</orc-core.override.version>
+        <orc-core.override.version>1.9.5</orc-core.override.version>
     </properties>
 
     <repositories>
