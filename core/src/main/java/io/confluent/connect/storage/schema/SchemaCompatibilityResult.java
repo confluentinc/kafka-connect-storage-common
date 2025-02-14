@@ -15,20 +15,21 @@
 
 package io.confluent.connect.storage.schema;
 
-import org.apache.kafka.connect.connector.ConnectRecord;
-import org.apache.kafka.connect.data.Schema;
-import org.apache.kafka.connect.sink.SinkRecord;
-import org.apache.kafka.connect.source.SourceRecord;
+public final class SchemaCompatibilityResult {
+  private final boolean isInCompatible;
+  private final SchemaIncompatibilityType schemaIncompatibilityType;
 
-public interface SchemaCompatibility {
+  public SchemaCompatibilityResult(boolean isInCompatible,
+      SchemaIncompatibilityType schemaIncompatibilityType) {
+    this.isInCompatible = isInCompatible;
+    this.schemaIncompatibilityType = schemaIncompatibilityType;
+  }
 
-  SchemaCompatibilityResult shouldChangeSchema(
-      ConnectRecord<?> record,
-      Schema currentkeySchema,
-      Schema currentValueSchema
-  );
+  public boolean isInCompatible() {
+    return isInCompatible;
+  }
 
-  SinkRecord project(SinkRecord record, Schema currentKeySchema, Schema currentValueSchema);
-
-  SourceRecord project(SourceRecord record, Schema currentKeySchema, Schema currentValueSchema);
+  public SchemaIncompatibilityType getSchemaIncompatibilityType() {
+    return schemaIncompatibilityType;
+  }
 }
