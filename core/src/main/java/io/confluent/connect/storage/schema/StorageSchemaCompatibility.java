@@ -286,8 +286,12 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
   ) {
     Map<String, String> originalParams = originalSchema.parameters();
     Map<String, String> currentParams = currentSchema.parameters();
-    if (originalParams == null || currentParams == null) {
-      return false;
+    // Default to empty maps if parameters are null
+    if (originalParams == null) {
+      originalParams = Collections.emptyMap();
+    }
+    if (currentParams == null) {
+      currentParams = Collections.emptyMap();
     }
     return !currentParams.entrySet().containsAll(originalParams.entrySet());
   }
