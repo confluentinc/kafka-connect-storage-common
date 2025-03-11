@@ -62,10 +62,6 @@ public class StorageSchemaCompatibilityTest {
     return enumSchema;
   }
 
-//  private static SchemaBuilder buildEnumMapSchema(String name, int version, String... allowedValues) {
-//    return SchemaBuilder.map(Schema.STRING_SCHEMA, buildEnumSchema(name, version, allowedValues).version(version).build());
-//  }
-
   private static final Schema SCHEMA_A =
       buildIntSchema("a", 2).build();
   private static final Schema SCHEMA_A_COPY =
@@ -127,8 +123,6 @@ public class StorageSchemaCompatibilityTest {
           buildEnumSchema("e1", 1, "RED", "GREEN", "BLUE").build();
   private static final Schema ENUM_SCHEMA_B =
           buildEnumSchema("e1", 1, "RED", "GREEN").build();
-  private static final Schema ENUM_SCHEMA_C =
-          buildEnumSchema("e1", 1, "YELLOW", "BLACK").build();
 
   @Test
   public void testShouldChangeSchemaWithEnumAddition() {

@@ -62,7 +62,7 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
      * {@link #project projecting} a key or value with the original schema into the current schema.
      *
      * <p>This method currently considers schemas to be compatible if and only they are
-     * equal. Otherwise, the schemas are deemed incompatible.
+     * {@link Schema#equals(Object) equal}. Otherwise, the schemas are deemed incompatible.
      *
      * @param originalSchema the original (new) schema; may not be null
      * @param currentSchema  the current schema; may not be null
@@ -286,8 +286,12 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
   ) {
     Map<String, String> originalParams = originalSchema.parameters();
     Map<String, String> currentParams = currentSchema.parameters();
-    if (originalParams == null || currentParams == null) {
-      return false;
+    // Default to empty maps if parameters are null
+    if (originalParams == null) {
+      originalParams = Collections.emptyMap();
+    }
+    if (currentParams == null) {
+      currentParams = Collections.emptyMap();
     }
     return !currentParams.entrySet().containsAll(originalParams.entrySet());
   }
