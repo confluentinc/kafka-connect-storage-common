@@ -47,16 +47,6 @@ public class SchemaProjector {
     }
   }
 
-  /**
-   * This method projects a value between compatible schemas and throws
-   * exceptions when non-compatible schemas are provided
-   * @throws SchemaProjectorException if the target schema is
-   * not optional and does not have a default value
-   * @param source the schema used to construct the record
-   * @param record the value to project from source schema to target schema
-   * @param target the schema to project the record to
-   * @return the projected value with target schema
-   */
   public static Object project(Schema source, Object record, Schema target)
       throws SchemaProjectorException {
     checkMaybeCompatible(source, target);
