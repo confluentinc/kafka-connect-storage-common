@@ -15,11 +15,16 @@ import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.errors.ConnectException;
+import org.apache.kafka.connect.errors.SchemaProjectorException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 
 public class StorageSchemaCompatibilityTest {
 
@@ -46,6 +51,20 @@ public class StorageSchemaCompatibilityTest {
                         .version(version)
                         .name(name);
   }
+
+  private static SchemaBuilder buildEnumSchema(String name, int version, String... values) {
+    SchemaBuilder enumSchema = SchemaBuilder.string()
+            .version(version)
+            .name(name);
+    for (String value: values) {
+      enumSchema.parameter("allowedValue." + value, value);
+    }
+    return enumSchema;
+  }
+
+//  private static SchemaBuilder buildEnumMapSchema(String name, int version, String... allowedValues) {
+//    return SchemaBuilder.map(Schema.STRING_SCHEMA, buildEnumSchema(name, version, allowedValues).version(version).build());
+//  }
 
   private static final Schema SCHEMA_A =
       buildIntSchema("a", 2).build();
@@ -104,7 +123,53 @@ public class StorageSchemaCompatibilityTest {
       buildStructSchema("b", 2).field("extra", Schema.STRING_SCHEMA).build();
   private static final Schema SCHEMA_B_EXTRA_OPTIONAL_FIELD =
       buildStructSchema("b", 2).field("extra", Schema.OPTIONAL_STRING_SCHEMA).build();
+  private static final Schema ENUM_SCHEMA_A =
+          buildEnumSchema("e1", 1, "RED", "GREEN", "BLUE").build();
+  private static final Schema ENUM_SCHEMA_B =
+          buildEnumSchema("e1", 1, "RED", "GREEN").build();
+  private static final Schema ENUM_SCHEMA_C =
+          buildEnumSchema("e1", 1, "YELLOW", "BLACK").build();
 
+  @Test
+  public void testShouldChangeSchemaWithEnumAddition() {
+    String value = "BLUE";
+    SinkRecord sinkRecord = new SinkRecord(
+            "test-topic",
+            0,
+            null,
+            null,
+            ENUM_SCHEMA_A,
+            value,
+            0
+    );
+
+    SchemaCompatibilityResult result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecord, null, ENUM_SCHEMA_B);
+    assertTrue(result.isInCompatible());
+    assertEquals(SchemaIncompatibilityType.DIFFERENT_PARAMS, result.getSchemaIncompatibilityType());
+  }
+
+  @Test
+  public void testShouldChangeSchemaWithEnumDeletion() {
+    String value = "RED";
+    SinkRecord sinkRecord = new SinkRecord(
+            "test-topic",
+            0,
+            null,
+            null,
+            ENUM_SCHEMA_B,
+            value,
+            0
+    );
+
+    SchemaCompatibilityResult result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecord, null, ENUM_SCHEMA_A);
+    assertFalse(result.isInCompatible());
+  }
+
+  @Test
+  public void testProjectSchemaAfterAddingEnumSymbol() {
+    String value = "GREEN";
+    assertThrows(SchemaProjectorException.class, () -> SchemaProjector.project(ENUM_SCHEMA_A, value, ENUM_SCHEMA_B));
+  }
 
   @Test
   public void noneCompatibilityShouldConsiderSameVersionsAsUnchanged() {
@@ -233,7 +298,8 @@ public class StorageSchemaCompatibilityTest {
     assertChanged(full, SCHEMA_B, SCHEMA_B_RETYPED, diffType);
   }
 
-  @Test
+  // No longer valid as schema parameters can evolve and we are not checking for equality anymore.
+  /*@Test
   public void allCompatibilitiesShouldConsiderDifferentSchemaParametersAsChanged() {
     assertChanged(none, SCHEMA_A, SCHEMA_A_PARAMETERED, diffSchema);
     assertChanged(backward, SCHEMA_A, SCHEMA_A_PARAMETERED, diffParams);
@@ -244,7 +310,7 @@ public class StorageSchemaCompatibilityTest {
     assertChanged(backward, SCHEMA_B, SCHEMA_B_PARAMETERED, diffParams);
     assertChanged(forward, SCHEMA_B, SCHEMA_B_PARAMETERED, diffParams);
     assertChanged(full, SCHEMA_B, SCHEMA_B_PARAMETERED, diffParams);
-  }
+  }*/
 
   @Test
   public void backwardCompatibilityShouldConsiderDifferentSchemaDocsAsUnchanged() {

@@ -24,7 +24,6 @@ import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.NA;
 
 import org.apache.kafka.connect.connector.ConnectRecord;
 import org.apache.kafka.connect.data.Schema;
-import org.apache.kafka.connect.data.SchemaProjector;
 import org.apache.kafka.connect.errors.SchemaProjectorException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.source.SourceRecord;
@@ -63,7 +62,7 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
      * {@link #project projecting} a key or value with the original schema into the current schema.
      *
      * <p>This method currently considers schemas to be compatible if and only they are
-     * {@link Schema#equals(Object) equal}. Otherwise, the schemas are deemed incompatible.
+     * equal. Otherwise, the schemas are deemed incompatible.
      *
      * @param originalSchema the original (new) schema; may not be null
      * @param currentSchema  the current schema; may not be null
@@ -285,7 +284,12 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
       Schema originalSchema,
       Schema currentSchema
   ) {
-    return !Objects.equals(originalSchema.parameters(), currentSchema.parameters());
+    Map<String, String> originalParams = originalSchema.parameters();
+    Map<String, String> currentParams = currentSchema.parameters();
+    if (originalParams == null || currentParams == null) {
+      return false;
+    }
+    return !currentParams.entrySet().containsAll(originalParams.entrySet());
   }
 
   protected boolean isPromotable(Schema.Type sourceType, Schema.Type targetType) {
