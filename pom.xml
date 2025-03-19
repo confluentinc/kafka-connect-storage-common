@@ -83,7 +83,7 @@
         <jackson.mapper.asl.version>1.9.14.jdk17-redhat-00001</jackson.mapper.asl.version>
         <jetty.version>9.4.56.v20240826</jetty.version>
         <jline.version>2.12.1</jline.version>
-        <joda.version>2.13.1</joda.version>
+        <joda.version>2.9.6</joda.version>
         <kafka.connect.storage.common.version>11.1.13-SNAPSHOT</kafka.connect.storage.common.version>
         <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
         <netty.version>4.1.108.Final</netty.version>
@@ -146,6 +146,11 @@
             <dependency>
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-connect-avro-data</artifactId>
+                <version>${confluent.version.range}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.confluent</groupId>
+                <artifactId>kafka-connect-protobuf-converter</artifactId>
                 <version>${confluent.version.range}</version>
             </dependency>
             <dependency>
@@ -324,13 +329,13 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <inherited>true</inherited>
-<!--                <configuration>-->
-<!--                    <showWarnings>true</showWarnings>-->
-<!--                    <compilerArgs>-->
-<!--                        <arg>-Xlint:-processing</arg>-->
-<!--                        <arg>-Werror</arg>-->
-<!--                    </compilerArgs>-->
-<!--                </configuration>-->
+                <configuration>
+                    <showWarnings>true</showWarnings>
+                    <compilerArgs>
+                        <arg>-Xlint:-processing</arg>
+                        <arg>-Werror</arg>
+                    </compilerArgs>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

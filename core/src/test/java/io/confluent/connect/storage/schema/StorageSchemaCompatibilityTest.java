@@ -128,7 +128,7 @@ public class StorageSchemaCompatibilityTest {
           buildEnumSchema("e1", 1, "RED", "GREEN").build();
 
   @Test
-  public void testShouldChangeSchemaWithEnumAddition() {
+  public void testShouldChangeSchemaWithEnumAdditionAndBackwardCompatibility() {
     String value = "BLUE";
     SinkRecord sinkRecord = new SinkRecord(
             "test-topic",
@@ -146,7 +146,7 @@ public class StorageSchemaCompatibilityTest {
   }
 
   @Test
-  public void testShouldChangeSchemaWithEnumDeletion() {
+  public void testShouldChangeSchemaWithEnumDeletionAndBackwardCompatibility() {
     String value = "RED";
     SinkRecord sinkRecord = new SinkRecord(
             "test-topic",
@@ -159,6 +159,41 @@ public class StorageSchemaCompatibilityTest {
     );
 
     SchemaCompatibilityResult result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecord, null, ENUM_SCHEMA_A);
+    assertFalse(result.isInCompatible());
+  }
+
+  @Test
+  public void testShouldChangeSchemaWithEnumAdditionAndForwardCompatibility() {
+    String value = "BLUE";
+    SinkRecord sinkRecord = new SinkRecord(
+        "test-topic",
+        0,
+        null,
+        null,
+        ENUM_SCHEMA_A,
+        value,
+        0
+    );
+
+    SchemaCompatibilityResult result = StorageSchemaCompatibility.FORWARD.shouldChangeSchema(sinkRecord, null, ENUM_SCHEMA_B);
+    assertTrue(result.isInCompatible());
+    assertEquals(SchemaIncompatibilityType.DIFFERENT_PARAMS, result.getSchemaIncompatibilityType());
+  }
+
+  @Test
+  public void testShouldChangeSchemaWithEnumDeletionAndForwardCompatibility() {
+    String value = "RED";
+    SinkRecord sinkRecord = new SinkRecord(
+        "test-topic",
+        0,
+        null,
+        null,
+        ENUM_SCHEMA_B,
+        value,
+        0
+    );
+
+    SchemaCompatibilityResult result = StorageSchemaCompatibility.FORWARD.shouldChangeSchema(sinkRecord, null, ENUM_SCHEMA_A);
     assertFalse(result.isInCompatible());
   }
 
