@@ -15,11 +15,17 @@ import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.errors.ConnectException;
+import org.apache.kafka.connect.errors.SchemaProjectorException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.junit.Test;
+import io.confluent.connect.avro.AvroData;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 
 public class StorageSchemaCompatibilityTest {
 
@@ -45,6 +51,18 @@ public class StorageSchemaCompatibilityTest {
     return SchemaBuilder.int32()
                         .version(version)
                         .name(name);
+  }
+
+  private static SchemaBuilder buildEnumSchema(String name, int version, String... values) {
+    // Enum schema is unwrapped as strings; symbols are represented as parameters
+    SchemaBuilder enumSchema = SchemaBuilder.string()
+            .version(version)
+            .name(name);
+    enumSchema.parameter(AvroData.AVRO_TYPE_ENUM, name);
+    for (String value: values) {
+      enumSchema.parameter(AvroData.AVRO_TYPE_ENUM + "." + value, value);
+    }
+    return enumSchema;
   }
 
   private static final Schema SCHEMA_A =
@@ -104,7 +122,86 @@ public class StorageSchemaCompatibilityTest {
       buildStructSchema("b", 2).field("extra", Schema.STRING_SCHEMA).build();
   private static final Schema SCHEMA_B_EXTRA_OPTIONAL_FIELD =
       buildStructSchema("b", 2).field("extra", Schema.OPTIONAL_STRING_SCHEMA).build();
+  private static final Schema ENUM_SCHEMA_A =
+          buildEnumSchema("e1", 1, "RED", "GREEN", "BLUE").build();
+  private static final Schema ENUM_SCHEMA_B =
+          buildEnumSchema("e1", 1, "RED", "GREEN").build();
 
+  @Test
+  public void testShouldChangeSchemaWithEnumAdditionAndBackwardCompatibility() {
+    String value = "BLUE";
+    SinkRecord sinkRecord = new SinkRecord(
+            "test-topic",
+            0,
+            null,
+            null,
+            ENUM_SCHEMA_A,
+            value,
+            0
+    );
+
+    SchemaCompatibilityResult result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecord, null, ENUM_SCHEMA_B);
+    assertTrue(result.isInCompatible());
+    assertEquals(SchemaIncompatibilityType.DIFFERENT_PARAMS, result.getSchemaIncompatibilityType());
+  }
+
+  @Test
+  public void testShouldChangeSchemaWithEnumDeletionAndBackwardCompatibility() {
+    String value = "RED";
+    SinkRecord sinkRecord = new SinkRecord(
+            "test-topic",
+            0,
+            null,
+            null,
+            ENUM_SCHEMA_B,
+            value,
+            0
+    );
+
+    SchemaCompatibilityResult result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecord, null, ENUM_SCHEMA_A);
+    assertFalse(result.isInCompatible());
+  }
+
+  @Test
+  public void testShouldChangeSchemaWithEnumAdditionAndForwardCompatibility() {
+    String value = "BLUE";
+    SinkRecord sinkRecord = new SinkRecord(
+        "test-topic",
+        0,
+        null,
+        null,
+        ENUM_SCHEMA_A,
+        value,
+        0
+    );
+
+    SchemaCompatibilityResult result = StorageSchemaCompatibility.FORWARD.shouldChangeSchema(sinkRecord, null, ENUM_SCHEMA_B);
+    assertTrue(result.isInCompatible());
+    assertEquals(SchemaIncompatibilityType.DIFFERENT_PARAMS, result.getSchemaIncompatibilityType());
+  }
+
+  @Test
+  public void testShouldChangeSchemaWithEnumDeletionAndForwardCompatibility() {
+    String value = "RED";
+    SinkRecord sinkRecord = new SinkRecord(
+        "test-topic",
+        0,
+        null,
+        null,
+        ENUM_SCHEMA_B,
+        value,
+        0
+    );
+
+    SchemaCompatibilityResult result = StorageSchemaCompatibility.FORWARD.shouldChangeSchema(sinkRecord, null, ENUM_SCHEMA_A);
+    assertFalse(result.isInCompatible());
+  }
+
+  @Test
+  public void testProjectSchemaAfterAddingEnumSymbol() {
+    String value = "GREEN";
+    assertThrows(SchemaProjectorException.class, () -> SchemaProjector.project(ENUM_SCHEMA_A, value, ENUM_SCHEMA_B));
+  }
 
   @Test
   public void noneCompatibilityShouldConsiderSameVersionsAsUnchanged() {
