@@ -19,6 +19,7 @@ import org.apache.kafka.connect.errors.SchemaProjectorException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.junit.Test;
+import io.confluent.connect.avro.AvroData;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -53,11 +54,13 @@ public class StorageSchemaCompatibilityTest {
   }
 
   private static SchemaBuilder buildEnumSchema(String name, int version, String... values) {
+    // Enum schema is unwrapped as strings; symbols are represented as parameters
     SchemaBuilder enumSchema = SchemaBuilder.string()
             .version(version)
             .name(name);
+    enumSchema.parameter(AvroData.AVRO_TYPE_ENUM, name);
     for (String value: values) {
-      enumSchema.parameter("allowedValue." + value, value);
+      enumSchema.parameter(AvroData.AVRO_TYPE_ENUM + "." + value, value);
     }
     return enumSchema;
   }
@@ -292,8 +295,7 @@ public class StorageSchemaCompatibilityTest {
     assertChanged(full, SCHEMA_B, SCHEMA_B_RETYPED, diffType);
   }
 
-  // No longer valid as schema parameters can evolve and we are not checking for equality anymore.
-  /*@Test
+  @Test
   public void allCompatibilitiesShouldConsiderDifferentSchemaParametersAsChanged() {
     assertChanged(none, SCHEMA_A, SCHEMA_A_PARAMETERED, diffSchema);
     assertChanged(backward, SCHEMA_A, SCHEMA_A_PARAMETERED, diffParams);
@@ -304,7 +306,7 @@ public class StorageSchemaCompatibilityTest {
     assertChanged(backward, SCHEMA_B, SCHEMA_B_PARAMETERED, diffParams);
     assertChanged(forward, SCHEMA_B, SCHEMA_B_PARAMETERED, diffParams);
     assertChanged(full, SCHEMA_B, SCHEMA_B_PARAMETERED, diffParams);
-  }*/
+  }
 
   @Test
   public void backwardCompatibilityShouldConsiderDifferentSchemaDocsAsUnchanged() {

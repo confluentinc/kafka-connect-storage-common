@@ -284,16 +284,14 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
       Schema originalSchema,
       Schema currentSchema
   ) {
-    Map<String, String> originalParams = originalSchema.parameters();
-    Map<String, String> currentParams = currentSchema.parameters();
-    // Default to empty maps if parameters are null
-    if (originalParams == null) {
-      originalParams = Collections.emptyMap();
+    if (SchemaProjector.isEnumSchema(originalSchema)
+        && SchemaProjector.isEnumSchema(currentSchema)) {
+      Map<String, String> originalParams = originalSchema.parameters();
+      Map<String, String> currentParams = currentSchema.parameters();
+      return !currentParams.entrySet().containsAll(originalParams.entrySet());
+    } else {
+      return !Objects.equals(originalSchema.parameters(), currentSchema.parameters());
     }
-    if (currentParams == null) {
-      currentParams = Collections.emptyMap();
-    }
-    return !currentParams.entrySet().containsAll(originalParams.entrySet());
   }
 
   protected boolean isPromotable(Schema.Type sourceType, Schema.Type targetType) {

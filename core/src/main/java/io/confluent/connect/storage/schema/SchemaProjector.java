@@ -19,6 +19,7 @@ import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.errors.SchemaProjectorException;
+import io.confluent.connect.avro.AvroData;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -90,7 +91,7 @@ public class SchemaProjector {
       case MAP:
         return projectMap(source, record, target);
       default:
-        throw new IllegalStateException("Unexpected value: " + target.type());
+        return null;
     }
   }
 
@@ -132,14 +133,28 @@ public class SchemaProjector {
       throw new SchemaProjectorException("Schema name mismatch. source name: " + source.name()
           + " and target name: " + target.name());
     } else if (source.parameters() != null && target.parameters() != null) {
-      for (Map.Entry<String, String> entry : source.parameters().entrySet()) {
-        if (!Objects.equals(target.parameters().get(entry.getKey()), entry.getValue())) {
-          throw new SchemaProjectorException("Schema parameters mismatch. Source parameter "
-              + entry.getKey() + "=" + entry.getValue()
-              + " is not a subset of target parameters: " + target.parameters());
+      if (isEnumSchema(source) && isEnumSchema(target)) {
+        for (Map.Entry<String, String> entry : source.parameters().entrySet()) {
+          if (!Objects.equals(target.parameters().get(entry.getKey()), entry.getValue())) {
+            throw new SchemaProjectorException("Schema parameters mismatch. Source parameter "
+                + entry.getKey() + "=" + entry.getValue()
+                + " is not a subset of target parameters: " + target.parameters());
+          }
+        }
+      } else {
+        if (!Objects.equals(source.parameters(), target.parameters())) {
+          throw new SchemaProjectorException("Schema parameters not equal. source parameters: "
+              + source.parameters() + " and target parameters: " + target.parameters());
         }
       }
     }
+  }
+
+  static boolean isEnumSchema(Schema schema) {
+    return schema.type() == Schema.Type.STRING
+        && schema.parameters() != null
+        && (schema.parameters().containsKey(AvroData.GENERALIZED_TYPE_ENUM)
+        || schema.parameters().containsKey(AvroData.AVRO_TYPE_ENUM));
   }
 
   private static Object projectArray(Schema source, Object record, Schema target)
