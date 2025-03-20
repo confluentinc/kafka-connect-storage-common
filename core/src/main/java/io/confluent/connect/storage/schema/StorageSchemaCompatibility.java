@@ -24,7 +24,6 @@ import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.NA;
 
 import org.apache.kafka.connect.connector.ConnectRecord;
 import org.apache.kafka.connect.data.Schema;
-import org.apache.kafka.connect.data.SchemaProjector;
 import org.apache.kafka.connect.errors.SchemaProjectorException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.source.SourceRecord;
@@ -285,7 +284,14 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
       Schema originalSchema,
       Schema currentSchema
   ) {
-    return !Objects.equals(originalSchema.parameters(), currentSchema.parameters());
+    if (SchemaProjector.isEnumSchema(originalSchema)
+        && SchemaProjector.isEnumSchema(currentSchema)) {
+      Map<String, String> originalParams = originalSchema.parameters();
+      Map<String, String> currentParams = currentSchema.parameters();
+      return !currentParams.entrySet().containsAll(originalParams.entrySet());
+    } else {
+      return !Objects.equals(originalSchema.parameters(), currentSchema.parameters());
+    }
   }
 
   protected boolean isPromotable(Schema.Type sourceType, Schema.Type targetType) {
