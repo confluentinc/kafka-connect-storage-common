@@ -20,7 +20,7 @@
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>kafka-connect-storage-common-parent</artifactId>
-        <version>11.2.21-SNAPSHOT</version>
+        <version>11.3.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>kafka-connect-storage-hive</artifactId>
@@ -32,7 +32,7 @@
         <kryo.version>2.24.0</kryo.version>
         <xml-apis.version>1.4.01</xml-apis.version>
         <jamon.runtime.version>2.4.1</jamon.runtime.version>
-        <jettison.version>1.5.3</jettison.version>
+        <jettison.version>1.5.4</jettison.version>
         <netty.all.version>4.1.109.Final</netty.all.version>
     </properties>
 
