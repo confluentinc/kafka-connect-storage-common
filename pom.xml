@@ -84,7 +84,7 @@
         <jetty.version>9.4.56.v20240826</jetty.version>
         <jline.version>2.12.1</jline.version>
         <joda.version>2.13.1</joda.version>
-        <kafka.connect.storage.common.version>11.1.13-SNAPSHOT</kafka.connect.storage.common.version>
+        <kafka.connect.storage.common.version>11.2.21-SNAPSHOT</kafka.connect.storage.common.version>
         <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
         <netty.version>4.1.108.Final</netty.version>
         <parquet.version>1.11.2</parquet.version>
