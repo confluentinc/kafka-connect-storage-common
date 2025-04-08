@@ -100,7 +100,7 @@
         -->
         <groovy.override.version>2.4.21</groovy.override.version>
         <derby.override.version>10.14.2.0</derby.override.version>
-        <orc-core.override.version>1.4.3</orc-core.override.version>
+        <orc-core.override.version>2.1.0</orc-core.override.version>
     </properties>
 
     <repositories>
