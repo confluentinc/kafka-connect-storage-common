@@ -10,16 +10,23 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.confluent.connect.protobuf.ProtobufData;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.errors.ConnectException;
+import org.apache.kafka.connect.errors.SchemaProjectorException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.junit.Test;
+import io.confluent.connect.avro.AvroData;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 
 public class StorageSchemaCompatibilityTest {
 
@@ -27,6 +34,13 @@ public class StorageSchemaCompatibilityTest {
   private final StorageSchemaCompatibility backward = StorageSchemaCompatibility.BACKWARD;
   private final StorageSchemaCompatibility forward = StorageSchemaCompatibility.FORWARD;
   private final StorageSchemaCompatibility full = StorageSchemaCompatibility.FULL;
+
+  private final SchemaIncompatibilityType diffSchema = SchemaIncompatibilityType.DIFFERENT_SCHEMA;
+  private final SchemaIncompatibilityType diffType = SchemaIncompatibilityType.DIFFERENT_TYPE;
+  private final SchemaIncompatibilityType diffName = SchemaIncompatibilityType.DIFFERENT_NAME;
+  private final SchemaIncompatibilityType diffParams = SchemaIncompatibilityType.DIFFERENT_PARAMS;
+  private final SchemaIncompatibilityType diffVersion = SchemaIncompatibilityType.DIFFERENT_VERSION;
+  private final SchemaIncompatibilityType na = SchemaIncompatibilityType.NA;
 
   private static SchemaBuilder buildStringSchema(String name, int version) {
     return SchemaBuilder.string()
@@ -38,6 +52,30 @@ public class StorageSchemaCompatibilityTest {
     return SchemaBuilder.int32()
                         .version(version)
                         .name(name);
+  }
+
+  private static SchemaBuilder buildAvroEnumSchema(String name, int version, String... values) {
+    // Enum schema is unwrapped as strings; symbols are represented as parameters
+    SchemaBuilder enumSchema = SchemaBuilder.string()
+            .version(version)
+            .name(name);
+    enumSchema.parameter(AvroData.AVRO_TYPE_ENUM, name);
+    for (String value: values) {
+      enumSchema.parameter(AvroData.AVRO_TYPE_ENUM + "." + value, value);
+    }
+    return enumSchema;
+  }
+
+  private static SchemaBuilder buildProtobufEnumSchema(String name, int version, String... values) {
+    // Enum schema is unwrapped as strings or integers; symbols are represented as parameters
+    SchemaBuilder enumSchema = SchemaBuilder.string()
+        .version(version)
+        .name(name);
+    enumSchema.parameter(ProtobufData.PROTOBUF_TYPE_ENUM, name);
+    for (String value: values) {
+      enumSchema.parameter(ProtobufData.PROTOBUF_TYPE_ENUM + "."  + value, value);
+    }
+    return enumSchema;
   }
 
   private static final Schema SCHEMA_A =
@@ -97,7 +135,161 @@ public class StorageSchemaCompatibilityTest {
       buildStructSchema("b", 2).field("extra", Schema.STRING_SCHEMA).build();
   private static final Schema SCHEMA_B_EXTRA_OPTIONAL_FIELD =
       buildStructSchema("b", 2).field("extra", Schema.OPTIONAL_STRING_SCHEMA).build();
+  private static final Schema ENUM_SCHEMA_A =
+      buildAvroEnumSchema("e1", 1, "RED", "GREEN", "BLUE").build();
+  private static final Schema ENUM_SCHEMA_B =
+      buildAvroEnumSchema("e1", 1, "RED", "GREEN").build();
+  private static final Schema ENUM_SCHEMA_C =
+      buildProtobufEnumSchema("e1", 1, "RED", "GREEN", "BLUE").build();
+  private static final Schema ENUM_SCHEMA_D =
+      buildProtobufEnumSchema("e1", 1, "RED", "GREEN").build();
 
+  @Test
+  public void testShouldChangeSchemaWithEnumAdditionAndBackwardCompatibility() {
+    String value = "BLUE";
+
+    // Avro schema test
+    SinkRecord sinkRecordAvro = new SinkRecord(
+            "test-topic",
+            0,
+            null,
+            null,
+            ENUM_SCHEMA_A,
+            value,
+            0
+    );
+
+    SchemaCompatibilityResult result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecordAvro, null, ENUM_SCHEMA_B);
+    assertTrue(result.isInCompatible());
+    assertEquals(SchemaIncompatibilityType.DIFFERENT_PARAMS, result.getSchemaIncompatibilityType());
+
+    // Protobuf schema test
+    SinkRecord sinkRecordProtobuf = new SinkRecord(
+        "test-topic",
+        0,
+        null,
+        null,
+        ENUM_SCHEMA_C,
+        value,
+        0
+    );
+
+    result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecordProtobuf, null, ENUM_SCHEMA_D);
+    assertTrue(result.isInCompatible());
+    assertEquals(SchemaIncompatibilityType.DIFFERENT_PARAMS, result.getSchemaIncompatibilityType());
+  }
+
+  @Test
+  public void testShouldChangeSchemaWithEnumDeletionAndBackwardCompatibility() {
+    String value = "RED";
+
+    // Avro schema test
+    SinkRecord sinkRecordAvro = new SinkRecord(
+            "test-topic",
+            0,
+            null,
+            null,
+            ENUM_SCHEMA_B,
+            value,
+            0
+    );
+
+    SchemaCompatibilityResult result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecordAvro, null, ENUM_SCHEMA_A);
+    assertFalse(result.isInCompatible());
+
+    // Protobuf schema test
+    SinkRecord sinkRecordProtobuf = new SinkRecord(
+        "test-topic",
+        0,
+        null,
+        null,
+        ENUM_SCHEMA_D,
+        value,
+        0
+    );
+
+    result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecordProtobuf, null, ENUM_SCHEMA_C);
+    assertFalse(result.isInCompatible());
+  }
+
+  @Test
+  public void testShouldChangeSchemaWithEnumAdditionAndForwardCompatibility() {
+    String value = "BLUE";
+
+    // Avro schema test
+    SinkRecord sinkRecordAvro = new SinkRecord(
+        "test-topic",
+        0,
+        null,
+        null,
+        ENUM_SCHEMA_A,
+        value,
+        0
+    );
+
+    SchemaCompatibilityResult result = StorageSchemaCompatibility.FORWARD.shouldChangeSchema(sinkRecordAvro, null, ENUM_SCHEMA_B);
+    assertTrue(result.isInCompatible());
+    assertEquals(SchemaIncompatibilityType.DIFFERENT_PARAMS, result.getSchemaIncompatibilityType());
+
+    // Protobuf schema test
+    SinkRecord sinkRecordProtobuf = new SinkRecord(
+        "test-topic",
+        0,
+        null,
+        null,
+        ENUM_SCHEMA_C,
+        value,
+        0
+    );
+
+    result = StorageSchemaCompatibility.FORWARD.shouldChangeSchema(sinkRecordProtobuf, null, ENUM_SCHEMA_D);
+    assertTrue(result.isInCompatible());
+    assertEquals(SchemaIncompatibilityType.DIFFERENT_PARAMS, result.getSchemaIncompatibilityType());
+  }
+
+  @Test
+  public void testShouldChangeSchemaWithEnumDeletionAndForwardCompatibility() {
+    String value = "RED";
+
+    // Avro schema test
+    SinkRecord sinkRecordAvro = new SinkRecord(
+        "test-topic",
+        0,
+        null,
+        null,
+        ENUM_SCHEMA_B,
+        value,
+        0
+    );
+
+    SchemaCompatibilityResult result = StorageSchemaCompatibility.FORWARD.shouldChangeSchema(sinkRecordAvro, null, ENUM_SCHEMA_A);
+    assertFalse(result.isInCompatible());
+
+    // Protobuf schema test
+    SinkRecord sinkRecordProtobuf = new SinkRecord(
+        "test-topic",
+        0,
+        null,
+        null,
+        ENUM_SCHEMA_D,
+        value,
+        0
+    );
+
+    result = StorageSchemaCompatibility.FORWARD.shouldChangeSchema(sinkRecordProtobuf, null, ENUM_SCHEMA_C);
+    assertFalse(result.isInCompatible());
+  }
+
+  @Test
+  public void testProjectSchemaAfterAddingEnumSymbol() {
+    String value = "GREEN";
+
+    // Avro schema test
+    assertThrows(SchemaProjectorException.class, () -> SchemaProjector.project(ENUM_SCHEMA_A, value, ENUM_SCHEMA_B));
+
+    // Protobuf schema test
+    assertThrows(SchemaProjectorException.class, () -> SchemaProjector.project(ENUM_SCHEMA_C, value, ENUM_SCHEMA_D));
+  }
 
   @Test
   public void noneCompatibilityShouldConsiderSameVersionsAsUnchanged() {
@@ -107,27 +299,27 @@ public class StorageSchemaCompatibilityTest {
 
   @Test
   public void noneCompatibilityShouldConsiderDifferentVersionsAsChanged() {
-    assertChanged(none, SCHEMA_A, SCHEMA_A_NEWER_VERSION);
-    assertChanged(none, SCHEMA_A, SCHEMA_A_OLDER_VERSION);
-    assertChanged(none, SCHEMA_B, SCHEMA_B_OLDER_VERSION);
-    assertChanged(none, SCHEMA_B, SCHEMA_B_PARAMETERED);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_NEWER_VERSION, diffSchema);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_OLDER_VERSION, diffSchema);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_OLDER_VERSION, diffSchema);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_PARAMETERED, diffSchema);
   }
 
   @Test
   public void noneCompatibilityShouldConsiderAnyDifferencesAsChanged() {
-    assertChanged(none, SCHEMA_A, SCHEMA_A_RENAMED);
-    assertChanged(none, SCHEMA_A, SCHEMA_A_RETYPED);
-    assertChanged(none, SCHEMA_A, SCHEMA_A_PARAMETERED);
-    assertChanged(none, SCHEMA_A, SCHEMA_A_WITH_DOC);
-    assertChanged(none, SCHEMA_A, SCHEMA_A_OPTIONAL);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_RENAMED, diffSchema);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_RETYPED, diffSchema);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_PARAMETERED, diffSchema);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_WITH_DOC, diffSchema);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_OPTIONAL, diffSchema);
 
-    assertChanged(none, SCHEMA_B, SCHEMA_B_RENAMED);
-    assertChanged(none, SCHEMA_B, SCHEMA_B_RETYPED);
-    assertChanged(none, SCHEMA_B, SCHEMA_B_PARAMETERED);
-    assertChanged(none, SCHEMA_B, SCHEMA_B_WITH_DOC);
-    assertChanged(none, SCHEMA_B, SCHEMA_B_OPTIONAL);
-    assertChanged(none, SCHEMA_B, SCHEMA_B_EXTRA_REQUIRED_FIELD);
-    assertChanged(none, SCHEMA_B, SCHEMA_B_EXTRA_OPTIONAL_FIELD);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_RENAMED, diffSchema);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_RETYPED, diffSchema);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_PARAMETERED, diffSchema);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_WITH_DOC, diffSchema);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_OPTIONAL, diffSchema);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_EXTRA_REQUIRED_FIELD, diffSchema);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_EXTRA_OPTIONAL_FIELD, diffSchema);
 
     assertUnchanged(none, SCHEMA_A, SCHEMA_A);
     assertUnchanged(none, SCHEMA_A, SCHEMA_A_COPY);
@@ -137,8 +329,8 @@ public class StorageSchemaCompatibilityTest {
 
   @Test
   public void backwardCompatibilityShouldConsiderOlderSchemaVersionsAsChanged() {
-    assertChanged(backward, SCHEMA_A, SCHEMA_A_OLDER_VERSION);
-    assertChanged(backward, SCHEMA_B, SCHEMA_B_OLDER_VERSION);
+    assertChanged(backward, SCHEMA_A, SCHEMA_A_OLDER_VERSION, diffVersion);
+    assertChanged(backward, SCHEMA_B, SCHEMA_B_OLDER_VERSION, diffVersion);
   }
 
   @Test
@@ -151,8 +343,8 @@ public class StorageSchemaCompatibilityTest {
 
   @Test
   public void forwardCompatibilityShouldConsiderNewerSchemaVersionsAsChanged() {
-    assertChanged(forward, SCHEMA_A, SCHEMA_A_NEWER_VERSION);
-    assertChanged(forward, SCHEMA_B, SCHEMA_B_NEWER_VERSION);
+    assertChanged(forward, SCHEMA_A, SCHEMA_A_NEWER_VERSION, diffVersion);
+    assertChanged(forward, SCHEMA_B, SCHEMA_B_NEWER_VERSION, diffVersion);
   }
 
   @Test
@@ -165,8 +357,8 @@ public class StorageSchemaCompatibilityTest {
 
   @Test
   public void fullCompatibilityShouldConsiderOlderSchemaVersionsAsChanged() {
-    assertChanged(full, SCHEMA_A, SCHEMA_A_OLDER_VERSION);
-    assertChanged(full, SCHEMA_B, SCHEMA_B_OLDER_VERSION);
+    assertChanged(full, SCHEMA_A, SCHEMA_A_OLDER_VERSION, diffVersion);
+    assertChanged(full, SCHEMA_B, SCHEMA_B_OLDER_VERSION, diffVersion);
   }
 
   @Test
@@ -202,41 +394,41 @@ public class StorageSchemaCompatibilityTest {
 
   @Test
   public void allCompatibilitiesShouldConsiderDifferentSchemaNamesAsChanged() {
-    assertChanged(none, SCHEMA_A, SCHEMA_A_RENAMED);
-    assertChanged(backward, SCHEMA_A, SCHEMA_A_RENAMED);
-    assertChanged(forward, SCHEMA_A, SCHEMA_A_RENAMED);
-    assertChanged(full, SCHEMA_A, SCHEMA_A_RENAMED);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_RENAMED, diffSchema);
+    assertChanged(backward, SCHEMA_A, SCHEMA_A_RENAMED, diffName);
+    assertChanged(forward, SCHEMA_A, SCHEMA_A_RENAMED, diffName);
+    assertChanged(full, SCHEMA_A, SCHEMA_A_RENAMED, diffName);
 
-    assertChanged(none, SCHEMA_B, SCHEMA_B_RENAMED);
-    assertChanged(backward, SCHEMA_B, SCHEMA_B_RENAMED);
-    assertChanged(forward, SCHEMA_B, SCHEMA_B_RENAMED);
-    assertChanged(full, SCHEMA_B, SCHEMA_B_RENAMED);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_RENAMED, diffSchema);
+    assertChanged(backward, SCHEMA_B, SCHEMA_B_RENAMED, diffName);
+    assertChanged(forward, SCHEMA_B, SCHEMA_B_RENAMED, diffName);
+    assertChanged(full, SCHEMA_B, SCHEMA_B_RENAMED, diffName);
   }
 
   @Test
   public void allCompatibilitiesShouldConsiderDifferentSchemaTypesAsChanged() {
-    assertChanged(none, SCHEMA_A, SCHEMA_A_RETYPED);
-    assertChanged(backward, SCHEMA_A, SCHEMA_A_RETYPED);
-    assertChanged(forward, SCHEMA_A, SCHEMA_A_RETYPED);
-    assertChanged(full, SCHEMA_A, SCHEMA_A_RETYPED);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_RETYPED, diffSchema);
+    assertChanged(backward, SCHEMA_A, SCHEMA_A_RETYPED, diffType);
+    assertChanged(forward, SCHEMA_A, SCHEMA_A_RETYPED, diffType);
+    assertChanged(full, SCHEMA_A, SCHEMA_A_RETYPED, diffType);
 
-    assertChanged(none, SCHEMA_B, SCHEMA_B_RETYPED);
-    assertChanged(backward, SCHEMA_B, SCHEMA_B_RETYPED);
-    assertChanged(forward, SCHEMA_B, SCHEMA_B_RETYPED);
-    assertChanged(full, SCHEMA_B, SCHEMA_B_RETYPED);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_RETYPED, diffSchema);
+    assertChanged(backward, SCHEMA_B, SCHEMA_B_RETYPED, diffType);
+    assertChanged(forward, SCHEMA_B, SCHEMA_B_RETYPED, diffType);
+    assertChanged(full, SCHEMA_B, SCHEMA_B_RETYPED, diffType);
   }
 
   @Test
   public void allCompatibilitiesShouldConsiderDifferentSchemaParametersAsChanged() {
-    assertChanged(none, SCHEMA_A, SCHEMA_A_PARAMETERED);
-    assertChanged(backward, SCHEMA_A, SCHEMA_A_PARAMETERED);
-    assertChanged(forward, SCHEMA_A, SCHEMA_A_PARAMETERED);
-    assertChanged(full, SCHEMA_A, SCHEMA_A_PARAMETERED);
+    assertChanged(none, SCHEMA_A, SCHEMA_A_PARAMETERED, diffSchema);
+    assertChanged(backward, SCHEMA_A, SCHEMA_A_PARAMETERED, diffParams);
+    assertChanged(forward, SCHEMA_A, SCHEMA_A_PARAMETERED, diffParams);
+    assertChanged(full, SCHEMA_A, SCHEMA_A_PARAMETERED, diffParams);
 
-    assertChanged(none, SCHEMA_B, SCHEMA_B_PARAMETERED);
-    assertChanged(backward, SCHEMA_B, SCHEMA_B_PARAMETERED);
-    assertChanged(forward, SCHEMA_B, SCHEMA_B_PARAMETERED);
-    assertChanged(full, SCHEMA_B, SCHEMA_B_PARAMETERED);
+    assertChanged(none, SCHEMA_B, SCHEMA_B_PARAMETERED, diffSchema);
+    assertChanged(backward, SCHEMA_B, SCHEMA_B_PARAMETERED, diffParams);
+    assertChanged(forward, SCHEMA_B, SCHEMA_B_PARAMETERED, diffParams);
+    assertChanged(full, SCHEMA_B, SCHEMA_B_PARAMETERED, diffParams);
   }
 
   @Test
@@ -321,21 +513,31 @@ public class StorageSchemaCompatibilityTest {
       Schema currentSchema,
       boolean isProjectable
   ) {
+    final SchemaCompatibilityResult schemaCompatibilityResult =
+        compatibility.validateAndCheck(recordSchema, currentSchema);
     assertFalse(
         "Expected " + currentSchema + " to not be change in order to project " + recordSchema,
-        compatibility.validateAndCheck(recordSchema, currentSchema)
+        schemaCompatibilityResult.isInCompatible()
     );
+    assertEquals(na, schemaCompatibilityResult.getSchemaIncompatibilityType());
     assertProjectable(compatibility, recordSchema, currentSchema, isProjectable);
   }
 
   protected void assertChanged(
       StorageSchemaCompatibility compatibility,
       Schema recordSchema,
-      Schema currentSchema
+      Schema currentSchema,
+      SchemaIncompatibilityType schemaIncompatibilityType
   ) {
+    final SchemaCompatibilityResult schemaCompatibilityResult =
+        compatibility.validateAndCheck(recordSchema, currentSchema);
     assertTrue(
         "Expected " + currentSchema + " to change in order to project " + recordSchema,
-        compatibility.validateAndCheck(recordSchema, currentSchema)
+        schemaCompatibilityResult.isInCompatible()
+    );
+    assertEquals(
+        schemaIncompatibilityType,
+        schemaCompatibilityResult.getSchemaIncompatibilityType()
     );
     // we don't care whether the schema are able to be projected
   }

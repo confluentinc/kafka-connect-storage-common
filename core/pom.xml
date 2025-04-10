@@ -20,7 +20,7 @@
     <parent>
         <groupId>io.confluent</groupId>
         <artifactId>kafka-connect-storage-common-parent</artifactId>
-        <version>11.1.15-SNAPSHOT</version>
+        <version>11.2.23-SNAPSHOT</version>
     </parent>
 
     <artifactId>kafka-connect-storage-core</artifactId>
@@ -35,6 +35,10 @@
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-avro-data</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-connect-protobuf-converter</artifactId>
         </dependency>
         <dependency>
             <groupId>joda-time</groupId>
