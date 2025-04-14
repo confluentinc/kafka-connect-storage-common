@@ -31,7 +31,6 @@
         <jackson.groupId>com.fasterxml.jackson.core</jackson.groupId>
         <jackson.package>com.fasterxml.jackson</jackson.package>
         <shade.prefix>shaded.parquet</shade.prefix>
-        <parquet.version>1.15.1</parquet.version>
     </properties>
 
     <dependencies>
