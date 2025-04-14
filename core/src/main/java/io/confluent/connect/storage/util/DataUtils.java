@@ -41,14 +41,13 @@ public class DataUtils {
       return field;
     } else {
       throw new DataException(String.format(
-            "Argument not a Struct or Map. Cannot get field '%s' from %s.",
-            fieldName,
-            structOrMap
+            "Argument not a Struct or Map. Cannot get field '%s'.",
+            fieldName
       ));
     }
     if (field == null) {
       throw new DataException(
-            String.format("The field '%s' does not exist in %s.", fieldName, structOrMap));
+            String.format("The field '%s' does not exist.", fieldName));
     }
     return field;
   }
@@ -65,7 +64,7 @@ public class DataUtils {
       return innermost;
     } catch (DataException e) {
       throw new DataException(
-            String.format("The field '%s' does not exist in %s.", fieldName, structOrMap),
+            String.format("The field '%s' does not exist.", fieldName),
             e
       );
     }
