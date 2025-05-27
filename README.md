@@ -1,4 +1,5 @@
 # Kafka Connect Common Modules for Storage Connectors
+
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fconfluentinc%2Fkafka-connect-storage-common.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fconfluentinc%2Fkafka-connect-storage-common?ref=badge_shield)
 
 Shared software modules among [Kafka Connectors](http://kafka.apache.org/documentation.html#connect) that target distributed filesystems and cloud storage.
