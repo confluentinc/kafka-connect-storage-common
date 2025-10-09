@@ -234,7 +234,7 @@ public class FieldPartitionerTest extends StorageSinkTestBase {
     
     Map<String, Object> m = new LinkedHashMap<>();
     m.put(fieldName, null);
-    assertThat(path, is(generateEncodedPartitionFromMap(m)));
+    assertThat(path, is("string=null"));
   }
 
   @Test
@@ -266,7 +266,6 @@ public class FieldPartitionerTest extends StorageSinkTestBase {
     Map<String, Object> config = new HashMap<>();
     config.put(StorageCommonConfig.DIRECTORY_DELIM_CONFIG, "|");
     config.put(PartitionerConfig.PARTITION_FIELD_NAME_CONFIG, Arrays.asList("string", "int"));
-    config.put(PartitionerConfig.PARTITIONER_CLASS_CONFIG, PartitionerConfig.PARTITIONER_CLASS_DEFAULT);
 
     FieldPartitioner<String> partitioner = new FieldPartitioner<>();
     partitioner.configure(config);
