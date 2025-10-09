@@ -61,31 +61,33 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
           continue;
         }
 
-        Type type = valueSchema.field(fieldName).schema().type();
-        switch (type) {
-          case INT8:
-          case INT16:
-          case INT32:
-          case INT64:
-            Number record = (Number) partitionKey;
-            builder.append(fieldName + "=" + record.toString());
-            break;
-          case STRING:
-            builder.append(fieldName + "=" + (String) partitionKey);
-            break;
-          case BOOLEAN:
-            boolean booleanRecord = (boolean) partitionKey;
-            builder.append(fieldName + "=" + Boolean.toString(booleanRecord));
-            break;
-          default:
-            log.error("Type {} is not supported as a partition key.", type.getName());
-            throw new PartitionException("Error encoding partition.");
-        }
+        String encodedValue = encodePartitionValue(fieldName, partitionKey, valueSchema);
+        builder.append(encodedValue);
       }
       return builder.toString();
     } else {
       log.error("Value is not Struct type.");
       throw new PartitionException("Error encoding partition.");
+    }
+  }
+
+  private String encodePartitionValue(String fieldName, Object partitionKey, Schema valueSchema) {
+    Type type = valueSchema.field(fieldName).schema().type();
+    switch (type) {
+      case INT8:
+      case INT16:
+      case INT32:
+      case INT64:
+        Number record = (Number) partitionKey;
+        return fieldName + "=" + record.toString();
+      case STRING:
+        return fieldName + "=" + (String) partitionKey;
+      case BOOLEAN:
+        boolean booleanRecord = (boolean) partitionKey;
+        return fieldName + "=" + Boolean.toString(booleanRecord);
+      default:
+        log.error("Type {} is not supported as a partition key.", type.getName());
+        throw new PartitionException("Error encoding partition.");
     }
   }
 
