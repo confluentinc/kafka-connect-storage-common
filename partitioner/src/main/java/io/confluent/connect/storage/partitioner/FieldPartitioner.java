@@ -55,6 +55,12 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
         }
 
         Object partitionKey = struct.get(fieldName);
+
+        if (partitionKey == null) {
+          builder.append(fieldName + "=null");
+          continue;
+        }
+
         Type type = valueSchema.field(fieldName).schema().type();
         switch (type) {
           case INT8:
