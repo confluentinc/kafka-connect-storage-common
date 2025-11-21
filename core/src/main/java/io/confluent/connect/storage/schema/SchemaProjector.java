@@ -134,17 +134,48 @@ public class SchemaProjector {
       throw new SchemaProjectorException("Schema name mismatch. source name: " + source.name()
           + " and target name: " + target.name());
     } else if (source.parameters() != null && target.parameters() != null) {
+      // Create copies and filter out metadata parameters that don't affect compatibility
+      Map<String, String> sourceParameters = filterMetadataParameters(source.parameters());
+      Map<String, String> targetParameters = filterMetadataParameters(target.parameters());
+      
       if (isEnumSchema(source) && isEnumSchema(target)) {
-        if (!target.parameters().entrySet().containsAll(source.parameters().entrySet())) {
+        if (!targetParameters.entrySet().containsAll(sourceParameters.entrySet())) {
           throw new SchemaProjectorException("Schema parameters mismatch. Source parameter: "
               + source.parameters()
               + " is not a subset of target parameters: " + target.parameters());
         }
-      } else if (!Objects.equals(source.parameters(), target.parameters())) {
+      } else if (!Objects.equals(sourceParameters, targetParameters)) {
         throw new SchemaProjectorException("Schema parameters not equal. source parameters: "
             + source.parameters() + " and target parameters: " + target.parameters());
       }
     }
+  }
+
+  /**
+   * Filters out metadata/documentation parameters that don't affect schema compatibility.
+   * These parameters are used for documentation purposes and should not cause schema projection to fail.
+   * 
+   * @param parameters the original parameters map (may be null)
+   * @return a new map with metadata parameters filtered out, or empty map if input was null or empty
+   */
+  private static Map<String, String> filterMetadataParameters(Map<String, String> parameters) {
+    if (parameters == null || parameters.isEmpty()) {
+      return new HashMap<>();
+    }
+    
+    Map<String, String> filtered = new HashMap<>(parameters);
+    
+    // Remove Connect metadata parameters that don't affect compatibility
+    filtered.remove("connect.record.doc");
+    filtered.remove("connect.record.aliases");
+    filtered.remove("connect.record.namespace");
+    
+    // Remove all Confluent Avro field documentation parameters (io.confluent.connect.avro.field.doc.*)
+    // These are created when Avro field-level "doc" fields are present and don't affect schema compatibility
+    filtered.entrySet().removeIf(entry -> entry.getKey()
+            .startsWith("io.confluent.connect.avro.field.doc."));
+    
+    return filtered;
   }
 
   static boolean isEnumSchema(Schema schema) {
