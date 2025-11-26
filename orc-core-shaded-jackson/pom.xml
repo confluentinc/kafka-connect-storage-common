@@ -24,17 +24,6 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>${maven-shade-plugin.version}</version>
                 <executions>
@@ -44,6 +33,13 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <!-- attach shaded artifact instead of replacing main artifact -->
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>shaded-jackson</shadedClassifierName>
+
+                            <!-- optional: avoid generating dependency-reduced-pom if undesired -->
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+
                             <!-- Include ORC Core and all Jackson dependencies -->
                             <artifactSet>
                                 <includes>
