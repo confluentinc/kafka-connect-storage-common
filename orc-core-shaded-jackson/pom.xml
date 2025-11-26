@@ -16,14 +16,22 @@
 
     <properties>
         <orc-core.version>2.2.1</orc-core.version>
-        <jackson.version>2.15.4</jackson.version>
+        <jackson.version>2.16.0</jackson.version>
         <maven-shade-plugin.version>3.5.0</maven-shade-plugin.version>
     </properties>
 
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
