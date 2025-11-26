@@ -24,14 +24,6 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.0</version>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>${maven-shade-plugin.version}</version>
                 <executions>
@@ -41,13 +33,6 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <!-- attach shaded artifact instead of replacing main artifact -->
-                            <shadedArtifactAttached>true</shadedArtifactAttached>
-                            <shadedClassifierName>shaded-jackson</shadedClassifierName>
-
-                            <!-- optional: avoid generating dependency-reduced-pom if undesired -->
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
-
                             <!-- Include ORC Core and all Jackson dependencies -->
                             <artifactSet>
                                 <includes>
@@ -92,6 +77,7 @@
             <groupId>org.apache.orc</groupId>
             <artifactId>orc-core</artifactId>
             <version>${orc-core.version}</version>
+            <classifier>nohive</classifier>
         </dependency>
 
         <!-- Desired Jackson version to use and to be shaded into a new namespace -->
