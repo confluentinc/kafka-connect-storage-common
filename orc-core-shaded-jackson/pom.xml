@@ -10,9 +10,9 @@
         <version>11.0.38-SNAPSHOT</version>
     </parent>
 
-    <artifactId>kafka-connect-storage-common-orc-core</artifactId>
+    <artifactId>kafka-connect-storage-common-orc-core-shaded-jackson</artifactId>
     <packaging>jar</packaging>
-    <name>kafka-connect-storage-common-orc-core</name>
+    <name>kafka-connect-storage-common-orc-core-shaded-jackson</name>
 
     <properties>
         <orc-core.version>2.2.1</orc-core.version>
@@ -21,6 +21,20 @@
     </properties>
 
     <build>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/..</directory>
+                <targetPath>META-INF</targetPath>
+                <includes>
+                    <include>licenses-binary/*</include>
+                    <include>NOTICE.txt</include>
+                    <include>NOTICE-binary</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>${project.basedir}/src/main/resources</directory>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -61,7 +75,7 @@
                             <relocations>
                                 <relocation>
                                     <pattern>com/fasterxml/jackson</pattern>
-                                    <shadedPattern>io/confluent/shaded/com/fasterxml/jackson</shadedPattern>
+                                    <shadedPattern>io/confluent/shaded/com/fasterxml/jackson/</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
