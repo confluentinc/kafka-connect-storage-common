@@ -67,8 +67,8 @@
                             <!-- Relocate Jackson packages into a shaded namespace -->
                             <relocations>
                                 <relocation>
-                                    <pattern>com.fasterxml.jackson</pattern>
-                                    <shadedPattern>io.confluent.shaded.com.fasterxml.jackson</shadedPattern>
+                                    <pattern>com/fasterxml/jackson</pattern>
+                                    <shadedPattern>io/confluent/shaded/com/fasterxml/jackson</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
