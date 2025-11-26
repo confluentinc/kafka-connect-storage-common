@@ -10,9 +10,9 @@
         <version>11.0.38-SNAPSHOT</version>
     </parent>
 
-    <artifactId>kafka-connect-storage-common-orc-core-shaded-jackson</artifactId>
+    <artifactId>kafka-connect-storage-common-orc-core</artifactId>
     <packaging>jar</packaging>
-    <name>orc-core shaded to replace jackson dependencies without CVEs</name>
+    <name>kafka-connect-storage-common-orc-core</name>
 
     <properties>
         <orc-core.version>2.2.1</orc-core.version>
