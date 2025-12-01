@@ -91,7 +91,6 @@
             <groupId>org.apache.orc</groupId>
             <artifactId>orc-core</artifactId>
             <version>${orc-core.version}</version>
-            <classifier>nohive</classifier>
         </dependency>
 
         <!-- Desired Jackson version to use and to be shaded into a new namespace -->
