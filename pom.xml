@@ -64,6 +64,7 @@
         <module>hadoop-shaded-guava</module>
         <module>hadoop-shaded-protobuf</module>
         <module>package-kafka-connect-storage-common</module>
+        <module>orc-core-shaded-jackson</module>
     </modules>
 
     <properties>
