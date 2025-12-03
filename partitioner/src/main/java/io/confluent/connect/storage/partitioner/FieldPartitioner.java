@@ -16,9 +16,11 @@
 package io.confluent.connect.storage.partitioner;
 
 import org.apache.kafka.common.utils.Utils;
+import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Schema.Type;
 import org.apache.kafka.connect.data.Struct;
+import org.apache.kafka.connect.errors.DataException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +30,7 @@ import java.util.Map;
 
 import io.confluent.connect.storage.common.StorageCommonConfig;
 import io.confluent.connect.storage.errors.PartitionException;
+import io.confluent.connect.storage.util.DataUtils;
 
 public class FieldPartitioner<T> extends DefaultPartitioner<T> {
   private static final Logger log = LoggerFactory.getLogger(FieldPartitioner.class);
@@ -54,7 +57,14 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
           builder.append(this.delim);
         }
 
-        Object partitionKey = struct.get(fieldName);
+        Object partitionKey;
+        try {
+          partitionKey = DataUtils.getNestedFieldValue(struct, fieldName);
+        } catch (DataException e) {
+          log.error("Failed to retrieve partition key for field '{}'. "
+              + "Setting partition key to null.", fieldName, e);
+          partitionKey = null;
+        }
 
         if (partitionKey == null) {
           builder.append(fieldName + "=null");
@@ -72,7 +82,12 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
   }
 
   private String encodePartitionValue(String fieldName, Object partitionKey, Schema valueSchema) {
-    Type type = valueSchema.field(fieldName).schema().type();
+    Field nestedField = DataUtils.getNestedField(valueSchema, fieldName);
+    if (nestedField == null || nestedField.schema() == null) {
+      log.error("Nested field schema is null for field '{}'.", fieldName);
+      throw new PartitionException("Nested field schema is null.");
+    }
+    Type type = nestedField.schema().type();
     switch (type) {
       case INT8:
       case INT16:
