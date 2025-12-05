@@ -103,6 +103,12 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final String TIMESTAMP_FIELD_NAME_DEFAULT = "timestamp";
   public static final String TIMESTAMP_FIELD_NAME_DISPLAY = "Record Field for Timestamp Extractor";
 
+  public static final String TIMESTAMP_FIELD_FORMAT_PATTERN_CONFIG = "timestamp.field.format";
+  public static final String TIMESTAMP_FIELD_FORMAT_PATTERN_DOC = "The datetime format pattern of record "
+          + "field used as timestamp by RecordTimestampExtractor. If empty (which is default) "
+          + "ISODateTimeFormat.dateTimeParser() is used";
+  public static final String TIMESTAMP_FIELD_FORMAT_PATTERN_DEFAULT = "";
+  public static final String TIMESTAMP_FIELD_FORMAT_PATTERN_DISPLAY = "Datetime format pattern for RecordTimestampExtractor";
   /**
    * Create a new configuration definition.
    *
@@ -211,6 +217,16 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           ++orderInGroup,
           Width.LONG,
           TIMESTAMP_FIELD_NAME_DISPLAY);
+
+      configDef.define(TIMESTAMP_FIELD_FORMAT_PATTERN_CONFIG,
+              Type.STRING,
+              TIMESTAMP_FIELD_FORMAT_PATTERN_DEFAULT,
+              Importance.MEDIUM,
+              TIMESTAMP_FIELD_FORMAT_PATTERN_DOC,
+              group,
+              ++orderInGroup,
+              Width.LONG,
+              TIMESTAMP_FIELD_FORMAT_PATTERN_DISPLAY);
     }
 
     return configDef;
