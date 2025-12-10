@@ -57,6 +57,11 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
           builder.append(this.delim);
         }
 
+        Field field = DataUtils.getNestedField(valueSchema, fieldName);
+        if (field == null) {
+          throw new DataException("Field '" + fieldName + "' is not present in the schema.");
+        }
+
         Object partitionKey;
         try {
           partitionKey = DataUtils.getNestedFieldValue(struct, fieldName);
@@ -71,7 +76,7 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
           continue;
         }
 
-        String encodedValue = encodePartitionValue(fieldName, partitionKey, valueSchema);
+        String encodedValue = encodePartitionValue(fieldName, partitionKey, field);
         builder.append(encodedValue);
       }
       return builder.toString();
@@ -81,13 +86,11 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
     }
   }
 
-  private String encodePartitionValue(String fieldName, Object partitionKey, Schema valueSchema) {
-    Field nestedField = DataUtils.getNestedField(valueSchema, fieldName);
-    if (nestedField == null || nestedField.schema() == null) {
-      log.error("Nested field schema is null for field '{}'.", fieldName);
-      throw new PartitionException("Nested field schema is null.");
+  private String encodePartitionValue(String fieldName, Object partitionKey, Field field) {
+    if (field.schema() == null) {
+      throw new DataException("Partition field '" + fieldName + "' has no schema.");
     }
-    Type type = nestedField.schema().type();
+    Type type = field.schema().type();
     switch (type) {
       case INT8:
       case INT16:
