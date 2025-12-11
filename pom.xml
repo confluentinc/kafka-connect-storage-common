@@ -64,6 +64,8 @@
         <module>hadoop-shaded-guava</module>
         <module>hadoop-shaded-protobuf</module>
         <module>package-kafka-connect-storage-common</module>
+        <module>hive-exec-shaded</module>
+        <module>hive-exec-slim</module>
     </modules>
 
     <properties>
