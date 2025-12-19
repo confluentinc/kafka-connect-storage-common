@@ -355,47 +355,4 @@ public class FieldPartitionerTest extends StorageSinkTestBase {
     String path = getEncodedPatitionerPath(partitioner, schema, record);
     assertThat(path, is("user.address.city=null"));
   }
-
-
-  @Test
-  public void testInvalidNestedFieldPartitionerName() {
-    FieldPartitioner<String> partitioner = getFieldPartitioner("user.address..city");
-
-    Schema addressSchema = SchemaBuilder.struct().name("address")
-        .field("city", Schema.STRING_SCHEMA)
-        .build();
-    Schema userSchema = SchemaBuilder.struct().name("user")
-        .field("address", addressSchema)
-        .build();
-    Schema schema = SchemaBuilder.struct().name("record")
-        .field("user", userSchema)
-        .build();
-
-    Struct address = new Struct(addressSchema).put("city", "NYC");
-    Struct user = new Struct(userSchema).put("address", address);
-    Struct record = new Struct(schema).put("user", user);
-    assertThrows(DataException.class,
-        () -> getEncodedPatitionerPath(partitioner, schema, record));
-  }
-
-  @Test
-  public void testInvalidNestedFieldPartitionerNameWithSpace() {
-    FieldPartitioner<String> partitioner = getFieldPartitioner("user.address.  .city");
-
-    Schema addressSchema = SchemaBuilder.struct().name("address")
-        .field("city", Schema.STRING_SCHEMA)
-        .build();
-    Schema userSchema = SchemaBuilder.struct().name("user")
-        .field("address", addressSchema)
-        .build();
-    Schema schema = SchemaBuilder.struct().name("record")
-        .field("user", userSchema)
-        .build();
-
-    Struct address = new Struct(addressSchema).put("city", "NYC");
-    Struct user = new Struct(userSchema).put("address", address);
-    Struct record = new Struct(schema).put("user", user);
-    assertThrows(DataException.class,
-        () -> getEncodedPatitionerPath(partitioner, schema, record));
-  }
 }

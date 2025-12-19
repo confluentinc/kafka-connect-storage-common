@@ -59,9 +59,7 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
 
         Field field = DataUtils.getNestedField(valueSchema, fieldName);
         if (field == null) {
-          throw new DataException(
-              String.format("Unable to get field '%s' from schema %s.", fieldName, valueSchema)
-          );
+          throw new DataException("Field '" + fieldName + "' is not present in the schema.");
         }
 
         Object partitionKey;

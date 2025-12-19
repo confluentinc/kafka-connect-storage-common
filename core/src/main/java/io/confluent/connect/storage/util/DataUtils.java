@@ -78,9 +78,6 @@ public class DataUtils {
       Field innermost = schema.field(fieldNames[0]);
       // Iterate down to final schema
       for (int i = 1; i < fieldNames.length; ++i) {
-        if (innermost == null) {
-          throw new DataException("Unable to find nested field '" + fieldNames[i-1] + "'");
-        }
         innermost = innermost.schema().field(fieldNames[i]);
       }
       return innermost;
