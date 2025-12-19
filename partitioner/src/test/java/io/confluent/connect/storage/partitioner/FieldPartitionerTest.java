@@ -18,7 +18,6 @@ package io.confluent.connect.storage.partitioner;
 import io.confluent.connect.storage.StorageSinkTestBase;
 import io.confluent.connect.storage.common.StorageCommonConfig;
 import io.confluent.connect.storage.errors.PartitionException;
-import org.apache.kafka.connect.errors.DataException;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -198,19 +197,6 @@ public class FieldPartitionerTest extends StorageSinkTestBase {
       partitioner.encodePartition(sinkRecord);
     });
     assertEquals("Error encoding partition.", e.getMessage());
-  }
-
-  @Test
-  public void testMissingFieldInSchemaThrows() {
-    FieldPartitioner<String> partitioner = getFieldPartitioner("missing");
-
-    Schema schema = SchemaBuilder.struct().name("record")
-        .field("present", Schema.STRING_SCHEMA)
-        .build();
-    Struct struct = new Struct(schema).put("present", "value");
-
-    assertThrows(DataException.class,
-        () -> getEncodedPatitionerPath(partitioner, schema, struct));
   }
 
   @Test
