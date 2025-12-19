@@ -16,11 +16,9 @@
 package io.confluent.connect.storage.partitioner;
 
 import org.apache.kafka.common.utils.Utils;
-import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Schema.Type;
 import org.apache.kafka.connect.data.Struct;
-import org.apache.kafka.connect.errors.DataException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +28,6 @@ import java.util.Map;
 
 import io.confluent.connect.storage.common.StorageCommonConfig;
 import io.confluent.connect.storage.errors.PartitionException;
-import io.confluent.connect.storage.util.DataUtils;
 
 public class FieldPartitioner<T> extends DefaultPartitioner<T> {
   private static final Logger log = LoggerFactory.getLogger(FieldPartitioner.class);
@@ -57,26 +54,14 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
           builder.append(this.delim);
         }
 
-        Field field = DataUtils.getNestedField(valueSchema, fieldName);
-        if (field == null) {
-          throw new DataException("Field '" + fieldName + "' is not present in the schema.");
-        }
-
-        Object partitionKey;
-        try {
-          partitionKey = DataUtils.getNestedFieldValue(struct, fieldName);
-        } catch (DataException e) {
-          log.error("Failed to retrieve partition key for field '{}'. "
-              + "Setting partition key to null.", fieldName, e);
-          partitionKey = null;
-        }
+        Object partitionKey = struct.get(fieldName);
 
         if (partitionKey == null) {
           builder.append(fieldName + "=null");
           continue;
         }
 
-        String encodedValue = encodePartitionValue(fieldName, partitionKey, field);
+        String encodedValue = encodePartitionValue(fieldName, partitionKey, valueSchema);
         builder.append(encodedValue);
       }
       return builder.toString();
@@ -86,11 +71,8 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
     }
   }
 
-  private String encodePartitionValue(String fieldName, Object partitionKey, Field field) {
-    if (field.schema() == null) {
-      throw new DataException("Partition field '" + fieldName + "' has no schema.");
-    }
-    Type type = field.schema().type();
+  private String encodePartitionValue(String fieldName, Object partitionKey, Schema valueSchema) {
+    Type type = valueSchema.field(fieldName).schema().type();
     switch (type) {
       case INT8:
       case INT16:
