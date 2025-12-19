@@ -84,15 +84,13 @@
                                 </relocation>
                             </relocations>
                             <transformers>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.DontIncludeResourceTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.DontIncludeResourceTransformer">
                                     <resources>
                                         <resource>NOTICE</resource>
                                         <resource>LICENSE</resource>
                                     </resources>
                                 </transformer>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
                                     <resource>META-INF/LICENSE.txt</resource>
                                     <file>${basedir}/../LICENSE-binary</file>
                                 </transformer>
