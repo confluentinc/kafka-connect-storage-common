@@ -60,8 +60,6 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
         try {
           partitionKey = DataUtils.getNestedFieldValue(struct, fieldName);
         } catch (DataException e) {
-          log.error("Failed to retrieve partition key for field '{}'. "
-              + "Setting partition key to null.", fieldName, e);
           partitionKey = null;
         }
 
