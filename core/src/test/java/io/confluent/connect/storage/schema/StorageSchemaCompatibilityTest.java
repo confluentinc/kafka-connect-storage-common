@@ -152,9 +152,8 @@ public class StorageSchemaCompatibilityTest {
             0
     );
 
-    SchemaCompatibilityResult result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecordAvro, null, ENUM_SCHEMA_B);
-    assertTrue(result.isInCompatible());
-    assertEquals(SchemaIncompatibilityType.DIFFERENT_PARAMS, result.getSchemaIncompatibilityType());
+    boolean result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecordAvro, null, ENUM_SCHEMA_B);
+    assertTrue(result);
 
     // Protobuf schema test
     SinkRecord sinkRecordProtobuf = new SinkRecord(
@@ -168,8 +167,7 @@ public class StorageSchemaCompatibilityTest {
     );
 
     result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecordProtobuf, null, ENUM_SCHEMA_D);
-    assertTrue(result.isInCompatible());
-    assertEquals(SchemaIncompatibilityType.DIFFERENT_PARAMS, result.getSchemaIncompatibilityType());
+    assertTrue(result);
   }
 
   @Test
@@ -187,8 +185,8 @@ public class StorageSchemaCompatibilityTest {
             0
     );
 
-    SchemaCompatibilityResult result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecordAvro, null, ENUM_SCHEMA_A);
-    assertFalse(result.isInCompatible());
+    boolean result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecordAvro, null, ENUM_SCHEMA_A);
+    assertFalse(result);
 
     // Protobuf schema test
     SinkRecord sinkRecordProtobuf = new SinkRecord(
@@ -202,7 +200,7 @@ public class StorageSchemaCompatibilityTest {
     );
 
     result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecordProtobuf, null, ENUM_SCHEMA_C);
-    assertFalse(result.isInCompatible());
+    assertFalse(result);
   }
 
   @Test
@@ -220,9 +218,8 @@ public class StorageSchemaCompatibilityTest {
         0
     );
 
-    SchemaCompatibilityResult result = StorageSchemaCompatibility.FORWARD.shouldChangeSchema(sinkRecordAvro, null, ENUM_SCHEMA_B);
-    assertTrue(result.isInCompatible());
-    assertEquals(SchemaIncompatibilityType.DIFFERENT_PARAMS, result.getSchemaIncompatibilityType());
+    boolean result = StorageSchemaCompatibility.FORWARD.shouldChangeSchema(sinkRecordAvro, null, ENUM_SCHEMA_B);
+    assertTrue(result);
 
     // Protobuf schema test
     SinkRecord sinkRecordProtobuf = new SinkRecord(
@@ -236,8 +233,7 @@ public class StorageSchemaCompatibilityTest {
     );
 
     result = StorageSchemaCompatibility.FORWARD.shouldChangeSchema(sinkRecordProtobuf, null, ENUM_SCHEMA_D);
-    assertTrue(result.isInCompatible());
-    assertEquals(SchemaIncompatibilityType.DIFFERENT_PARAMS, result.getSchemaIncompatibilityType());
+    assertTrue(result);
   }
 
   @Test
@@ -255,8 +251,8 @@ public class StorageSchemaCompatibilityTest {
         0
     );
 
-    SchemaCompatibilityResult result = StorageSchemaCompatibility.FORWARD.shouldChangeSchema(sinkRecordAvro, null, ENUM_SCHEMA_A);
-    assertFalse(result.isInCompatible());
+    boolean result = StorageSchemaCompatibility.FORWARD.shouldChangeSchema(sinkRecordAvro, null, ENUM_SCHEMA_A);
+    assertFalse(result);
 
     // Protobuf schema test
     SinkRecord sinkRecordProtobuf = new SinkRecord(
@@ -270,7 +266,7 @@ public class StorageSchemaCompatibilityTest {
     );
 
     result = StorageSchemaCompatibility.FORWARD.shouldChangeSchema(sinkRecordProtobuf, null, ENUM_SCHEMA_C);
-    assertFalse(result.isInCompatible());
+    assertFalse(result);
   }
 
   @Test

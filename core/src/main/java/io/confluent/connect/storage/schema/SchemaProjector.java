@@ -149,8 +149,7 @@ public class SchemaProjector {
 
   static boolean isEnumSchema(Schema schema) {
     return schema.parameters() != null
-        && (schema.parameters().containsKey(AvroData.GENERALIZED_TYPE_ENUM)
-        || schema.parameters().containsKey(AvroData.AVRO_TYPE_ENUM)
+        && (schema.parameters().containsKey(AvroData.AVRO_TYPE_ENUM)
         || schema.parameters().containsKey(ProtobufData.PROTOBUF_TYPE_ENUM));
   }
 
