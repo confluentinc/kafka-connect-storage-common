@@ -32,20 +32,15 @@ blocks:
     dependencies: []
     run:
       # don't run the tests on non-functional changes...
-      when: "change_in('/', {exclude: ['/.deployed-versions/', '.github/'], default_branch: 'master'})"
+      when: "change_in('/', {exclude: ['/.deployed-versions/', '.github/']})"
     task:
       jobs:
         - name: Test
           commands:
-            - . sem-pint
-            - mvn -Dcloud -Pjenkins -U -Dmaven.wagon.http.retryHandler.count=10 --batch-mode --no-transfer-progress clean verify install dependency:analyze validate
-            - export TRIVY_DISABLE_VEX_NOTICE=true
-            - trivy version
-            - echo "Check go/connector-dev-vuln-remediation for fixing or suppressing vulnerabilities found by trivy"
-            - trivy --skip-files "*.zip" rootfs --scanners vuln --db-repository public.ecr.aws/aquasecurity/trivy-db --java-db-repository public.ecr.aws/aquasecurity/trivy-java-db --ignore-unfixed 
-              --ignorefile .trivyignore --exit-code 1 --severity CRITICAL target/components/packages
-            - trivy --skip-files "*.zip" rootfs --scanners vuln --db-repository public.ecr.aws/aquasecurity/trivy-db --java-db-repository public.ecr.aws/aquasecurity/trivy-java-db --ignore-unfixed 
-              --ignorefile .trivyignore --severity HIGH,LOW,MEDIUM target/components/packages
+            - pip install confluent-release-tools -q
+            - . sem-pint -c
+            - mvn -Dcloud -Pjenkins -U -Dmaven.wagon.http.retryHandler.count=10 --batch-mode --no-transfer-progress clean verify install dependency:analyze validate -Ddependency.check.skip=true
+            - cve-scan
             - . cache-maven store
       epilogue:
         always:
@@ -62,15 +57,14 @@ blocks:
       jobs:
         - name: Release
           commands:
-            - mvn -Dcloud -Pjenkins -U -Dmaven.wagon.http.retryHandler.count=10 --batch-mode 
-              -DaltDeploymentRepository=confluent-codeartifact-internal::default::https://confluent-519856050701.d.codeartifact.us-west-2.amazonaws.com/maven/maven-snapshots/ 
-              -DrepositoryId=confluent-codeartifact-internal deploy -DskipTests
+            - mvn -Dcloud -Pjenkins -U -Dmaven.wagon.http.retryHandler.count=10 --batch-mode -DaltDeploymentRepository=confluent-codeartifact-internal::default::https://confluent-519856050701.d.codeartifact.us-west-2.amazonaws.com/maven/maven-snapshots/
+              -DrepositoryId=confluent-codeartifact-internal deploy -DskipTests -Ddependency.check.skip=true
 
 after_pipeline:
   task:
     agent:
       machine:
-        type: s1-prod-ubuntu24-04-arm64-00
+        type: s1-prod-ubuntu24-04-arm64-0
     jobs:
       - name: Metrics
         commands:
@@ -81,5 +75,6 @@ after_pipeline:
       - name: SonarQube
         commands:
           - checkout
+          - sem-version java 11
           - artifact pull workflow target
           - emit-sonarqube-data --run_only_sonar_scan
