@@ -16,7 +16,6 @@
 package io.confluent.connect.storage.partitioner;
 
 import org.apache.kafka.common.utils.Utils;
-import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Schema.Type;
 import org.apache.kafka.connect.data.Struct;
@@ -82,12 +81,7 @@ public class FieldPartitioner<T> extends DefaultPartitioner<T> {
   }
 
   private String encodePartitionValue(String fieldName, Object partitionKey, Schema valueSchema) {
-    Field nestedField = DataUtils.getNestedField(valueSchema, fieldName);
-    if (nestedField == null || nestedField.schema() == null) {
-      log.error("Nested field schema is null for field '{}'.", fieldName);
-      throw new PartitionException("Nested field schema is null.");
-    }
-    Type type = nestedField.schema().type();
+    Type type = DataUtils.getNestedField(valueSchema, fieldName).schema().type();
     switch (type) {
       case INT8:
       case INT16:
