@@ -18,6 +18,7 @@ package io.confluent.connect.storage.partitioner;
 import io.confluent.connect.storage.StorageSinkTestBase;
 import io.confluent.connect.storage.common.StorageCommonConfig;
 import io.confluent.connect.storage.errors.PartitionException;
+import org.apache.kafka.connect.errors.DataException;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -200,6 +201,19 @@ public class FieldPartitionerTest extends StorageSinkTestBase {
   }
 
   @Test
+  public void testMissingFieldInSchemaThrows() {
+    FieldPartitioner<String> partitioner = getFieldPartitioner("missing");
+
+    Schema schema = SchemaBuilder.struct().name("record")
+        .field("present", Schema.STRING_SCHEMA)
+        .build();
+    Struct struct = new Struct(schema).put("present", "value");
+
+    assertThrows(DataException.class,
+        () -> getEncodedPatitionerPath(partitioner, schema, struct));
+  }
+
+  @Test
   public void testMultiPartition() {
     FieldPartitioner<String> partitioner = getFieldPartitioner("string", "int");
     String path = getEncodedPatitionerPath(partitioner);
@@ -274,5 +288,114 @@ public class FieldPartitionerTest extends StorageSinkTestBase {
     
     // For custom delimiter, we need to manually construct the expected result
     assertThat(path, is("string=def|int=12"));
+  }
+
+  @Test
+  public void testNestedStringPartition() {
+    FieldPartitioner<String> partitioner = getFieldPartitioner("user.address.city");
+
+    Schema addressSchema = SchemaBuilder.struct().name("address")
+        .field("city", Schema.STRING_SCHEMA)
+        .build();
+    Schema userSchema = SchemaBuilder.struct().name("user")
+        .field("address", addressSchema)
+        .build();
+    Schema schema = SchemaBuilder.struct().name("record")
+        .field("user", userSchema)
+        .build();
+
+    Struct address = new Struct(addressSchema).put("city", "NYC");
+    Struct user = new Struct(userSchema).put("address", address);
+    Struct record = new Struct(schema).put("user", user);
+
+    String path = getEncodedPatitionerPath(partitioner, schema, record);
+    assertThat(path, is("user.address.city=NYC"));
+  }
+
+  @Test
+  public void testNestedNullPartition() {
+    FieldPartitioner<String> partitioner = getFieldPartitioner("user.address.city");
+
+    Schema addressSchema = SchemaBuilder.struct().name("address")
+        .field("city", SchemaBuilder.string().optional().build())
+        .build();
+    Schema userSchema = SchemaBuilder.struct().name("user")
+        .field("address", addressSchema)
+        .build();
+    Schema schema = SchemaBuilder.struct().name("record")
+        .field("user", userSchema)
+        .build();
+
+    Struct address = new Struct(addressSchema).put("city", null);
+    Struct user = new Struct(userSchema).put("address", address);
+    Struct record = new Struct(schema).put("user", user);
+
+    String path = getEncodedPatitionerPath(partitioner, schema, record);
+    assertThat(path, is("user.address.city=null"));
+  }
+
+  @Test
+  public void testNestedMissingPartition() {
+    FieldPartitioner<String> partitioner = getFieldPartitioner("user.address.city");
+
+    Schema addressSchema = SchemaBuilder.struct().name("address")
+        .field("city", SchemaBuilder.string().optional().build())
+        .optional()
+        .build();
+    Schema userSchema = SchemaBuilder.struct().name("user")
+        .field("address", addressSchema)
+        .build();
+    Schema schema = SchemaBuilder.struct().name("record")
+        .field("user", userSchema)
+        .build();
+
+    Struct user = new Struct(userSchema);
+    Struct record = new Struct(schema).put("user", user);
+
+    String path = getEncodedPatitionerPath(partitioner, schema, record);
+    assertThat(path, is("user.address.city=null"));
+  }
+
+
+  @Test
+  public void testInvalidNestedFieldPartitionerName() {
+    FieldPartitioner<String> partitioner = getFieldPartitioner("user.address..city");
+
+    Schema addressSchema = SchemaBuilder.struct().name("address")
+        .field("city", Schema.STRING_SCHEMA)
+        .build();
+    Schema userSchema = SchemaBuilder.struct().name("user")
+        .field("address", addressSchema)
+        .build();
+    Schema schema = SchemaBuilder.struct().name("record")
+        .field("user", userSchema)
+        .build();
+
+    Struct address = new Struct(addressSchema).put("city", "NYC");
+    Struct user = new Struct(userSchema).put("address", address);
+    Struct record = new Struct(schema).put("user", user);
+    assertThrows(DataException.class,
+        () -> getEncodedPatitionerPath(partitioner, schema, record));
+  }
+
+  @Test
+  public void testInvalidNestedFieldPartitionerNameWithSpace() {
+    FieldPartitioner<String> partitioner = getFieldPartitioner("user.address.  .city");
+
+    Schema addressSchema = SchemaBuilder.struct().name("address")
+        .field("city", Schema.STRING_SCHEMA)
+        .build();
+    Schema userSchema = SchemaBuilder.struct().name("user")
+        .field("address", addressSchema)
+        .build();
+    Schema schema = SchemaBuilder.struct().name("record")
+        .field("user", userSchema)
+        .build();
+
+    Struct address = new Struct(addressSchema).put("city", "NYC");
+    Struct user = new Struct(userSchema).put("address", address);
+    Struct record = new Struct(schema).put("user", user);
+    assertThrows(DataException.class,
+        () -> getEncodedPatitionerPath(partitioner, schema, record));
   }
 }
