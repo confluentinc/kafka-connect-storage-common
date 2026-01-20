@@ -15,39 +15,30 @@
 
 package io.confluent.connect.storage.partitioner;
 
-import org.apache.kafka.common.config.Config;
-import org.apache.kafka.common.config.ConfigValue;
-
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class FieldPartitionerValidator {
 
   private final Map<String, String> connectorConfigs;
-  private final Config config;
 
-  public FieldPartitionerValidator(Map<String, String> connectorConfigs, Config config) {
+  public FieldPartitionerValidator(Map<String, String> connectorConfigs) {
     this.connectorConfigs = connectorConfigs;
-    this.config = config;
   }
 
-  public Config validate() {
+  public Optional<String> validate() {
     if (!isFieldPartitioner()) {
-      return config;
+      return Optional.empty();
     }
 
     String fieldName = connectorConfigs.get(PartitionerConfig.PARTITION_FIELD_NAME_CONFIG);
     if (fieldName != null && !fieldName.trim().isEmpty()) {
-      return config;
+      return Optional.empty();
     }
 
-    ConfigValue configValue = findConfigValue(PartitionerConfig.PARTITION_FIELD_NAME_CONFIG);
-    if (configValue != null) {
-      configValue.addErrorMessage(
-          "Partition field name cannot be null or empty when using FieldPartitioner."
-      );
-    }
-    return config;
+    return Optional.of(
+        "Partition field name cannot be null or empty when using FieldPartitioner."
+    );
   }
 
   private boolean isFieldPartitioner() {
@@ -58,16 +49,4 @@ public class FieldPartitionerValidator {
     return FieldPartitioner.class.getName().equals(partitioner);
   }
 
-  private ConfigValue findConfigValue(String name) {
-    List<ConfigValue> configValues = config.configValues();
-    if (configValues == null) {
-      return null;
-    }
-    for (ConfigValue configValue : configValues) {
-      if (name.equals(configValue.name())) {
-        return configValue;
-      }
-    }
-    return null;
-  }
 }

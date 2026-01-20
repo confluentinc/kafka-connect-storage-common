@@ -1,25 +1,19 @@
 package io.confluent.connect.storage.partitioner;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import io.confluent.connect.storage.StorageSinkTestBase;
-import io.confluent.connect.storage.common.GenericRecommender;
-import java.util.List;
-import org.apache.kafka.common.config.Config;
-import org.apache.kafka.common.config.ConfigDef;
-import org.apache.kafka.common.config.ConfigValue;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
 public class FieldPartitionerValidatorTest extends StorageSinkTestBase {
 
-  private ConfigDef configDef;
-
   @Before
   public void setUp() {
     properties = super.createProps();
-    configDef = PartitionerConfig.newConfigDef(new GenericRecommender());
   }
 
   @Test
@@ -29,16 +23,12 @@ public class FieldPartitionerValidatorTest extends StorageSinkTestBase {
         FieldPartitioner.class.getName()
     );
 
-    Config config = new Config(configDef.validate(properties));
-    new FieldPartitionerValidator(properties, config).validate();
+    Optional<String> error = new FieldPartitionerValidator(properties).validate();
 
-    ConfigValue fieldNameValue = getConfigValue(config,
-        PartitionerConfig.PARTITION_FIELD_NAME_CONFIG);
-    List<String> errors = fieldNameValue.errorMessages();
-    assertEquals(1, errors.size());
+    assertTrue(error.isPresent());
     assertEquals(
         "Partition field name cannot be null or empty when using FieldPartitioner.",
-        errors.get(0)
+        error.get()
     );
   }
 
@@ -50,12 +40,13 @@ public class FieldPartitionerValidatorTest extends StorageSinkTestBase {
     );
     properties.put(PartitionerConfig.PARTITION_FIELD_NAME_CONFIG, "   ");
 
-    Config config = new Config(configDef.validate(properties));
-    new FieldPartitionerValidator(properties, config).validate();
+    Optional<String> error = new FieldPartitionerValidator(properties).validate();
 
-    ConfigValue fieldNameValue = getConfigValue(config,
-        PartitionerConfig.PARTITION_FIELD_NAME_CONFIG);
-    assertEquals(1, fieldNameValue.errorMessages().size());
+    assertTrue(error.isPresent());
+    assertEquals(
+        "Partition field name cannot be null or empty when using FieldPartitioner.",
+        error.get()
+    );
   }
 
   @Test
@@ -65,12 +56,9 @@ public class FieldPartitionerValidatorTest extends StorageSinkTestBase {
         DefaultPartitioner.class.getName()
     );
 
-    Config config = new Config(configDef.validate(properties));
-    new FieldPartitionerValidator(properties, config).validate();
+    Optional<String> error = new FieldPartitionerValidator(properties).validate();
 
-    ConfigValue fieldNameValue = getConfigValue(config,
-        PartitionerConfig.PARTITION_FIELD_NAME_CONFIG);
-    assertTrue(fieldNameValue.errorMessages().isEmpty());
+    assertFalse(error.isPresent());
   }
 
   @Test
@@ -81,20 +69,8 @@ public class FieldPartitionerValidatorTest extends StorageSinkTestBase {
     );
     properties.put(PartitionerConfig.PARTITION_FIELD_NAME_CONFIG, "validFieldName");
 
-    Config config = new Config(configDef.validate(properties));
-    new FieldPartitionerValidator(properties, config).validate();
+    Optional<String> error = new FieldPartitionerValidator(properties).validate();
 
-    ConfigValue fieldNameValue = getConfigValue(config,
-        PartitionerConfig.PARTITION_FIELD_NAME_CONFIG);
-    assertTrue(fieldNameValue.errorMessages().isEmpty());
-  }
-
-  private ConfigValue getConfigValue(Config config, String name) {
-    for (ConfigValue configValue : config.configValues()) {
-      if (name.equals(configValue.name())) {
-        return configValue;
-      }
-    }
-    throw new AssertionError("Missing ConfigValue for " + name);
+    assertFalse(error.isPresent());
   }
 }
