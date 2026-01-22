@@ -55,12 +55,11 @@ public class FieldPartitionerValidator {
     if (partitioner == null) {
       return false;
     }
-    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-    if (classLoader == null) {
-      classLoader = FieldPartitioner.class.getClassLoader();
-    }
+
     try {
-      Class<?> partitionerClass = Class.forName(partitioner, false, classLoader);
+      Class<?> partitionerClass = Class.forName(
+          partitioner, false, FieldPartitioner.class.getClassLoader()
+      );
       return FieldPartitioner.class.isAssignableFrom(partitionerClass);
     } catch (ClassNotFoundException e) {
       return false;
