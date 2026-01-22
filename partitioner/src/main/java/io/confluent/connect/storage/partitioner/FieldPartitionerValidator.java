@@ -57,9 +57,7 @@ public class FieldPartitionerValidator {
     }
 
     try {
-      Class<?> partitionerClass = Class.forName(
-          partitioner, false, FieldPartitioner.class.getClassLoader()
-      );
+      Class<?> partitionerClass = Class.forName(partitioner);
       return FieldPartitioner.class.isAssignableFrom(partitionerClass);
     } catch (ClassNotFoundException e) {
       return false;
