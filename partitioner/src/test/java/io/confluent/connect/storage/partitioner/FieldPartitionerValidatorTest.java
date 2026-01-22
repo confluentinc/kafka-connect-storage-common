@@ -89,6 +89,24 @@ public class FieldPartitionerValidatorTest extends StorageSinkTestBase {
     assertTrue(fieldNameValue.errorMessages().isEmpty());
   }
 
+  @Test
+  public void testSubclassOfFieldPartitionerAddsError() {
+    properties.put(
+        PartitionerConfig.PARTITIONER_CLASS_CONFIG,
+        CustomFieldPartitioner.class.getName()
+    );
+
+    Config config = new Config(configDef.validate(properties));
+    new FieldPartitionerValidator(properties, config).validate();
+
+    ConfigValue fieldNameValue = getConfigValue(config,
+        PartitionerConfig.PARTITION_FIELD_NAME_CONFIG);
+    assertEquals(1, fieldNameValue.errorMessages().size());
+  }
+
+  private static class CustomFieldPartitioner extends FieldPartitioner<Object> {
+  }
+
   private ConfigValue getConfigValue(Config config, String name) {
     for (ConfigValue configValue : config.configValues()) {
       if (name.equals(configValue.name())) {
