@@ -23,6 +23,7 @@ import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.DIFF
 import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.NA;
 
 import org.apache.kafka.connect.connector.ConnectRecord;
+import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.errors.SchemaProjectorException;
 import org.apache.kafka.connect.sink.SinkRecord;
@@ -174,8 +175,9 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    * Check whether the two schemas are incompatible such that they would prevent successfully
    * {@link #project projecting} a key or value with the original schema into the current schema.
    *
-   * <p>This method currently considers schemas to be incompatible for projection when any of
-   * the following are true:
+   * <p>This method considers schemas to be incompatible for projection when any of the following
+   * are true, checked recursively at every nesting level (struct fields, array elements,
+   * map keys/values):
    * <ol>
    *   <li>The {@link Schema#type() Schema types} are different, per
    *       {@link #checkSchemaTypes(Schema, Schema)}</li>
@@ -183,14 +185,14 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    *       {@link #checkSchemaNames(Schema, Schema)}</li>
    *   <li>The {@link Schema#parameters() Schema parameters} are different, per
    *       {@link #checkSchemaParameters(Schema, Schema)}</li>
-   *   <li>The {@link Schema#version() Schema versions} don't allow projection, per
-   *       {@link #checkVersions(Schema, Schema)}</li>
+   *   <li>The {@link Schema#version() Schema versions} don't allow projection (top-level only),
+   *       per {@link #checkVersions(Schema, Schema)}</li>
    * </ol>
-   * In all of these cases, a record key or value using the original schema will not be able to
-   * be projected to the current schema.
    *
-   * <p>Any of the `check*` methods can be overridden to change the individual behavior,
-   * or this method can be overridden to alter the logic described above.</p>
+   * <p>The individual {@code check*} methods ({@link #checkSchemaTypes}, {@link #checkSchemaNames},
+   * {@link #checkSchemaParameters}, {@link #checkVersions}) can be overridden to change their
+   * behavior. The recursive traversal itself is a private implementation detail and cannot be
+   * overridden independently; override this method to alter the overall logic.</p>
    *
    * @param originalSchema the original (new) schema; may not be null
    * @param currentSchema  the current schema; may not be null
@@ -201,16 +203,11 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
       Schema originalSchema,
       Schema currentSchema
   ) {
-    if (checkSchemaTypes(originalSchema, currentSchema)) {
-      return new SchemaCompatibilityResult(true, DIFFERENT_TYPE);
+    SchemaCompatibilityResult result = checkSchemaCompatibility(
+        originalSchema, currentSchema);
+    if (result.isInCompatible()) {
+      return result;
     }
-    if (checkSchemaNames(originalSchema, currentSchema)) {
-      return new SchemaCompatibilityResult(true, DIFFERENT_NAME);
-    }
-    if (checkSchemaParameters(originalSchema, currentSchema)) {
-      return new SchemaCompatibilityResult(true, DIFFERENT_PARAMS);
-    }
-
     return checkVersions(originalSchema, currentSchema);
   }
 
@@ -275,6 +272,14 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    * prevent successfully {@link #project projecting} a key or value with the original schema
    * into the current schema.
    *
+   * <p>Metadata/documentation parameters (such as {@code connect.record.doc},
+   * {@code connect.record.aliases}, {@code connect.record.namespace}, and
+   * {@code io.confluent.connect.avro.field.doc.*}) are filtered out before comparison,
+   * matching the behaviour in {@link SchemaProjector}.
+   *
+   * <p>For enum schemas a subset check is applied: every symbol in {@code originalSchema} must
+   * exist in {@code currentSchema}. For all other schema types a strict equality check is used.
+   *
    * @param originalSchema the original (new) schema; may not be null
    * @param currentSchema  the current schema; may not be null
    * @return true if the schema parameters are not compatible for projection, or false if they are
@@ -284,18 +289,117 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
       Schema originalSchema,
       Schema currentSchema
   ) {
+    Map<String, String> originalParams = filterMetadataParameters(originalSchema.parameters());
+    Map<String, String> currentParams = filterMetadataParameters(currentSchema.parameters());
+
     if (SchemaProjector.isEnumSchema(originalSchema)
         && SchemaProjector.isEnumSchema(currentSchema)) {
-      Map<String, String> originalParams = originalSchema.parameters();
-      Map<String, String> currentParams = currentSchema.parameters();
       return !currentParams.entrySet().containsAll(originalParams.entrySet());
     } else {
-      return !Objects.equals(originalSchema.parameters(), currentSchema.parameters());
+      return !originalParams.equals(currentParams);
     }
+  }
+
+  /**
+   * Filters out metadata/documentation parameters that don't affect schema compatibility.
+   * These parameters are used for documentation purposes and should not cause schema
+   * rotation or projection failures.
+   *
+   * <p>This mirrors the filtering in {@link SchemaProjector} to keep
+   * {@link #shouldChangeSchema} and {@link SchemaProjector#project} in sync.
+   *
+   * @param parameters the original parameters map (may be null)
+   * @return a new map with metadata parameters filtered out, or an empty map if input was
+   *         null or empty
+   */
+  private static Map<String, String> filterMetadataParameters(Map<String, String> parameters) {
+    if (parameters == null || parameters.isEmpty()) {
+      return new HashMap<>();
+    }
+
+    Map<String, String> filtered = new HashMap<>(parameters);
+
+    // Remove Connect metadata parameters that don't affect compatibility
+    filtered.remove("connect.record.doc");
+    filtered.remove("connect.record.aliases");
+    filtered.remove("connect.record.namespace");
+
+    // Remove all Confluent Avro field documentation parameters
+    // (io.confluent.connect.avro.field.doc.*)
+    filtered.entrySet().removeIf(
+        entry -> entry.getKey().startsWith("io.confluent.connect.avro.field.doc."));
+
+    return filtered;
   }
 
   protected boolean isPromotable(Schema.Type sourceType, Schema.Type targetType) {
     return PROMOTABLES.contains(new AbstractMap.SimpleImmutableEntry<>(sourceType, targetType));
+  }
+
+  /**
+   * Recursively checks schema compatibility at the current level and all nested levels.
+   * At each level, checks {@link #checkSchemaTypes types}, {@link #checkSchemaNames names}, and
+   * {@link #checkSchemaParameters parameters}. For {@link Schema.Type#STRUCT STRUCT},
+   * {@link Schema.Type#ARRAY ARRAY}, and {@link Schema.Type#MAP MAP} schemas, descends into
+   * nested schemas (fields, elements, keys/values).
+   *
+   * <p>This keeps {@link #shouldChangeSchema} in sync with {@link SchemaProjector}'s recursive
+   * projection, so incompatibilities are caught here (triggering file rotation) rather than
+   * inside {@code SchemaProjector} (where they would cause a
+   * {@link SchemaProjectorException} and route the record to the DLQ).
+   *
+   * <p>Version checks are intentionally excluded here — they are applied only at the top level
+   * by {@link #check(Schema, Schema)} after this method returns.
+   *
+   * <p>Only fields present in <em>both</em> schemas are compared. Fields present only in
+   * {@code originalSchema} (record has extra field) or only in {@code currentSchema} (file has
+   * extra field) are left for {@link SchemaProjector#project} to handle via optionality and
+   * default-value rules, consistent with the existing behaviour for added/removed fields.
+   *
+   * @param originalSchema the incoming record's schema at this nesting level
+   * @param currentSchema  the current file's schema at this nesting level
+   * @return SchemaCompatibilityResult indicating whether any incompatibility was found
+   */
+  private SchemaCompatibilityResult checkSchemaCompatibility(
+      Schema originalSchema,
+      Schema currentSchema
+  ) {
+    if (checkSchemaTypes(originalSchema, currentSchema)) {
+      return new SchemaCompatibilityResult(true, DIFFERENT_TYPE);
+    }
+    if (checkSchemaNames(originalSchema, currentSchema)) {
+      return new SchemaCompatibilityResult(true, DIFFERENT_NAME);
+    }
+    if (checkSchemaParameters(originalSchema, currentSchema)) {
+      return new SchemaCompatibilityResult(true, DIFFERENT_PARAMS);
+    }
+
+    // Recurse into nested schemas (struct fields, array elements, map keys/values)
+    if (originalSchema.type() == Schema.Type.STRUCT) {
+      for (Field field : originalSchema.fields()) {
+        Field currentField = currentSchema.field(field.name());
+        if (currentField == null) {
+          continue; // field absent in current schema — handled by SchemaProjector projection rules
+        }
+        SchemaCompatibilityResult result = checkSchemaCompatibility(
+            field.schema(), currentField.schema());
+        if (result.isInCompatible()) {
+          return result;
+        }
+      }
+    } else if (originalSchema.type() == Schema.Type.ARRAY) {
+      return checkSchemaCompatibility(
+          originalSchema.valueSchema(), currentSchema.valueSchema());
+    } else if (originalSchema.type() == Schema.Type.MAP) {
+      SchemaCompatibilityResult result = checkSchemaCompatibility(
+          originalSchema.keySchema(), currentSchema.keySchema());
+      if (result.isInCompatible()) {
+        return result;
+      }
+      return checkSchemaCompatibility(
+          originalSchema.valueSchema(), currentSchema.valueSchema());
+    }
+    return new SchemaCompatibilityResult(false, NA);
   }
 
   /**
