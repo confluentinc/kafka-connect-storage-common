@@ -289,8 +289,10 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
       Schema originalSchema,
       Schema currentSchema
   ) {
-    Map<String, String> originalParams = filterMetadataParameters(originalSchema.parameters());
-    Map<String, String> currentParams = filterMetadataParameters(currentSchema.parameters());
+    Map<String, String> originalParams =
+        SchemaProjector.filterMetadataParameters(originalSchema.parameters());
+    Map<String, String> currentParams =
+        SchemaProjector.filterMetadataParameters(currentSchema.parameters());
 
     if (SchemaProjector.isEnumSchema(originalSchema)
         && SchemaProjector.isEnumSchema(currentSchema)) {
@@ -298,38 +300,6 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
     } else {
       return !originalParams.equals(currentParams);
     }
-  }
-
-  /**
-   * Filters out metadata/documentation parameters that don't affect schema compatibility.
-   * These parameters are used for documentation purposes and should not cause schema
-   * rotation or projection failures.
-   *
-   * <p>This mirrors the filtering in {@link SchemaProjector} to keep
-   * {@link #shouldChangeSchema} and {@link SchemaProjector#project} in sync.
-   *
-   * @param parameters the original parameters map (may be null)
-   * @return a new map with metadata parameters filtered out, or an empty map if input was
-   *         null or empty
-   */
-  private static Map<String, String> filterMetadataParameters(Map<String, String> parameters) {
-    if (parameters == null || parameters.isEmpty()) {
-      return new HashMap<>();
-    }
-
-    Map<String, String> filtered = new HashMap<>(parameters);
-
-    // Remove Connect metadata parameters that don't affect compatibility
-    filtered.remove("connect.record.doc");
-    filtered.remove("connect.record.aliases");
-    filtered.remove("connect.record.namespace");
-
-    // Remove all Confluent Avro field documentation parameters
-    // (io.confluent.connect.avro.field.doc.*)
-    filtered.entrySet().removeIf(
-        entry -> entry.getKey().startsWith("io.confluent.connect.avro.field.doc."));
-
-    return filtered;
   }
 
   protected boolean isPromotable(Schema.Type sourceType, Schema.Type targetType) {
@@ -343,10 +313,13 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    * {@link Schema.Type#ARRAY ARRAY}, and {@link Schema.Type#MAP MAP} schemas, descends into
    * nested schemas (fields, elements, keys/values).
    *
-   * <p>This keeps {@link #shouldChangeSchema} in sync with {@link SchemaProjector}'s recursive
-   * projection, so incompatibilities are caught here (triggering file rotation) rather than
-   * inside {@code SchemaProjector} (where they would cause a
-   * {@link SchemaProjectorException} and route the record to the DLQ).
+   * <p>This mirrors {@link SchemaProjector}'s recursive traversal pattern for the subset of
+   * compatibility checks performed here, so that many structural incompatibilities are detected
+   * early (triggering file rotation) rather than only during {@link SchemaProjector#project}
+   * (where they could cause a {@link SchemaProjectorException} and route the record to the DLQ).
+   * However, {@code SchemaProjector} still enforces additional rules (for example, around field
+   * optionality and default values), and violations of those rules may still only be detected
+   * at projection time.
    *
    * <p>Version checks are intentionally excluded here — they are applied only at the top level
    * by {@link #check(Schema, Schema)} after this method returns.
