@@ -35,30 +35,35 @@ public class StorageSchemaCompatibilityTest {
   private final StorageSchemaCompatibility forward = StorageSchemaCompatibility.FORWARD;
   private final StorageSchemaCompatibility full = StorageSchemaCompatibility.FULL;
 
+  private static final String COLOR = "color";
+  private static final String RED = "RED";
+  private static final String GREEN = "GREEN";
+  private static final String BLUE = "BLUE";
+
   // ---- Schemas for nested-schema compatibility tests ----
 
   // Struct containing an Avro enum field: version kept equal so version check doesn't fire first.
   private static final Schema STRUCT_WITH_AVRO_ENUM_BLUE =
       SchemaBuilder.struct().name("sr").version(1)
           .field("label", Schema.STRING_SCHEMA)
-          .field("color", buildAvroEnumSchema("color", 1, "RED", "GREEN", "BLUE").build())
+          .field(COLOR, buildAvroEnumSchema(COLOR, 1, RED, GREEN, BLUE).build())
           .build();
 
   private static final Schema STRUCT_WITH_AVRO_ENUM_NO_BLUE =
       SchemaBuilder.struct().name("sr").version(1)
           .field("label", Schema.STRING_SCHEMA)
-          .field("color", buildAvroEnumSchema("color", 1, "RED", "GREEN").build())
+          .field(COLOR, buildAvroEnumSchema(COLOR, 1, RED, GREEN).build())
           .build();
 
   // Same for Protobuf enums.
   private static final Schema STRUCT_WITH_PROTOBUF_ENUM_BLUE =
       SchemaBuilder.struct().name("sr").version(1)
-          .field("color", buildProtobufEnumSchema("color", 1, "RED", "GREEN", "BLUE").build())
+          .field(COLOR, buildProtobufEnumSchema(COLOR, 1, RED, GREEN, BLUE).build())
           .build();
 
   private static final Schema STRUCT_WITH_PROTOBUF_ENUM_NO_BLUE =
       SchemaBuilder.struct().name("sr").version(1)
-          .field("color", buildProtobufEnumSchema("color", 1, "RED", "GREEN").build())
+          .field(COLOR, buildProtobufEnumSchema(COLOR, 1, RED, GREEN).build())
           .build();
 
   // Deeply nested: outer struct → inner struct → enum field.
@@ -66,7 +71,7 @@ public class StorageSchemaCompatibilityTest {
       SchemaBuilder.struct().name("outer").version(1)
           .field("inner",
               SchemaBuilder.struct().name("inner")
-                  .field("color", buildAvroEnumSchema("color", 1, "RED", "GREEN", "BLUE").build())
+                  .field(COLOR, buildAvroEnumSchema(COLOR, 1, RED, GREEN, BLUE).build())
                   .build())
           .build();
 
@@ -74,7 +79,7 @@ public class StorageSchemaCompatibilityTest {
       SchemaBuilder.struct().name("outer").version(1)
           .field("inner",
               SchemaBuilder.struct().name("inner")
-                  .field("color", buildAvroEnumSchema("color", 1, "RED", "GREEN").build())
+                  .field(COLOR, buildAvroEnumSchema(COLOR, 1, RED, GREEN).build())
                   .build())
           .build();
 
@@ -109,14 +114,14 @@ public class StorageSchemaCompatibilityTest {
   private static final Schema ARRAY_OF_STRUCT_WITH_AVRO_ENUM_BLUE =
       SchemaBuilder.array(
           SchemaBuilder.struct().name("elem")
-              .field("color", buildAvroEnumSchema("color", 1, "RED", "GREEN", "BLUE").build())
+              .field(COLOR, buildAvroEnumSchema(COLOR, 1, RED, GREEN, BLUE).build())
               .build()
       ).name("arr").version(1).build();
 
   private static final Schema ARRAY_OF_STRUCT_WITH_AVRO_ENUM_NO_BLUE =
       SchemaBuilder.array(
           SchemaBuilder.struct().name("elem")
-              .field("color", buildAvroEnumSchema("color", 1, "RED", "GREEN").build())
+              .field(COLOR, buildAvroEnumSchema(COLOR, 1, RED, GREEN).build())
               .build()
       ).name("arr").version(1).build();
 
@@ -124,14 +129,14 @@ public class StorageSchemaCompatibilityTest {
   private static final Schema MAP_WITH_AVRO_ENUM_VALUE_BLUE =
       SchemaBuilder.map(Schema.STRING_SCHEMA,
           SchemaBuilder.struct().name("val")
-              .field("color", buildAvroEnumSchema("color", 1, "RED", "GREEN", "BLUE").build())
+              .field(COLOR, buildAvroEnumSchema(COLOR, 1, RED, GREEN, BLUE).build())
               .build()
       ).name("m").version(1).build();
 
   private static final Schema MAP_WITH_AVRO_ENUM_VALUE_NO_BLUE =
       SchemaBuilder.map(Schema.STRING_SCHEMA,
           SchemaBuilder.struct().name("val")
-              .field("color", buildAvroEnumSchema("color", 1, "RED", "GREEN").build())
+              .field(COLOR, buildAvroEnumSchema(COLOR, 1, RED, GREEN).build())
               .build()
       ).name("m").version(1).build();
 
@@ -236,17 +241,17 @@ public class StorageSchemaCompatibilityTest {
   private static final Schema SCHEMA_B_EXTRA_OPTIONAL_FIELD =
       buildStructSchema("b", 2).field("extra", Schema.OPTIONAL_STRING_SCHEMA).build();
   private static final Schema ENUM_SCHEMA_A =
-      buildAvroEnumSchema("e1", 1, "RED", "GREEN", "BLUE").build();
+      buildAvroEnumSchema("e1", 1, RED, GREEN, BLUE).build();
   private static final Schema ENUM_SCHEMA_B =
-      buildAvroEnumSchema("e1", 1, "RED", "GREEN").build();
+      buildAvroEnumSchema("e1", 1, RED, GREEN).build();
   private static final Schema ENUM_SCHEMA_C =
-      buildProtobufEnumSchema("e1", 1, "RED", "GREEN", "BLUE").build();
+      buildProtobufEnumSchema("e1", 1, RED, GREEN, BLUE).build();
   private static final Schema ENUM_SCHEMA_D =
-      buildProtobufEnumSchema("e1", 1, "RED", "GREEN").build();
+      buildProtobufEnumSchema("e1", 1, RED, GREEN).build();
 
   @Test
   public void testShouldChangeSchemaWithEnumAdditionAndBackwardCompatibility() {
-    String value = "BLUE";
+    String value = BLUE;
 
     // Avro schema test
     SinkRecord sinkRecordAvro = new SinkRecord(
@@ -281,7 +286,7 @@ public class StorageSchemaCompatibilityTest {
 
   @Test
   public void testShouldChangeSchemaWithEnumDeletionAndBackwardCompatibility() {
-    String value = "RED";
+    String value = RED;
 
     // Avro schema test
     SinkRecord sinkRecordAvro = new SinkRecord(
@@ -314,7 +319,7 @@ public class StorageSchemaCompatibilityTest {
 
   @Test
   public void testShouldChangeSchemaWithEnumAdditionAndForwardCompatibility() {
-    String value = "BLUE";
+    String value = BLUE;
 
     // Avro schema test
     SinkRecord sinkRecordAvro = new SinkRecord(
@@ -349,7 +354,7 @@ public class StorageSchemaCompatibilityTest {
 
   @Test
   public void testShouldChangeSchemaWithEnumDeletionAndForwardCompatibility() {
-    String value = "RED";
+    String value = RED;
 
     // Avro schema test
     SinkRecord sinkRecordAvro = new SinkRecord(
@@ -382,7 +387,7 @@ public class StorageSchemaCompatibilityTest {
 
   @Test
   public void testProjectSchemaAfterAddingEnumSymbol() {
-    String value = "GREEN";
+    String value = GREEN;
 
     // Avro schema test
     assertThrows(SchemaProjectorException.class, () -> SchemaProjector.project(ENUM_SCHEMA_A, value, ENUM_SCHEMA_B));
