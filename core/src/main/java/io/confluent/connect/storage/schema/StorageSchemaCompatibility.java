@@ -298,7 +298,7 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
         && SchemaProjector.isEnumSchema(currentSchema)) {
       return !currentParams.entrySet().containsAll(originalParams.entrySet());
     } else {
-      return !originalParams.equals(currentParams);
+      return !Objects.equals(originalParams, currentParams);
     }
   }
 
