@@ -349,30 +349,45 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
 
     // Recurse into nested schemas (struct fields, array elements, map keys/values)
     if (originalSchema.type() == Schema.Type.STRUCT) {
-      for (Field field : originalSchema.fields()) {
-        Field currentField = currentSchema.field(field.name());
-        if (currentField == null) {
-          continue; // field absent in current schema — handled by SchemaProjector projection rules
-        }
-        SchemaCompatibilityResult result = checkSchemaCompatibility(
-            field.schema(), currentField.schema());
-        if (result.isInCompatible()) {
-          return result;
-        }
-      }
+      return checkStructFieldsCompatibility(originalSchema, currentSchema);
     } else if (originalSchema.type() == Schema.Type.ARRAY) {
       return checkSchemaCompatibility(
           originalSchema.valueSchema(), currentSchema.valueSchema());
     } else if (originalSchema.type() == Schema.Type.MAP) {
+      return checkMapSchemaCompatibility(originalSchema, currentSchema);
+    }
+    return new SchemaCompatibilityResult(false, NA);
+  }
+
+  private SchemaCompatibilityResult checkStructFieldsCompatibility(
+      Schema originalSchema,
+      Schema currentSchema
+  ) {
+    for (Field field : originalSchema.fields()) {
+      Field currentField = currentSchema.field(field.name());
+      if (currentField == null) {
+        continue; // field absent in current schema — handled by SchemaProjector projection rules
+      }
       SchemaCompatibilityResult result = checkSchemaCompatibility(
-          originalSchema.keySchema(), currentSchema.keySchema());
+          field.schema(), currentField.schema());
       if (result.isInCompatible()) {
         return result;
       }
-      return checkSchemaCompatibility(
-          originalSchema.valueSchema(), currentSchema.valueSchema());
     }
     return new SchemaCompatibilityResult(false, NA);
+  }
+
+  private SchemaCompatibilityResult checkMapSchemaCompatibility(
+      Schema originalSchema,
+      Schema currentSchema
+  ) {
+    SchemaCompatibilityResult result = checkSchemaCompatibility(
+        originalSchema.keySchema(), currentSchema.keySchema());
+    if (result.isInCompatible()) {
+      return result;
+    }
+    return checkSchemaCompatibility(
+        originalSchema.valueSchema(), currentSchema.valueSchema());
   }
 
   /**
