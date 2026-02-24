@@ -20,6 +20,8 @@ import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.DIFF
 import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.DIFFERENT_SCHEMA;
 import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.DIFFERENT_TYPE;
 import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.DIFFERENT_VERSION;
+import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.INCOMPATIBLE_OPTIONALITY;
+import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.MISSING_REQUIRED_FIELD;
 import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.NA;
 
 import org.apache.kafka.connect.connector.ConnectRecord;
@@ -313,21 +315,22 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    * {@link Schema.Type#ARRAY ARRAY}, and {@link Schema.Type#MAP MAP} schemas, descends into
    * nested schemas (fields, elements, keys/values).
    *
-   * <p>This mirrors {@link SchemaProjector}'s recursive traversal pattern for the subset of
-   * compatibility checks performed here, so that many structural incompatibilities are detected
-   * early (triggering file rotation) rather than only during {@link SchemaProjector#project}
-   * (where they could cause a {@link SchemaProjectorException} and route the record to the DLQ).
-   * However, {@code SchemaProjector} still enforces additional rules (for example, around field
-   * optionality and default values), and violations of those rules may still only be detected
-   * at projection time.
+   * <p>This mirrors {@link SchemaProjector}'s recursive traversal pattern so that structural
+   * incompatibilities are detected early (triggering file rotation) rather than only during
+   * {@link SchemaProjector#project} (where they could cause a {@link SchemaProjectorException}
+   * and route the record to the DLQ). In addition to type, name, and parameter checks, this
+   * method also detects optionality mismatches (record field is optional but file field is
+   * required with no default) and, for struct schemas, missing required fields (file schema has
+   * a required field with no default that is absent from the record schema).
    *
    * <p>Version checks are intentionally excluded here — they are applied only at the top level
    * by {@link #check(Schema, Schema)} after this method returns.
    *
-   * <p>Only fields present in <em>both</em> schemas are compared. Fields present only in
-   * {@code originalSchema} (record has extra field) or only in {@code currentSchema} (file has
-   * extra field) are left for {@link SchemaProjector#project} to handle via optionality and
-   * default-value rules, consistent with the existing behaviour for added/removed fields.
+   * <p>For fields present in <em>both</em> schemas, recursive compatibility checks are applied.
+   * Fields present only in {@code originalSchema} (record has extra field) are ignored.
+   * Fields present only in {@code currentSchema} (file has extra field) that are required with
+   * no default value are flagged as incompatible, since {@link SchemaProjector#project} would
+   * throw for them.
    *
    * @param originalSchema the incoming record's schema at this nesting level
    * @param currentSchema  the current file's schema at this nesting level
@@ -345,6 +348,10 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
     }
     if (checkSchemaParameters(originalSchema, currentSchema)) {
       return new SchemaCompatibilityResult(true, DIFFERENT_PARAMS);
+    }
+    if (originalSchema.isOptional() && !currentSchema.isOptional()
+        && currentSchema.defaultValue() == null) {
+      return new SchemaCompatibilityResult(true, INCOMPATIBLE_OPTIONALITY);
     }
 
     // Recurse into nested schemas (struct fields, array elements, map keys/values)
@@ -372,6 +379,13 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
           field.schema(), currentField.schema());
       if (result.isInCompatible()) {
         return result;
+      }
+    }
+    for (Field field : currentSchema.fields()) {
+      if (originalSchema.field(field.name()) == null
+          && !field.schema().isOptional()
+          && field.schema().defaultValue() == null) {
+        return new SchemaCompatibilityResult(true, MISSING_REQUIRED_FIELD);
       }
     }
     return new SchemaCompatibilityResult(false, NA);

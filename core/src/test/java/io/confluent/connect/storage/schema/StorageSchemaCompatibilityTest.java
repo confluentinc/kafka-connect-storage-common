@@ -146,6 +146,10 @@ public class StorageSchemaCompatibilityTest {
   private final SchemaIncompatibilityType diffName = SchemaIncompatibilityType.DIFFERENT_NAME;
   private final SchemaIncompatibilityType diffParams = SchemaIncompatibilityType.DIFFERENT_PARAMS;
   private final SchemaIncompatibilityType diffVersion = SchemaIncompatibilityType.DIFFERENT_VERSION;
+  private final SchemaIncompatibilityType missingRequired =
+      SchemaIncompatibilityType.MISSING_REQUIRED_FIELD;
+  private final SchemaIncompatibilityType incompatOptional =
+      SchemaIncompatibilityType.INCOMPATIBLE_OPTIONALITY;
   private final SchemaIncompatibilityType na = SchemaIncompatibilityType.NA;
 
   private static SchemaBuilder buildStringSchema(String name, int version) {
@@ -241,6 +245,9 @@ public class StorageSchemaCompatibilityTest {
       buildStructSchema("b", 2).field("extra", Schema.STRING_SCHEMA).build();
   private static final Schema SCHEMA_B_EXTRA_OPTIONAL_FIELD =
       buildStructSchema("b", 2).field("extra", Schema.OPTIONAL_STRING_SCHEMA).build();
+  private static final Schema SCHEMA_B_EXTRA_REQUIRED_WITH_DEFAULT =
+      buildStructSchema("b", 2).field("extra",
+          SchemaBuilder.string().defaultValue("fallback").build()).build();
   private static final Schema ENUM_SCHEMA_A =
       buildAvroEnumSchema("e1", 1, RED, GREEN, BLUE).build();
   private static final Schema ENUM_SCHEMA_B =
@@ -571,7 +578,47 @@ public class StorageSchemaCompatibilityTest {
   public void fullCompatibilityShouldConsiderDifferentSchemaOptionalityAsUnchanged() {
     assertUnchanged(full, SCHEMA_A, SCHEMA_A_OPTIONAL);
     assertUnchanged(full, SCHEMA_B, SCHEMA_B_OPTIONAL);
+  }
 
+  /**
+   * When the record schema is optional but the file schema is required without a default,
+   * projection would throw. shouldChangeSchema must trigger rotation.
+   */
+  @Test
+  public void optionalToRequiredWithoutDefaultShouldTriggerRotation() {
+    // SCHEMA_A_OPTIONAL is optional, SCHEMA_A is required with no default
+    assertChanged(backward, SCHEMA_A_OPTIONAL, SCHEMA_A, incompatOptional);
+    assertChanged(forward, SCHEMA_A_OPTIONAL, SCHEMA_A, incompatOptional);
+    assertChanged(full, SCHEMA_A_OPTIONAL, SCHEMA_A, incompatOptional);
+
+    // Struct-level optionality
+    assertChanged(backward, SCHEMA_B_OPTIONAL, SCHEMA_B, incompatOptional);
+    assertChanged(forward, SCHEMA_B_OPTIONAL, SCHEMA_B, incompatOptional);
+    assertChanged(full, SCHEMA_B_OPTIONAL, SCHEMA_B, incompatOptional);
+  }
+
+  /**
+   * When the record schema is optional but the file schema is required WITH a default,
+   * projection succeeds. shouldChangeSchema must NOT trigger rotation.
+   */
+  @Test
+  public void optionalToRequiredWithDefaultShouldNotTriggerRotation() {
+    Schema optionalInt = buildIntSchema("a", 2).optional().build();
+    Schema requiredIntWithDefault = buildIntSchema("a", 2).defaultValue(0).build();
+    assertUnchanged(backward, optionalInt, requiredIntWithDefault);
+    assertUnchanged(forward, optionalInt, requiredIntWithDefault);
+    assertUnchanged(full, optionalInt, requiredIntWithDefault);
+  }
+
+  /**
+   * Extra required field in file schema with a default value should NOT trigger rotation,
+   * since SchemaProjector can fill in the default.
+   */
+  @Test
+  public void extraRequiredFieldWithDefaultShouldNotTriggerRotation() {
+    assertUnchanged(backward, SCHEMA_B, SCHEMA_B_EXTRA_REQUIRED_WITH_DEFAULT);
+    assertUnchanged(forward, SCHEMA_B, SCHEMA_B_EXTRA_REQUIRED_WITH_DEFAULT);
+    assertUnchanged(full, SCHEMA_B, SCHEMA_B_EXTRA_REQUIRED_WITH_DEFAULT);
   }
 
   @Test
@@ -596,13 +643,12 @@ public class StorageSchemaCompatibilityTest {
   }
 
   @Test
-  public void allCompatibilitiesShouldConsiderExtraRequiredFieldsAsUnchangedButNotProjectable() {
-    // The following are considered unchanged, but we cannot project from first to second.
-    // The projection should catch this case if it happens, but SR should prevent records
-    // being written to the topic if using Avro and `forward` SR compatibility is enabled
-    assertUnchanged(backward, SCHEMA_B, SCHEMA_B_EXTRA_REQUIRED_FIELD, false);
-    assertUnchanged(forward, SCHEMA_B, SCHEMA_B_EXTRA_REQUIRED_FIELD, false);
-    assertUnchanged(full, SCHEMA_B, SCHEMA_B_EXTRA_REQUIRED_FIELD, false);
+  public void allCompatibilitiesShouldConsiderExtraRequiredFieldsAsChanged() {
+    // File schema has a required field (no default) that is missing from the record schema.
+    // shouldChangeSchema must trigger rotation so projection does not throw and DLQ the record.
+    assertChanged(backward, SCHEMA_B, SCHEMA_B_EXTRA_REQUIRED_FIELD, missingRequired);
+    assertChanged(forward, SCHEMA_B, SCHEMA_B_EXTRA_REQUIRED_FIELD, missingRequired);
+    assertChanged(full, SCHEMA_B, SCHEMA_B_EXTRA_REQUIRED_FIELD, missingRequired);
   }
 
   protected void assertUnchanged(
