@@ -36,6 +36,7 @@ public class StorageSchemaCompatibilityTest {
   private final StorageSchemaCompatibility full = StorageSchemaCompatibility.FULL;
 
   private static final String COLOR = "color";
+  private static final String INNER = "inner";
   private static final String RED = "RED";
   private static final String GREEN = "GREEN";
   private static final String BLUE = "BLUE";
@@ -69,16 +70,16 @@ public class StorageSchemaCompatibilityTest {
   // Deeply nested: outer struct → inner struct → enum field.
   private static final Schema DEEPLY_NESTED_WITH_AVRO_ENUM_BLUE =
       SchemaBuilder.struct().name("outer").version(1)
-          .field("inner",
-              SchemaBuilder.struct().name("inner")
+          .field(INNER,
+              SchemaBuilder.struct().name(INNER)
                   .field(COLOR, buildAvroEnumSchema(COLOR, 1, RED, GREEN, BLUE).build())
                   .build())
           .build();
 
   private static final Schema DEEPLY_NESTED_WITH_AVRO_ENUM_NO_BLUE =
       SchemaBuilder.struct().name("outer").version(1)
-          .field("inner",
-              SchemaBuilder.struct().name("inner")
+          .field(INNER,
+              SchemaBuilder.struct().name(INNER)
                   .field(COLOR, buildAvroEnumSchema(COLOR, 1, RED, GREEN).build())
                   .build())
           .build();
@@ -702,10 +703,6 @@ public class StorageSchemaCompatibilityTest {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Tests for nested-schema compatibility (CC-38689)
-  // ---------------------------------------------------------------------------
-
   /**
    * Adding an enum symbol inside a struct field must be detected by shouldChangeSchema so the
    * connector rotates the file instead of attempting projection (which would DLQ the record).
@@ -713,7 +710,7 @@ public class StorageSchemaCompatibilityTest {
    */
   @Test
   public void nestedAvroEnumAdditionInStructShouldTriggerRotation() {
-    // record has BLUE (new symbol), current file schema does not → incompatible for BACKWARD
+    // record has BLUE (new symbol), current file schema does not → incompatible
     assertChanged(backward, STRUCT_WITH_AVRO_ENUM_BLUE, STRUCT_WITH_AVRO_ENUM_NO_BLUE, diffParams);
     assertChanged(forward,  STRUCT_WITH_AVRO_ENUM_BLUE, STRUCT_WITH_AVRO_ENUM_NO_BLUE, diffParams);
     assertChanged(full,     STRUCT_WITH_AVRO_ENUM_BLUE, STRUCT_WITH_AVRO_ENUM_NO_BLUE, diffParams);
@@ -847,6 +844,10 @@ public class StorageSchemaCompatibilityTest {
     assertChanged(none, STRUCT_WITH_AVRO_ENUM_BLUE, STRUCT_WITH_AVRO_ENUM_NO_BLUE, diffSchema);
     assertChanged(none, STRUCT_WITH_INT_FIELD,       STRUCT_WITH_STRING_FIELD,       diffSchema);
     assertChanged(none, STRUCT_WITH_FIELD_DOC_PARAM, STRUCT_WITHOUT_FIELD_DOC_PARAM, diffSchema);
+    assertChanged(none,
+        DEEPLY_NESTED_WITH_AVRO_ENUM_BLUE,
+        DEEPLY_NESTED_WITH_AVRO_ENUM_NO_BLUE,
+        diffSchema);
   }
 
   protected Object valueFor(Schema schema) {
