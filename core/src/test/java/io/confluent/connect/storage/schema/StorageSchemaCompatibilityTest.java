@@ -35,6 +35,112 @@ public class StorageSchemaCompatibilityTest {
   private final StorageSchemaCompatibility forward = StorageSchemaCompatibility.FORWARD;
   private final StorageSchemaCompatibility full = StorageSchemaCompatibility.FULL;
 
+  private static final String COLOR = "color";
+  private static final String INNER = "inner";
+  private static final String RED = "RED";
+  private static final String GREEN = "GREEN";
+  private static final String BLUE = "BLUE";
+
+  // ---- Schemas for nested-schema compatibility tests ----
+
+  // Struct containing an Avro enum field: version kept equal so version check doesn't fire first.
+  private static final Schema STRUCT_WITH_AVRO_ENUM_BLUE =
+      SchemaBuilder.struct().name("sr").version(1)
+          .field("label", Schema.STRING_SCHEMA)
+          .field(COLOR, buildAvroEnumSchema(COLOR, 1, RED, GREEN, BLUE).build())
+          .build();
+
+  private static final Schema STRUCT_WITH_AVRO_ENUM_NO_BLUE =
+      SchemaBuilder.struct().name("sr").version(1)
+          .field("label", Schema.STRING_SCHEMA)
+          .field(COLOR, buildAvroEnumSchema(COLOR, 1, RED, GREEN).build())
+          .build();
+
+  // Same for Protobuf enums.
+  private static final Schema STRUCT_WITH_PROTOBUF_ENUM_BLUE =
+      SchemaBuilder.struct().name("sr").version(1)
+          .field(COLOR, buildProtobufEnumSchema(COLOR, 1, RED, GREEN, BLUE).build())
+          .build();
+
+  private static final Schema STRUCT_WITH_PROTOBUF_ENUM_NO_BLUE =
+      SchemaBuilder.struct().name("sr").version(1)
+          .field(COLOR, buildProtobufEnumSchema(COLOR, 1, RED, GREEN).build())
+          .build();
+
+  // Deeply nested: outer struct → inner struct → enum field.
+  private static final Schema DEEPLY_NESTED_WITH_AVRO_ENUM_BLUE =
+      SchemaBuilder.struct().name("outer").version(1)
+          .field(INNER,
+              SchemaBuilder.struct().name(INNER)
+                  .field(COLOR, buildAvroEnumSchema(COLOR, 1, RED, GREEN, BLUE).build())
+                  .build())
+          .build();
+
+  private static final Schema DEEPLY_NESTED_WITH_AVRO_ENUM_NO_BLUE =
+      SchemaBuilder.struct().name("outer").version(1)
+          .field(INNER,
+              SchemaBuilder.struct().name(INNER)
+                  .field(COLOR, buildAvroEnumSchema(COLOR, 1, RED, GREEN).build())
+                  .build())
+          .build();
+
+  // Struct whose field changes type (INT32 → STRING).
+  private static final Schema STRUCT_WITH_INT_FIELD =
+      SchemaBuilder.struct().name("s1").version(1)
+          .field("count", Schema.INT32_SCHEMA)
+          .build();
+
+  private static final Schema STRUCT_WITH_STRING_FIELD =
+      SchemaBuilder.struct().name("s1").version(1)
+          .field("count", Schema.STRING_SCHEMA)
+          .build();
+
+  // Struct with a metadata doc parameter on a field — should NOT trigger rotation for
+  // BACKWARD/FORWARD/FULL because checkSchemaParameters filters metadata parameters.
+  private static final Schema STRUCT_WITH_FIELD_DOC_PARAM =
+      SchemaBuilder.struct().name("s1").version(1)
+          .field("name",
+              SchemaBuilder.string()
+                  .parameter("io.confluent.connect.avro.field.doc.name", "The entity name")
+                  .build())
+          .build();
+
+  private static final Schema STRUCT_WITHOUT_FIELD_DOC_PARAM =
+      SchemaBuilder.struct().name("s1").version(1)
+          .field("name", Schema.STRING_SCHEMA)
+          .build();
+
+  // Array whose element schema is a struct containing an Avro enum.
+  // Arrays need a top-level version for validateAndCheck to pass for non-NONE modes.
+  private static final Schema ARRAY_OF_STRUCT_WITH_AVRO_ENUM_BLUE =
+      SchemaBuilder.array(
+          SchemaBuilder.struct().name("elem")
+              .field(COLOR, buildAvroEnumSchema(COLOR, 1, RED, GREEN, BLUE).build())
+              .build()
+      ).name("arr").version(1).build();
+
+  private static final Schema ARRAY_OF_STRUCT_WITH_AVRO_ENUM_NO_BLUE =
+      SchemaBuilder.array(
+          SchemaBuilder.struct().name("elem")
+              .field(COLOR, buildAvroEnumSchema(COLOR, 1, RED, GREEN).build())
+              .build()
+      ).name("arr").version(1).build();
+
+  // Map whose value schema is a struct containing an Avro enum.
+  private static final Schema MAP_WITH_AVRO_ENUM_VALUE_BLUE =
+      SchemaBuilder.map(Schema.STRING_SCHEMA,
+          SchemaBuilder.struct().name("val")
+              .field(COLOR, buildAvroEnumSchema(COLOR, 1, RED, GREEN, BLUE).build())
+              .build()
+      ).name("m").version(1).build();
+
+  private static final Schema MAP_WITH_AVRO_ENUM_VALUE_NO_BLUE =
+      SchemaBuilder.map(Schema.STRING_SCHEMA,
+          SchemaBuilder.struct().name("val")
+              .field(COLOR, buildAvroEnumSchema(COLOR, 1, RED, GREEN).build())
+              .build()
+      ).name("m").version(1).build();
+
   private final SchemaIncompatibilityType diffSchema = SchemaIncompatibilityType.DIFFERENT_SCHEMA;
   private final SchemaIncompatibilityType diffType = SchemaIncompatibilityType.DIFFERENT_TYPE;
   private final SchemaIncompatibilityType diffName = SchemaIncompatibilityType.DIFFERENT_NAME;
@@ -136,17 +242,17 @@ public class StorageSchemaCompatibilityTest {
   private static final Schema SCHEMA_B_EXTRA_OPTIONAL_FIELD =
       buildStructSchema("b", 2).field("extra", Schema.OPTIONAL_STRING_SCHEMA).build();
   private static final Schema ENUM_SCHEMA_A =
-      buildAvroEnumSchema("e1", 1, "RED", "GREEN", "BLUE").build();
+      buildAvroEnumSchema("e1", 1, RED, GREEN, BLUE).build();
   private static final Schema ENUM_SCHEMA_B =
-      buildAvroEnumSchema("e1", 1, "RED", "GREEN").build();
+      buildAvroEnumSchema("e1", 1, RED, GREEN).build();
   private static final Schema ENUM_SCHEMA_C =
-      buildProtobufEnumSchema("e1", 1, "RED", "GREEN", "BLUE").build();
+      buildProtobufEnumSchema("e1", 1, RED, GREEN, BLUE).build();
   private static final Schema ENUM_SCHEMA_D =
-      buildProtobufEnumSchema("e1", 1, "RED", "GREEN").build();
+      buildProtobufEnumSchema("e1", 1, RED, GREEN).build();
 
   @Test
   public void testShouldChangeSchemaWithEnumAdditionAndBackwardCompatibility() {
-    String value = "BLUE";
+    String value = BLUE;
 
     // Avro schema test
     SinkRecord sinkRecordAvro = new SinkRecord(
@@ -181,7 +287,7 @@ public class StorageSchemaCompatibilityTest {
 
   @Test
   public void testShouldChangeSchemaWithEnumDeletionAndBackwardCompatibility() {
-    String value = "RED";
+    String value = RED;
 
     // Avro schema test
     SinkRecord sinkRecordAvro = new SinkRecord(
@@ -214,7 +320,7 @@ public class StorageSchemaCompatibilityTest {
 
   @Test
   public void testShouldChangeSchemaWithEnumAdditionAndForwardCompatibility() {
-    String value = "BLUE";
+    String value = BLUE;
 
     // Avro schema test
     SinkRecord sinkRecordAvro = new SinkRecord(
@@ -249,7 +355,7 @@ public class StorageSchemaCompatibilityTest {
 
   @Test
   public void testShouldChangeSchemaWithEnumDeletionAndForwardCompatibility() {
-    String value = "RED";
+    String value = RED;
 
     // Avro schema test
     SinkRecord sinkRecordAvro = new SinkRecord(
@@ -282,7 +388,7 @@ public class StorageSchemaCompatibilityTest {
 
   @Test
   public void testProjectSchemaAfterAddingEnumSymbol() {
-    String value = "GREEN";
+    String value = GREEN;
 
     // Avro schema test
     assertThrows(SchemaProjectorException.class, () -> SchemaProjector.project(ENUM_SCHEMA_A, value, ENUM_SCHEMA_B));
@@ -595,6 +701,153 @@ public class StorageSchemaCompatibilityTest {
         valueSchema,
         valueFor(valueSchema)
     );
+  }
+
+  /**
+   * Adding an enum symbol inside a struct field must be detected by shouldChangeSchema so the
+   * connector rotates the file instead of attempting projection (which would DLQ the record).
+   * This is the core scenario from CC-38689.
+   */
+  @Test
+  public void nestedAvroEnumAdditionInStructShouldTriggerRotation() {
+    // record has BLUE (new symbol), current file schema does not → incompatible
+    assertChanged(backward, STRUCT_WITH_AVRO_ENUM_BLUE, STRUCT_WITH_AVRO_ENUM_NO_BLUE, diffParams);
+    assertChanged(forward,  STRUCT_WITH_AVRO_ENUM_BLUE, STRUCT_WITH_AVRO_ENUM_NO_BLUE, diffParams);
+    assertChanged(full,     STRUCT_WITH_AVRO_ENUM_BLUE, STRUCT_WITH_AVRO_ENUM_NO_BLUE, diffParams);
+  }
+
+  @Test
+  public void nestedProtobufEnumAdditionInStructShouldTriggerRotation() {
+    assertChanged(backward, STRUCT_WITH_PROTOBUF_ENUM_BLUE, STRUCT_WITH_PROTOBUF_ENUM_NO_BLUE,
+        diffParams);
+    assertChanged(forward,  STRUCT_WITH_PROTOBUF_ENUM_BLUE, STRUCT_WITH_PROTOBUF_ENUM_NO_BLUE,
+        diffParams);
+    assertChanged(full,     STRUCT_WITH_PROTOBUF_ENUM_BLUE, STRUCT_WITH_PROTOBUF_ENUM_NO_BLUE,
+        diffParams);
+  }
+
+  /**
+   * A record whose enum field has fewer symbols than the current file schema is compatible:
+   * the current schema already knows all symbols the record can produce.
+   * Projection must also succeed (current schema is a superset).
+   */
+  @Test
+  public void nestedEnumDeletionInStructShouldNotTriggerRotation() {
+    // record has only RED+GREEN, current file schema has RED+GREEN+BLUE → compatible
+    assertUnchanged(backward, STRUCT_WITH_AVRO_ENUM_NO_BLUE, STRUCT_WITH_AVRO_ENUM_BLUE);
+    assertUnchanged(forward,  STRUCT_WITH_AVRO_ENUM_NO_BLUE, STRUCT_WITH_AVRO_ENUM_BLUE);
+    assertUnchanged(full,     STRUCT_WITH_AVRO_ENUM_NO_BLUE, STRUCT_WITH_AVRO_ENUM_BLUE);
+    assertUnchanged(backward, STRUCT_WITH_PROTOBUF_ENUM_NO_BLUE, STRUCT_WITH_PROTOBUF_ENUM_BLUE);
+    assertUnchanged(forward,  STRUCT_WITH_PROTOBUF_ENUM_NO_BLUE, STRUCT_WITH_PROTOBUF_ENUM_BLUE);
+    assertUnchanged(full,     STRUCT_WITH_PROTOBUF_ENUM_NO_BLUE, STRUCT_WITH_PROTOBUF_ENUM_BLUE);
+  }
+
+  /**
+   * The enum addition must be detected even when it is two levels deep in the schema tree.
+   */
+  @Test
+  public void deeplyNestedAvroEnumAdditionShouldTriggerRotation() {
+    assertChanged(backward,
+        DEEPLY_NESTED_WITH_AVRO_ENUM_BLUE,
+        DEEPLY_NESTED_WITH_AVRO_ENUM_NO_BLUE,
+        diffParams);
+    assertChanged(forward,
+        DEEPLY_NESTED_WITH_AVRO_ENUM_BLUE,
+        DEEPLY_NESTED_WITH_AVRO_ENUM_NO_BLUE,
+        diffParams);
+    assertChanged(full,
+        DEEPLY_NESTED_WITH_AVRO_ENUM_BLUE,
+        DEEPLY_NESTED_WITH_AVRO_ENUM_NO_BLUE,
+        diffParams);
+  }
+
+  /**
+   * A field inside a struct changing type (INT32 → STRING) must trigger rotation so that
+   * the projection engine does not receive schemas it cannot project.
+   */
+  @Test
+  public void nestedFieldTypeChangeShouldTriggerRotation() {
+    assertChanged(backward, STRUCT_WITH_STRING_FIELD, STRUCT_WITH_INT_FIELD, diffType);
+    assertChanged(forward,  STRUCT_WITH_STRING_FIELD, STRUCT_WITH_INT_FIELD, diffType);
+    assertChanged(full,     STRUCT_WITH_STRING_FIELD, STRUCT_WITH_INT_FIELD, diffType);
+
+    // Opposite direction: record has INT32, current has STRING.
+    assertChanged(backward, STRUCT_WITH_INT_FIELD, STRUCT_WITH_STRING_FIELD, diffType);
+  }
+
+  /**
+   * An enum addition inside an array's element schema must also be caught recursively.
+   */
+  @Test
+  public void arrayWithNestedEnumAdditionShouldTriggerRotation() {
+    assertChanged(backward,
+        ARRAY_OF_STRUCT_WITH_AVRO_ENUM_BLUE,
+        ARRAY_OF_STRUCT_WITH_AVRO_ENUM_NO_BLUE,
+        diffParams);
+    assertChanged(forward,
+        ARRAY_OF_STRUCT_WITH_AVRO_ENUM_BLUE,
+        ARRAY_OF_STRUCT_WITH_AVRO_ENUM_NO_BLUE,
+        diffParams);
+    assertChanged(full,
+        ARRAY_OF_STRUCT_WITH_AVRO_ENUM_BLUE,
+        ARRAY_OF_STRUCT_WITH_AVRO_ENUM_NO_BLUE,
+        diffParams);
+  }
+
+  /**
+   * An enum addition inside a map's value schema must also be caught recursively.
+   */
+  @Test
+  public void mapWithNestedEnumAdditionShouldTriggerRotation() {
+    assertChanged(backward,
+        MAP_WITH_AVRO_ENUM_VALUE_BLUE,
+        MAP_WITH_AVRO_ENUM_VALUE_NO_BLUE,
+        diffParams);
+    assertChanged(forward,
+        MAP_WITH_AVRO_ENUM_VALUE_BLUE,
+        MAP_WITH_AVRO_ENUM_VALUE_NO_BLUE,
+        diffParams);
+    assertChanged(full,
+        MAP_WITH_AVRO_ENUM_VALUE_BLUE,
+        MAP_WITH_AVRO_ENUM_VALUE_NO_BLUE,
+        diffParams);
+  }
+
+  /**
+   * Metadata documentation parameters on nested fields (e.g., io.confluent.connect.avro.field.doc.*)
+   * must not trigger rotation. These are filtered by checkSchemaParameters before comparison,
+   * matching SchemaProjector's behaviour.
+   */
+  @Test
+  public void nestedFieldDocParamShouldNotTriggerRotation() {
+    assertUnchanged(backward, STRUCT_WITH_FIELD_DOC_PARAM, STRUCT_WITHOUT_FIELD_DOC_PARAM);
+    assertUnchanged(forward,  STRUCT_WITH_FIELD_DOC_PARAM, STRUCT_WITHOUT_FIELD_DOC_PARAM);
+    assertUnchanged(full,     STRUCT_WITH_FIELD_DOC_PARAM, STRUCT_WITHOUT_FIELD_DOC_PARAM);
+
+    // Opposite direction: current has doc param, record does not
+    assertUnchanged(backward, STRUCT_WITHOUT_FIELD_DOC_PARAM, STRUCT_WITH_FIELD_DOC_PARAM);
+    assertUnchanged(forward,  STRUCT_WITHOUT_FIELD_DOC_PARAM, STRUCT_WITH_FIELD_DOC_PARAM);
+    assertUnchanged(full,     STRUCT_WITHOUT_FIELD_DOC_PARAM, STRUCT_WITH_FIELD_DOC_PARAM);
+  }
+
+  /**
+   * NONE compatibility must be unaffected: it overrides check() with Schema.equals() and
+   * never calls checkSchemaCompatibility(), so nested schema details don't change its
+   * rotation decision.
+   */
+  @Test
+  public void noneCompatibilityShouldUseSchemaEqualsForNestedSchemas() {
+    // Identical struct+enum schemas → no rotation
+    assertUnchanged(none, STRUCT_WITH_AVRO_ENUM_BLUE, STRUCT_WITH_AVRO_ENUM_BLUE);
+
+    // Struct schemas that differ in any way → rotation (diffSchema, not diffParams)
+    assertChanged(none, STRUCT_WITH_AVRO_ENUM_BLUE, STRUCT_WITH_AVRO_ENUM_NO_BLUE, diffSchema);
+    assertChanged(none, STRUCT_WITH_INT_FIELD,       STRUCT_WITH_STRING_FIELD,       diffSchema);
+    assertChanged(none, STRUCT_WITH_FIELD_DOC_PARAM, STRUCT_WITHOUT_FIELD_DOC_PARAM, diffSchema);
+    assertChanged(none,
+        DEEPLY_NESTED_WITH_AVRO_ENUM_BLUE,
+        DEEPLY_NESTED_WITH_AVRO_ENUM_NO_BLUE,
+        diffSchema);
   }
 
   protected Object valueFor(Schema schema) {
