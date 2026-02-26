@@ -160,7 +160,7 @@ public class SchemaProjector {
    * @return a new map with metadata parameters filtered out, or empty map if input was
    *         null or empty
    */
-  private static Map<String, String> filterMetadataParameters(Map<String, String> parameters) {
+  static Map<String, String> filterMetadataParameters(Map<String, String> parameters) {
     if (parameters == null || parameters.isEmpty()) {
       return new HashMap<>();
     }
