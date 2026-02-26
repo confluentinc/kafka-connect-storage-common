@@ -101,6 +101,7 @@
         -->
         <groovy.override.version>2.4.21</groovy.override.version>
         <derby.override.version>10.14.2.0</derby.override.version>
+        <aircompressor.version>2.0.3</aircompressor.version>
         <orc-core.override.version>1.4.3</orc-core.override.version>
     </properties>
 
@@ -297,6 +298,13 @@
                 <groupId>org.apache.orc</groupId>
                 <artifactId>orc-core</artifactId>
                 <version>${orc-core.override.version}</version>
+            </dependency>
+            <!-- pin aircompressor to fix CVE-2025-67721 (CONMON-19884)
+                 Transitive via orc-core. Remove once orc-core ships with aircompressor >= 2.0.3 -->
+            <dependency>
+                <groupId>io.airlift</groupId>
+                <artifactId>aircompressor</artifactId>
+                <version>${aircompressor.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
