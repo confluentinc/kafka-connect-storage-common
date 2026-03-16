@@ -203,7 +203,7 @@ public class DataUtilsTest extends StorageSinkTestBase {
       DataUtils.getNestedFieldValue(map, fieldName);
     });
     assertThat(e.getMessage(),
-        startsWith(String.format("The field '%s' does not exist in", fieldName)));
+        startsWith(String.format("The field '%s' does not exist", fieldName)));
   }
 
   @Test
@@ -218,7 +218,7 @@ public class DataUtilsTest extends StorageSinkTestBase {
       DataUtils.getNestedFieldValue(map, topField + "." + fieldName);
     });
     assertThat(e.getMessage(),
-        startsWith(String.format("The field '%s.%s' does not exist in", topField, fieldName)));
+        startsWith(String.format("The field '%s.%s' does not exist", topField, fieldName)));
   }
 
   @Test
