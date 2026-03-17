@@ -63,6 +63,7 @@
         <module>avatica-shaded</module>
         <module>hadoop-shaded-guava</module>
         <module>hadoop-shaded-protobuf</module>
+        <module>parquet-shaded-jackson</module>
         <module>package-kafka-connect-storage-common</module>
     </modules>
 
