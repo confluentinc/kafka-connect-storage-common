@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -8,13 +10,11 @@
         <version>11.0.42-SNAPSHOT</version>
     </parent>
 
-    <artifactId>kafka-connect-storage-common-orc-core-shaded-jackson</artifactId>
+    <artifactId>kafka-connect-storage-common-parquet-shaded-jackson</artifactId>
     <packaging>jar</packaging>
-    <name>kafka-connect-storage-common-orc-core-shaded-jackson</name>
+    <name>kafka-connect-storage-common-parquet-shaded-jackson</name>
 
     <properties>
-        <orc-core.version>2.2.1</orc-core.version>
-        <jackson.version>2.18.6</jackson.version>
         <maven-shade-plugin.version>3.5.0</maven-shade-plugin.version>
     </properties>
 
@@ -45,18 +45,14 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <!-- Include ORC Core and all Jackson dependencies -->
                             <artifactSet>
                                 <includes>
-                                    <include>org.apache.orc:*</include>
                                     <include>com.fasterxml.jackson.core:*</include>
                                 </includes>
                             </artifactSet>
 
-                            <!-- Apply general filters to clean up META-INF for all included artifacts -->
                             <filters>
                                 <filter>
-                                    <!-- This filter now applies to all included artifacts (*:*) -->
                                     <artifact>*:*</artifact>
                                     <excludes>
                                         <exclude>META-INF/MANIFEST.MF</exclude>
@@ -69,11 +65,11 @@
                                 </filter>
                             </filters>
 
-                            <!-- Relocate Jackson packages into a shaded namespace -->
+                            <!-- Match parquet's relocation pattern exactly -->
                             <relocations>
                                 <relocation>
-                                    <pattern>com/fasterxml/jackson</pattern>
-                                    <shadedPattern>io/confluent/shaded/com/fasterxml/jackson/</shadedPattern>
+                                    <pattern>com.fasterxml.jackson</pattern>
+                                    <shadedPattern>shaded.parquet.com.fasterxml.jackson</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
@@ -84,22 +80,14 @@
     </build>
 
     <dependencies>
-        <!-- The runtime Hadoop client that brings in Jackson transitively -->
-        <dependency>
-            <groupId>org.apache.orc</groupId>
-            <artifactId>orc-core</artifactId>
-            <version>${orc-core.version}</version>
-        </dependency>
-
-        <!-- Desired Jackson version to use and to be shaded into a new namespace -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
+            <artifactId>jackson-core</artifactId>
             <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
+            <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
         </dependency>
         <dependency>
