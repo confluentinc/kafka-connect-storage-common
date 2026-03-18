@@ -15,9 +15,18 @@
 
 package io.confluent.connect.storage.schema;
 
+import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.DIFFERENT_NAME;
+import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.DIFFERENT_PARAMS;
+import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.DIFFERENT_SCHEMA;
+import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.DIFFERENT_TYPE;
+import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.DIFFERENT_VERSION;
+import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.INCOMPATIBLE_OPTIONALITY;
+import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.MISSING_REQUIRED_FIELD;
+import static io.confluent.connect.storage.schema.SchemaIncompatibilityType.NA;
+
 import org.apache.kafka.connect.connector.ConnectRecord;
+import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
-import org.apache.kafka.connect.data.SchemaProjector;
 import org.apache.kafka.connect.errors.SchemaProjectorException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.source.SourceRecord;
@@ -60,15 +69,17 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
      *
      * @param originalSchema the original (new) schema; may not be null
      * @param currentSchema  the current schema; may not be null
-     * @return true if the schemas are not equal and therefore incompatible,
+     * @return CompatibilityResult: true if the schemas are not equal and therefore incompatible,
      *         or false if they are equal and therefore compatible
      */
     @Override
-    protected boolean check(
+    protected SchemaCompatibilityResult check(
         Schema originalSchema,
         Schema currentSchema
     ) {
-      return !originalSchema.equals(currentSchema);
+      boolean isInCompatible = !originalSchema.equals(currentSchema);
+      SchemaIncompatibilityType schemaIncompatibilityType = isInCompatible ? DIFFERENT_SCHEMA : NA;
+      return new SchemaCompatibilityResult(isInCompatible, schemaIncompatibilityType);
     }
   },
   BACKWARD,
@@ -82,15 +93,17 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
      *
      * @param originalSchema the original (new) schema; may not be null
      * @param currentSchema  the current schema; may not be null
-     * @return true if the schema are not compatible for projection, or false if they are
-     *         compatible
+     * @return CompatibilityResult true if the schema are not compatible for projection,
+     *         or false if they are compatible
      */
     @Override
-    protected boolean checkVersions(
+    protected SchemaCompatibilityResult checkVersions(
         Schema originalSchema,
         Schema currentSchema
     ) {
-      return (originalSchema.version()).compareTo(currentSchema.version()) < 0;
+      boolean isInCompatible = (originalSchema.version()).compareTo(currentSchema.version()) < 0;
+      SchemaIncompatibilityType schemaIncompatibilityType = isInCompatible ? DIFFERENT_VERSION : NA;
+      return new SchemaCompatibilityResult(isInCompatible, schemaIncompatibilityType);
     }
   },
   FULL;
@@ -131,18 +144,18 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    *
    * @param valueSchema   the schema of the value to be projected; may not be null
    * @param currentSchema the current schema; may not be null
-   * @return true if the schemas are not compatible for projection, or false if they are
-   *         compatible
+   * @return CompatibilityResult: true if the schemas are not compatible for projection,
+   *         or false if they are compatible
    */
-  protected boolean validateAndCheck(
+  protected SchemaCompatibilityResult validateAndCheck(
       Schema valueSchema,
       Schema currentSchema
   ) {
     if (currentSchema == null && valueSchema == null) {
-      return false;
+      return new SchemaCompatibilityResult(false, NA);
     }
     if (currentSchema == valueSchema) {
-      return false;
+      return new SchemaCompatibilityResult(false, NA);
     }
 
     if (currentSchema == null || valueSchema == null) {
@@ -157,7 +170,6 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
           "Schema version required for " + toString() + " compatibility"
       );
     }
-
     return check(valueSchema, currentSchema);
   }
 
@@ -165,8 +177,9 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    * Check whether the two schemas are incompatible such that they would prevent successfully
    * {@link #project projecting} a key or value with the original schema into the current schema.
    *
-   * <p>This method currently considers schemas to be incompatible for projection when any of
-   * the following are true:
+   * <p>This method considers schemas to be incompatible for projection when any of the following
+   * are true, checked recursively at every nesting level (struct fields, array elements,
+   * map keys/values):
    * <ol>
    *   <li>The {@link Schema#type() Schema types} are different, per
    *       {@link #checkSchemaTypes(Schema, Schema)}</li>
@@ -174,34 +187,29 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    *       {@link #checkSchemaNames(Schema, Schema)}</li>
    *   <li>The {@link Schema#parameters() Schema parameters} are different, per
    *       {@link #checkSchemaParameters(Schema, Schema)}</li>
-   *   <li>The {@link Schema#version() Schema versions} don't allow projection, per
-   *       {@link #checkVersions(Schema, Schema)}</li>
+   *   <li>The {@link Schema#version() Schema versions} don't allow projection (top-level only),
+   *       per {@link #checkVersions(Schema, Schema)}</li>
    * </ol>
-   * In all of these cases, a record key or value using the original schema will not be able to
-   * be projected to the current schema.
    *
-   * <p>Any of the `check*` methods can be overridden to change the individual behavior,
-   * or this method can be overridden to alter the logic described above.</p>
+   * <p>The individual {@code check*} methods ({@link #checkSchemaTypes}, {@link #checkSchemaNames},
+   * {@link #checkSchemaParameters}, {@link #checkVersions}) can be overridden to change their
+   * behavior. The recursive traversal itself is a private implementation detail and cannot be
+   * overridden independently; override this method to alter the overall logic.</p>
    *
    * @param originalSchema the original (new) schema; may not be null
    * @param currentSchema  the current schema; may not be null
-   * @return true if the schemas are not compatible for projection, or false if they are
-   *         compatible
+   * @return SchemaCompatibilityResult: true if the schemas are not compatible for projection,
+   *         or false if they are compatible
    */
-  protected boolean check(
+  protected SchemaCompatibilityResult check(
       Schema originalSchema,
       Schema currentSchema
   ) {
-    if (checkSchemaTypes(originalSchema, currentSchema)) {
-      return true;
+    SchemaCompatibilityResult result = checkSchemaCompatibility(
+        originalSchema, currentSchema);
+    if (result.isInCompatible()) {
+      return result;
     }
-    if (checkSchemaNames(originalSchema, currentSchema)) {
-      return true;
-    }
-    if (checkSchemaParameters(originalSchema, currentSchema)) {
-      return true;
-    }
-
     return checkVersions(originalSchema, currentSchema);
   }
 
@@ -216,14 +224,16 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    *
    * @param originalSchema the original (new) schema; may not be null
    * @param currentSchema  the current schema; may not be null
-   * @return true if the schema versions are not compatible for projection, or false if they are
-   *         compatible
+   * @return SchemaCompatibilityResult: true if the schema versions are not compatible for
+   *         projection, or false if they are compatible
    */
-  protected boolean checkVersions(
+  protected SchemaCompatibilityResult checkVersions(
       Schema originalSchema,
       Schema currentSchema
   ) {
-    return originalSchema.version().compareTo(currentSchema.version()) > 0;
+    boolean isInCompatible = originalSchema.version().compareTo(currentSchema.version()) > 0;
+    SchemaIncompatibilityType schemaIncompatibilityType = isInCompatible ? DIFFERENT_VERSION : NA;
+    return new SchemaCompatibilityResult(isInCompatible, schemaIncompatibilityType);
   }
 
   /**
@@ -264,6 +274,14 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    * prevent successfully {@link #project projecting} a key or value with the original schema
    * into the current schema.
    *
+   * <p>Metadata/documentation parameters (such as {@code connect.record.doc},
+   * {@code connect.record.aliases}, {@code connect.record.namespace}, and
+   * {@code io.confluent.connect.avro.field.doc.*}) are filtered out before comparison,
+   * matching the behaviour in {@link SchemaProjector}.
+   *
+   * <p>For enum schemas a subset check is applied: every symbol in {@code originalSchema} must
+   * exist in {@code currentSchema}. For all other schema types a strict equality check is used.
+   *
    * @param originalSchema the original (new) schema; may not be null
    * @param currentSchema  the current schema; may not be null
    * @return true if the schema parameters are not compatible for projection, or false if they are
@@ -273,11 +291,117 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
       Schema originalSchema,
       Schema currentSchema
   ) {
-    return !Objects.equals(originalSchema.parameters(), currentSchema.parameters());
+    Map<String, String> originalParams =
+        SchemaProjector.filterMetadataParameters(originalSchema.parameters());
+    Map<String, String> currentParams =
+        SchemaProjector.filterMetadataParameters(currentSchema.parameters());
+
+    if (SchemaProjector.isEnumSchema(originalSchema)
+        && SchemaProjector.isEnumSchema(currentSchema)) {
+      return !currentParams.entrySet().containsAll(originalParams.entrySet());
+    } else {
+      return !Objects.equals(originalParams, currentParams);
+    }
   }
 
   protected boolean isPromotable(Schema.Type sourceType, Schema.Type targetType) {
     return PROMOTABLES.contains(new AbstractMap.SimpleImmutableEntry<>(sourceType, targetType));
+  }
+
+  /**
+   * Recursively checks schema compatibility at the current level and all nested levels.
+   * At each level, checks {@link #checkSchemaTypes types}, {@link #checkSchemaNames names}, and
+   * {@link #checkSchemaParameters parameters}. For {@link Schema.Type#STRUCT STRUCT},
+   * {@link Schema.Type#ARRAY ARRAY}, and {@link Schema.Type#MAP MAP} schemas, descends into
+   * nested schemas (fields, elements, keys/values).
+   *
+   * <p>This mirrors {@link SchemaProjector}'s recursive traversal pattern so that structural
+   * incompatibilities are detected early (triggering file rotation) rather than only during
+   * {@link SchemaProjector#project} (where they could cause a {@link SchemaProjectorException}
+   * and route the record to the DLQ). In addition to type, name, and parameter checks, this
+   * method also detects optionality mismatches (record field is optional but file field is
+   * required with no default) and, for struct schemas, missing required fields (file schema has
+   * a required field with no default that is absent from the record schema).
+   *
+   * <p>Version checks are intentionally excluded here — they are applied only at the top level
+   * by {@link #check(Schema, Schema)} after this method returns.
+   *
+   * <p>For fields present in <em>both</em> schemas, recursive compatibility checks are applied.
+   * Fields present only in {@code originalSchema} (record has extra field) are ignored.
+   * Fields present only in {@code currentSchema} (file has extra field) that are required with
+   * no default value are flagged as incompatible, since {@link SchemaProjector#project} would
+   * throw for them.
+   *
+   * @param originalSchema the incoming record's schema at this nesting level
+   * @param currentSchema  the current file's schema at this nesting level
+   * @return SchemaCompatibilityResult indicating whether any incompatibility was found
+   */
+  private SchemaCompatibilityResult checkSchemaCompatibility(
+      Schema originalSchema,
+      Schema currentSchema
+  ) {
+    if (checkSchemaTypes(originalSchema, currentSchema)) {
+      return new SchemaCompatibilityResult(true, DIFFERENT_TYPE);
+    }
+    if (checkSchemaNames(originalSchema, currentSchema)) {
+      return new SchemaCompatibilityResult(true, DIFFERENT_NAME);
+    }
+    if (checkSchemaParameters(originalSchema, currentSchema)) {
+      return new SchemaCompatibilityResult(true, DIFFERENT_PARAMS);
+    }
+    if (originalSchema.isOptional() && !currentSchema.isOptional()
+        && currentSchema.defaultValue() == null) {
+      return new SchemaCompatibilityResult(true, INCOMPATIBLE_OPTIONALITY);
+    }
+
+    // Recurse into nested schemas (struct fields, array elements, map keys/values)
+    if (originalSchema.type() == Schema.Type.STRUCT) {
+      return checkStructFieldsCompatibility(originalSchema, currentSchema);
+    } else if (originalSchema.type() == Schema.Type.ARRAY) {
+      return checkSchemaCompatibility(
+          originalSchema.valueSchema(), currentSchema.valueSchema());
+    } else if (originalSchema.type() == Schema.Type.MAP) {
+      return checkMapSchemaCompatibility(originalSchema, currentSchema);
+    }
+    return new SchemaCompatibilityResult(false, NA);
+  }
+
+  private SchemaCompatibilityResult checkStructFieldsCompatibility(
+      Schema originalSchema,
+      Schema currentSchema
+  ) {
+    for (Field field : originalSchema.fields()) {
+      Field currentField = currentSchema.field(field.name());
+      if (currentField == null) {
+        continue; // field absent in current schema — handled by SchemaProjector projection rules
+      }
+      SchemaCompatibilityResult result = checkSchemaCompatibility(
+          field.schema(), currentField.schema());
+      if (result.isInCompatible()) {
+        return result;
+      }
+    }
+    for (Field field : currentSchema.fields()) {
+      if (originalSchema.field(field.name()) == null
+          && !field.schema().isOptional()
+          && field.schema().defaultValue() == null) {
+        return new SchemaCompatibilityResult(true, MISSING_REQUIRED_FIELD);
+      }
+    }
+    return new SchemaCompatibilityResult(false, NA);
+  }
+
+  private SchemaCompatibilityResult checkMapSchemaCompatibility(
+      Schema originalSchema,
+      Schema currentSchema
+  ) {
+    SchemaCompatibilityResult result = checkSchemaCompatibility(
+        originalSchema.keySchema(), currentSchema.keySchema());
+    if (result.isInCompatible()) {
+      return result;
+    }
+    return checkSchemaCompatibility(
+        originalSchema.valueSchema(), currentSchema.valueSchema());
   }
 
   /**
@@ -307,11 +431,11 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
    * @param record             the next record; may not be null
    * @param currentKeySchema   the current key schema; may be null
    * @param currentValueSchema the current value schema; may be null
-   * @return true if the key or value schema in the supplied record has changed such that it cannot
-   *         be projected to the current key schema and value schema, or false if the record can
-   *         be projected
+   * @return CompatibilityResult: true if the key or value schema in the supplied record has changed
+   *         such that it cannot be projected to the current key schema and value schema, or false
+   *         if the record can be projected
    */
-  public boolean shouldChangeSchema(
+  public SchemaCompatibilityResult shouldChangeSchema(
       ConnectRecord<?> record,
       Schema currentKeySchema,
       Schema currentValueSchema
@@ -359,19 +483,18 @@ public enum StorageSchemaCompatibility implements SchemaCompatibility {
     );
 
     // Just reference comparison here.
-    return projected.getKey() == record.key() && projected.getValue() == record.value()
-           ? record
-           : new SinkRecord(
-               record.topic(),
-               record.kafkaPartition(),
-               currentKeySchema,
-               projected.getKey(),
-               currentValueSchema,
-               projected.getValue(),
-               record.kafkaOffset(),
-               record.timestamp(),
-               record.timestampType()
-           );
+    if (projected.getKey() == record.key() && projected.getValue() == record.value()) {
+      return record;
+    }
+
+    return record.newRecord(
+        record.topic(),
+        record.kafkaPartition(),
+        currentKeySchema,
+        projected.getKey(),
+        currentValueSchema,
+        projected.getValue(),
+        record.timestamp());
   }
 
   private static Map.Entry<Object, Object> projectInternal(
