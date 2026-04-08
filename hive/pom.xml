@@ -33,7 +33,7 @@
         <xml-apis.version>1.4.01</xml-apis.version>
         <jamon.runtime.version>2.4.1</jamon.runtime.version>
         <jettison.version>1.5.4</jettison.version>
-        <netty.all.version>4.1.109.Final</netty.all.version>
+        <netty.all.version>4.1.132.Final</netty.all.version>
     </properties>
 
     <dependencies>
