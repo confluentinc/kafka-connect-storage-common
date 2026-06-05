@@ -145,6 +145,15 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final String SCHEMA_COMPATIBILITY_DEFAULT = "NONE";
   public static final String SCHEMA_COMPATIBILITY_DISPLAY = "Schema Compatibility";
 
+  // Mode group
+  public static final String MODE_CONFIG = "mode";
+  public static final String MODE_DEFAULT = "GENERIC";
+  public static final String MODE_DOC =
+      "The connector's operation mode. "
+      + "GENERIC: standard sink behavior. "
+      + "BACKUP_FULL_RECORD: consolidates key, value, headers and metadata "
+      + "into a single envelope record per message with pristine schema preservation.";
+
   // CHECKSTYLE:OFF
   public static final ConfigDef.Recommender schemaCompatibilityRecommender =
       new SchemaCompatibilityRecommender();
@@ -336,6 +345,23 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           schemaCompatibilityRecommender
       );
     }
+
+    {
+      final String group = "Mode";
+      int orderInGroup = 0;
+      configDef.define(
+          MODE_CONFIG,
+          Type.STRING,
+          MODE_DEFAULT,
+          ConfigDef.ValidString.in("GENERIC", "BACKUP_FULL_RECORD"),
+          Importance.MEDIUM,
+          MODE_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          "Mode"
+      );
+    }
     return configDef;
   }
 
@@ -432,5 +458,16 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
     props.put(CONNECT_META_DATA_CONFIG, get(CONNECT_META_DATA_CONFIG));
     props.put(ALLOW_OPTIONAL_MAP_KEYS, get(ALLOW_OPTIONAL_MAP_KEYS));
     return new AvroDataConfig(props);
+  }
+
+  public boolean isBackupMode() {
+    return "BACKUP_FULL_RECORD".equalsIgnoreCase(getString(MODE_CONFIG));
+  }
+
+  public String getEffectiveSchemaCompatibility() {
+    if (isBackupMode()) {
+      return "NONE";
+    }
+    return getString(SCHEMA_COMPATIBILITY_CONFIG);
   }
 }

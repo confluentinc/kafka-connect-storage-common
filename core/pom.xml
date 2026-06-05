@@ -38,6 +38,10 @@
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
+            <artifactId>kafka-schema-converter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.confluent</groupId>
             <artifactId>kafka-connect-protobuf-converter</artifactId>
         </dependency>
         <dependency>
