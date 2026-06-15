@@ -44,6 +44,12 @@ public final class BackupEnvelope {
   public static final String FIELD_HEADER_VALUE = "headerValue";
   public static final String FIELD_HEADER_SCHEMA_TYPE = "headerSchemaType";
 
+  // Converter schema backup config key.
+  // Must match BackupWrapper.SCHEMA_BACKUP_ENABLED_CONFIG
+  // in the schema-registry repo (cross-repo contract).
+  // User sets: value.converter.schema.backup.enabled=true
+  public static final String SCHEMA_BACKUP_ENABLED_CONFIG = "schema.backup.enabled";
+
   // Schema type constants
   public static final String TYPE_AVRO = "AVRO";
   public static final String TYPE_PROTOBUF = "PROTOBUF";

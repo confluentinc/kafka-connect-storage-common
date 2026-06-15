@@ -15,8 +15,6 @@
 
 package io.confluent.connect.storage.backup;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,9 +32,6 @@ public class ObjectStoreSchemaBackupStore implements SchemaBackupStore {
 
   private static final Logger log =
       LoggerFactory.getLogger(ObjectStoreSchemaBackupStore.class);
-  private static final ObjectMapper JSON = new ObjectMapper()
-      .enable(SerializationFeature.INDENT_OUTPUT);
-
   private final StorageWriter writer;
   private final String topicsDir;
   private final String dirDelim;
@@ -54,8 +49,7 @@ public class ObjectStoreSchemaBackupStore implements SchemaBackupStore {
   public void backupIfNeeded(
       String topic, int schemaId, int version,
       String schemaType, String subject, String rawSchema,
-      List<SchemaManifest.SchemaReferenceEntry> references,
-      String compatibility) {
+      List<SchemaManifest.SchemaReferenceEntry> references) {
     if (schemaId <= 0) {
       log.warn("Invalid schemaId={} for topic={}, skipping backup", schemaId, topic);
       return;
@@ -84,9 +78,9 @@ public class ObjectStoreSchemaBackupStore implements SchemaBackupStore {
 
     SchemaManifest.SchemaEntry entry = new SchemaManifest.SchemaEntry(
         schemaId, schemaType, subject, version,
-        schemaId + ext, references, compatibility);
+        schemaId + ext, references);
     try {
-      String entryJson = JSON.writeValueAsString(entry);
+      String entryJson = entry.toJsonString();
       writer.write(entryPath, entryJson);
     } catch (Exception e) {
       log.error("Failed to write entry file: {}. Schema will be retried.", entryPath, e);

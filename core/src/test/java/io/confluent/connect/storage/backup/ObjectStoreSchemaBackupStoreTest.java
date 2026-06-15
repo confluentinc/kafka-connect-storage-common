@@ -47,7 +47,7 @@ public class ObjectStoreSchemaBackupStoreTest {
     when(writer.exists(anyString())).thenReturn(false);
 
     store.backupIfNeeded("orders", 42, 1, "AVRO",
-        "orders-value", "{\"type\":\"record\"}", null, null);
+        "orders-value", "{\"type\":\"record\"}", null);
 
     ArgumentCaptor<String> pathCaptor = ArgumentCaptor.forClass(String.class);
     verify(writer, times(2)).write(pathCaptor.capture(), anyString());
@@ -61,7 +61,7 @@ public class ObjectStoreSchemaBackupStoreTest {
     when(writer.exists(anyString())).thenReturn(false);
 
     store.backupIfNeeded("orders", 10, 1, "PROTOBUF",
-        "orders-value", "syntax=\"proto3\";", null, null);
+        "orders-value", "syntax=\"proto3\";", null);
 
     ArgumentCaptor<String> pathCaptor = ArgumentCaptor.forClass(String.class);
     verify(writer, times(2)).write(pathCaptor.capture(), anyString());
@@ -73,7 +73,7 @@ public class ObjectStoreSchemaBackupStoreTest {
     when(writer.exists(anyString())).thenReturn(false);
 
     store.backupIfNeeded("orders", 10, 1, "JSON_SCHEMA",
-        "orders-value", "{\"type\":\"object\"}", null, null);
+        "orders-value", "{\"type\":\"object\"}", null);
 
     ArgumentCaptor<String> pathCaptor = ArgumentCaptor.forClass(String.class);
     verify(writer, times(2)).write(pathCaptor.capture(), anyString());
@@ -85,9 +85,9 @@ public class ObjectStoreSchemaBackupStoreTest {
     when(writer.exists(anyString())).thenReturn(false);
 
     store.backupIfNeeded("orders", 42, 1, "AVRO",
-        "orders-value", "{}", null, null);
+        "orders-value", "{}", null);
     store.backupIfNeeded("orders", 42, 1, "AVRO",
-        "orders-value", "{}", null, null);
+        "orders-value", "{}", null);
 
     verify(writer, times(2)).write(anyString(), anyString());
   }
@@ -97,7 +97,7 @@ public class ObjectStoreSchemaBackupStoreTest {
     when(writer.exists(anyString())).thenReturn(true);
 
     store.backupIfNeeded("orders", 42, 1, "AVRO",
-        "orders-value", "{}", null, null);
+        "orders-value", "{}", null);
 
     verify(writer, never()).write(anyString(), anyString());
   }
@@ -105,9 +105,9 @@ public class ObjectStoreSchemaBackupStoreTest {
   @Test
   public void testInvalidSchemaIdSkipped() {
     store.backupIfNeeded("orders", 0, 1, "AVRO",
-        "orders-value", "{}", null, null);
+        "orders-value", "{}", null);
     store.backupIfNeeded("orders", -1, 1, "AVRO",
-        "orders-value", "{}", null, null);
+        "orders-value", "{}", null);
 
     verify(writer, never()).write(anyString(), anyString());
     verify(writer, never()).exists(anyString());
@@ -122,7 +122,7 @@ public class ObjectStoreSchemaBackupStoreTest {
 
     store.backupIfNeeded("orders", 42, 1, "AVRO",
         "orders-value", "{}",
-        Collections.singletonList(ref), null);
+        Collections.singletonList(ref));
 
     ArgumentCaptor<String> contentCaptor = ArgumentCaptor.forClass(String.class);
     verify(writer, times(2)).write(anyString(), contentCaptor.capture());
@@ -140,12 +140,12 @@ public class ObjectStoreSchemaBackupStoreTest {
         .when(writer).write(anyString(), anyString());
 
     store.backupIfNeeded("orders", 42, 1, "AVRO",
-        "orders-value", "{}", null, null);
+        "orders-value", "{}", null);
 
     when(writer.exists(anyString())).thenReturn(false);
     org.mockito.Mockito.doNothing().when(writer).write(anyString(), anyString());
     store.backupIfNeeded("orders", 42, 1, "AVRO",
-        "orders-value", "{}", null, null);
+        "orders-value", "{}", null);
 
     verify(writer, times(4)).write(anyString(), anyString());
   }
@@ -155,7 +155,7 @@ public class ObjectStoreSchemaBackupStoreTest {
     when(writer.exists(anyString())).thenReturn(false);
 
     store.backupIfNeeded("orders", 42, 1, "AVRO",
-        "orders-value", "{}", null, null);
+        "orders-value", "{}", null);
 
     ArgumentCaptor<String> pathCaptor = ArgumentCaptor.forClass(String.class);
     verify(writer, times(2)).write(pathCaptor.capture(), anyString());

@@ -15,60 +15,90 @@
 
 package io.confluent.connect.storage.format.backup;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.connect.storage.backup.BackupReferenceParser;
 import io.confluent.connect.storage.backup.EnvelopeSchemaBuilder;
 import io.confluent.connect.storage.backup.SchemaBackupStore;
 import io.confluent.connect.storage.backup.SchemaManifest;
-import io.confluent.connect.storage.format.RecordWriter;
 import io.confluent.connect.storage.format.backup.BackupWrapperExtractor.Unwrapped;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
+import org.apache.kafka.connect.errors.DataException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-public class EnvelopeRecordWriter implements RecordWriter {
+/**
+ * Transforms SinkRecords into envelope-wrapped SinkRecords for backup mode.
+ *
+ * <p>This transformer wraps each record in an envelope struct that captures
+ * the full record context (key, value, headers, topic, partition, offset,
+ * timestamp) along with schema metadata. It also backs up schema files
+ * (.entry.json + .avsc/.proto/.json) to object storage.
+ *
+ * <p>The resulting envelope SinkRecord has a consistent, non-null schema
+ * that changes only when the key or value schema changes — including
+ * tombstone transitions. This allows {@code TopicPartitionWriter} to
+ * handle file rotation naturally via its existing schema change detection.
+ *
+ * <p>Created in {@code BackupSinkTask.start()}, used in {@code put()},
+ * released in {@code stop()}.
+ */
+public class EnvelopeTransformer {
 
-  private static final com.fasterxml.jackson.databind.ObjectMapper JSON =
-      new com.fasterxml.jackson.databind.ObjectMapper();
-  private static final Logger log =
-      LoggerFactory.getLogger(EnvelopeRecordWriter.class);
+  private static final Logger log = LoggerFactory.getLogger(EnvelopeTransformer.class);
+  private static final ObjectMapper JSON = new ObjectMapper();
 
-  private final RecordWriter delegate;
   private final SchemaBackupStore backupStore;
   private final String keySchemaTypeDefault;
   private final String valueSchemaTypeDefault;
 
-  public EnvelopeRecordWriter(
-      RecordWriter delegate, SchemaBackupStore backupStore,
+  public EnvelopeTransformer(
+      SchemaBackupStore backupStore,
       String keySchemaTypeDefault,
       String valueSchemaTypeDefault) {
-    this.delegate = delegate;
     this.backupStore = backupStore;
     this.keySchemaTypeDefault = keySchemaTypeDefault;
     this.valueSchemaTypeDefault = valueSchemaTypeDefault;
   }
 
-  @Override
-  public void write(SinkRecord record) {
+  /**
+   * Wraps a batch of SinkRecords in envelope structs.
+   * Also backs up schema files for any new schemas encountered.
+   */
+  public Collection<SinkRecord> wrapAll(Collection<SinkRecord> records) {
+    List<SinkRecord> wrapped = new ArrayList<>(records.size());
+    for (SinkRecord record : records) {
+      wrapped.add(wrap(record));
+    }
+    return wrapped;
+  }
+
+  /**
+   * Wraps a single SinkRecord in an envelope struct.
+   * Backs up schema files as a side effect (idempotent).
+   */
+  public SinkRecord wrap(SinkRecord record) {
     Unwrapped key = BackupWrapperExtractor.unwrap(
         record.key(), record.keySchema(), true, keySchemaTypeDefault);
     Unwrapped value = BackupWrapperExtractor.unwrap(
         record.value(), record.valueSchema(), false, valueSchemaTypeDefault);
 
-    // Validate that at least one of key or value is non-null
-    // While Kafka allows such records, they are semantically meaningless in envelope mode
-    // (empty envelope with no data to preserve)
     if (key.getData() == null && value.getData() == null) {
-      throw new org.apache.kafka.connect.errors.DataException(
+      throw new DataException(
           "Both key and value are null for record at topic=" + record.topic()
               + ", partition=" + record.kafkaPartition()
               + ", offset=" + record.kafkaOffset()
-              + ". Envelope backup requires at least one of key or value to be non-null.");
+              + ". Envelope backup requires at least one non-null.");
     }
 
     log.debug("Envelope: topic={}, offset={}, keyType={}, valType={}, keyId={}, valId={}",
@@ -90,15 +120,13 @@ public class EnvelopeRecordWriter implements RecordWriter {
             key.getSchemaType(), value.getSchemaType(),
             key.getSubject(), value.getSubject());
 
-    SinkRecord envelopeRecord = new SinkRecord(
+    return new SinkRecord(
         record.topic(), record.kafkaPartition(),
         null, null,
         envelopeSchema, envelope,
         record.kafkaOffset(),
         record.timestamp(),
         record.timestampType());
-
-    delegate.write(envelopeRecord);
   }
 
   @SuppressWarnings("unchecked")
@@ -118,8 +146,7 @@ public class EnvelopeRecordWriter implements RecordWriter {
         unwrapped.getSchemaType(),
         unwrapped.getSubject(),
         unwrapped.getRawSchema(),
-        refs,
-        null);
+        refs);
   }
 
   @SuppressWarnings("unchecked")
@@ -128,19 +155,17 @@ public class EnvelopeRecordWriter implements RecordWriter {
       return;
     }
     try {
-      java.util.Map<String, java.util.Map<String, Object>> tree =
-          JSON.readValue(
-              referenceTreeJson,
-              new com.fasterxml.jackson.core.type.TypeReference<
-                  java.util.Map<String, java.util.Map<String, Object>>>() {});
-
+      Map<String, Map<String, Object>> tree = JSON.readValue(
+          referenceTreeJson,
+          new TypeReference<Map<String, Map<String, Object>>>() {});
       Set<Integer> visited = new HashSet<>();
-      for (java.util.Map.Entry<String, java.util.Map<String, Object>> entry
-          : tree.entrySet()) {
+      for (Map.Entry<String, Map<String, Object>> entry : tree.entrySet()) {
         backupSingleReference(topic, entry.getValue(), tree, visited);
       }
+    } catch (DataException de) {
+      throw de;
     } catch (Exception e) {
-      throw new org.apache.kafka.connect.errors.DataException(
+      throw new DataException(
           "Failed to backup reference schemas for topic="
           + topic + ". Cannot guarantee pristine restore.", e);
     }
@@ -148,9 +173,8 @@ public class EnvelopeRecordWriter implements RecordWriter {
 
   @SuppressWarnings("unchecked")
   private void backupSingleReference(
-      String topic, java.util.Map<String, Object> node,
-      java.util.Map<String, java.util.Map<String, Object>> tree,
-      Set<Integer> visited) {
+      String topic, Map<String, Object> node,
+      Map<String, Map<String, Object>> tree, Set<Integer> visited) {
     int globalId = node.get("globalId") instanceof Number
         ? ((Number) node.get("globalId")).intValue() : 0;
     if (globalId <= 0 || !visited.add(globalId)) {
@@ -163,39 +187,35 @@ public class EnvelopeRecordWriter implements RecordWriter {
     String schemaType = node.get("schemaType") instanceof String
         ? (String) node.get("schemaType") : null;
     if (schema == null || schemaType == null) {
-      throw new org.apache.kafka.connect.errors.DataException(
-          "Cannot backup reference schema: missing schema text or "
-          + "type for globalId=" + globalId + ", subject=" + subject
-          + ", topic=" + topic
-          + ". Cannot guarantee pristine restore.");
+      throw new DataException(
+          "Cannot backup reference schema: missing schema text or type"
+          + " for globalId=" + globalId + ", subject=" + subject
+          + ", topic=" + topic + ". Cannot guarantee pristine restore.");
     }
-    java.util.List<SchemaManifest.SchemaReferenceEntry> childRefs =
+    List<SchemaManifest.SchemaReferenceEntry> childRefs =
         extractChildRefs(node, tree);
     backupStore.backupIfNeeded(
-        topic, globalId, version, schemaType, subject, schema,
-        childRefs, null);
+        topic, globalId, version, schemaType, subject, schema, childRefs);
   }
 
   @SuppressWarnings("unchecked")
-  private java.util.List<SchemaManifest.SchemaReferenceEntry> extractChildRefs(
-      java.util.Map<String, Object> node,
-      java.util.Map<String, java.util.Map<String, Object>> tree) {
+  private List<SchemaManifest.SchemaReferenceEntry> extractChildRefs(
+      Map<String, Object> node, Map<String, Map<String, Object>> tree) {
     Object refsObj = node.get("references");
-    if (!(refsObj instanceof java.util.List)) {
-      return java.util.Collections.emptyList();
+    if (!(refsObj instanceof List)) {
+      return Collections.emptyList();
     }
-    java.util.List<SchemaManifest.SchemaReferenceEntry> childRefs =
-        new java.util.ArrayList<>();
-    for (Object item : (java.util.List<?>) refsObj) {
-      if (!(item instanceof java.util.Map)) {
+    List<SchemaManifest.SchemaReferenceEntry> childRefs = new ArrayList<>();
+    for (Object item : (List<?>) refsObj) {
+      if (!(item instanceof Map)) {
         continue;
       }
-      java.util.Map<String, Object> m = (java.util.Map<String, Object>) item;
+      Map<String, Object> m = (Map<String, Object>) item;
       String refName = (String) m.get("name");
       String refSubject = (String) m.get("subject");
       int refVersion = m.get("version") instanceof Number
           ? ((Number) m.get("version")).intValue() : 0;
-      java.util.Map<String, Object> childNode = tree.get(refName);
+      Map<String, Object> childNode = tree.get(refName);
       int refGlobalId = childNode != null
           && childNode.get("globalId") instanceof Number
           ? ((Number) childNode.get("globalId")).intValue() : 0;
@@ -203,15 +223,5 @@ public class EnvelopeRecordWriter implements RecordWriter {
           refName, refSubject, refVersion, refGlobalId));
     }
     return childRefs;
-  }
-
-  @Override
-  public void commit() {
-    delegate.commit();
-  }
-
-  @Override
-  public void close() {
-    delegate.close();
   }
 }

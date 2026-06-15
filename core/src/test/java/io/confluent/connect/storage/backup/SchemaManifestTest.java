@@ -17,40 +17,28 @@ package io.confluent.connect.storage.backup;
 
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class SchemaManifestTest {
 
   @Test
-  public void testEmptyManifest() {
-    SchemaManifest manifest = new SchemaManifest();
-    assertEquals("1.0", manifest.getVersion());
-    assertTrue(manifest.getEntries().isEmpty());
-    assertTrue(manifest.getSchemas().isEmpty());
-  }
-
-  @Test
-  public void testAddAndGetEntry() {
-    SchemaManifest manifest = new SchemaManifest();
+  public void testEntryFields() {
     SchemaManifest.SchemaEntry entry = new SchemaManifest.SchemaEntry(
         42, "AVRO", "test-value", 1, "42.avsc",
-        Collections.emptyList(), "BACKWARD");
-    manifest.addEntry(entry);
+        Collections.emptyList());
 
-    assertEquals(1, manifest.getEntries().size());
-    assertNotNull(manifest.getSchema(42));
-    assertEquals("AVRO", manifest.getSchema(42).getType());
-    assertEquals("test-value", manifest.getSchema(42).getSubject());
-    assertEquals(1, manifest.getSchema(42).getVersion());
-    assertEquals("42.avsc", manifest.getSchema(42).getFile());
-    assertEquals("BACKWARD", manifest.getSchema(42).getCompatibility());
+    assertEquals(42, entry.getId());
+    assertEquals("AVRO", entry.getType());
+    assertEquals("test-value", entry.getSubject());
+    assertEquals(1, entry.getVersion());
+    assertEquals("42.avsc", entry.getFile());
+    assertFalse(entry.hasReferences());
   }
 
   @Test
@@ -59,7 +47,7 @@ public class SchemaManifestTest {
         "Address", "address-value", 1, 10);
     SchemaManifest.SchemaEntry entry = new SchemaManifest.SchemaEntry(
         42, "AVRO", "order-value", 1, "42.avsc",
-        Collections.singletonList(ref), null);
+        Collections.singletonList(ref));
 
     assertTrue(entry.hasReferences());
     assertEquals(1, entry.getReferences().size());
@@ -70,55 +58,116 @@ public class SchemaManifestTest {
   }
 
   @Test
-  public void testEntryWithoutReferences() {
+  public void testEntryWithNullReferences() {
     SchemaManifest.SchemaEntry entry = new SchemaManifest.SchemaEntry(
-        10, "AVRO", "address-value", 1, "10.avsc",
-        null, null);
+        10, "AVRO", "address-value", 1, "10.avsc", null);
     assertFalse(entry.hasReferences());
     assertTrue(entry.getReferences().isEmpty());
   }
 
   @Test
-  public void testJsonRoundTrip() throws Exception {
-    SchemaManifest manifest = new SchemaManifest();
+  public void testEntryJsonRoundTrip() throws Exception {
     SchemaManifest.SchemaReferenceEntry ref = new SchemaManifest.SchemaReferenceEntry(
         "Country", "country-value", 1, 5);
-    manifest.addEntry(new SchemaManifest.SchemaEntry(
-        42, "AVRO", "order-value", 1, "42.avsc",
-        Collections.singletonList(ref), "BACKWARD"));
-    manifest.addEntry(new SchemaManifest.SchemaEntry(
-        5, "AVRO", "country-value", 1, "5.avsc",
-        Collections.emptyList(), null));
+    SchemaManifest.SchemaEntry original = new SchemaManifest.SchemaEntry(
+        42, "AVRO", "order-value", 3, "42.avsc",
+        Collections.singletonList(ref));
 
-    byte[] json = manifest.toJson();
-    SchemaManifest restored = SchemaManifest.fromJson(json);
+    String json = original.toJsonString();
+    SchemaManifest.SchemaEntry restored = SchemaManifest.SchemaEntry.fromJsonString(json);
 
-    assertEquals("1.0", restored.getVersion());
-    assertEquals(2, restored.getEntries().size());
-    assertNotNull(restored.getSchema(42));
-    assertNotNull(restored.getSchema(5));
-    assertTrue(restored.getSchema(42).hasReferences());
-    assertFalse(restored.getSchema(5).hasReferences());
-    assertEquals("Country",
-        restored.getSchema(42).getReferences().get(0).getName());
+    assertEquals(original.getId(), restored.getId());
+    assertEquals(original.getType(), restored.getType());
+    assertEquals(original.getSubject(), restored.getSubject());
+    assertEquals(original.getVersion(), restored.getVersion());
+    assertEquals(original.getFile(), restored.getFile());
+    assertTrue(restored.hasReferences());
+    assertEquals(1, restored.getReferences().size());
+    assertEquals("Country", restored.getReferences().get(0).getName());
+    assertEquals("country-value", restored.getReferences().get(0).getSubject());
+    assertEquals(1, restored.getReferences().get(0).getVersion());
+    assertEquals(5, restored.getReferences().get(0).getGlobalId());
   }
 
   @Test
-  public void testGetSchemaNonExistent() {
-    SchemaManifest manifest = new SchemaManifest();
-    assertNull(manifest.getSchema(999));
+  public void testEntryJsonRoundTripNoReferences() throws Exception {
+    SchemaManifest.SchemaEntry original = new SchemaManifest.SchemaEntry(
+        5, "PROTOBUF", "address-value", 1, "5.proto",
+        Collections.emptyList());
+
+    String json = original.toJsonString();
+    SchemaManifest.SchemaEntry restored = SchemaManifest.SchemaEntry.fromJsonString(json);
+
+    assertEquals(5, restored.getId());
+    assertEquals("PROTOBUF", restored.getType());
+    assertEquals("address-value", restored.getSubject());
+    assertEquals(1, restored.getVersion());
+    assertEquals("5.proto", restored.getFile());
+    assertFalse(restored.hasReferences());
   }
 
   @Test
-  public void testAddDuplicateOverwrites() {
-    SchemaManifest manifest = new SchemaManifest();
-    manifest.addEntry(new SchemaManifest.SchemaEntry(
-        42, "AVRO", "old-subject", 1, "42.avsc", null, null));
-    manifest.addEntry(new SchemaManifest.SchemaEntry(
-        42, "AVRO", "new-subject", 2, "42.avsc", null, null));
+  public void testEntryJsonContainsFormatVersion() throws Exception {
+    SchemaManifest.SchemaEntry entry = new SchemaManifest.SchemaEntry(
+        1, "AVRO", "test", 1, "1.avsc", null);
+    String json = entry.toJsonString();
+    assertTrue(json.contains("\"format\" : 1"));
+  }
 
-    assertEquals(1, manifest.getEntries().size());
-    assertEquals("new-subject", manifest.getSchema(42).getSubject());
-    assertEquals(2, manifest.getSchema(42).getVersion());
+  @Test
+  public void testEntryFromJsonMissingFields() throws Exception {
+    // Old entry.json without format or version fields
+    String json = "{\"id\":7,\"type\":\"AVRO\",\"subject\":\"test\",\"file\":\"7.avsc\"}";
+    SchemaManifest.SchemaEntry entry =
+        SchemaManifest.SchemaEntry.fromJsonString(json);
+
+    assertEquals(7, entry.getId());
+    assertEquals("AVRO", entry.getType());
+    assertEquals("test", entry.getSubject());
+    assertEquals(0, entry.getVersion());
+    assertEquals("7.avsc", entry.getFile());
+    assertFalse(entry.hasReferences());
+  }
+
+  @Test
+  public void testEntryFromJsonUnknownFieldsIgnored() throws Exception {
+    String json = "{\"id\":1,\"type\":\"AVRO\",\"subject\":\"s\","
+        + "\"version\":1,\"file\":\"1.avsc\","
+        + "\"references\":[],\"futureField\":\"ignored\"}";
+    SchemaManifest.SchemaEntry entry =
+        SchemaManifest.SchemaEntry.fromJsonString(json);
+    assertNotNull(entry);
+    assertEquals(1, entry.getId());
+  }
+
+  @Test
+  public void testReferenceEntryJsonRoundTrip() throws Exception {
+    SchemaManifest.SchemaReferenceEntry original =
+        new SchemaManifest.SchemaReferenceEntry("Address", "address-value", 2, 10);
+
+    com.fasterxml.jackson.databind.JsonNode json = original.toJson();
+    SchemaManifest.SchemaReferenceEntry restored =
+        SchemaManifest.SchemaReferenceEntry.fromJson(json);
+
+    assertEquals("Address", restored.getName());
+    assertEquals("address-value", restored.getSubject());
+    assertEquals(2, restored.getVersion());
+    assertEquals(10, restored.getGlobalId());
+  }
+
+  @Test
+  public void testMultipleReferencesRoundTrip() throws Exception {
+    List<SchemaManifest.SchemaReferenceEntry> refs = java.util.Arrays.asList(
+        new SchemaManifest.SchemaReferenceEntry("Address", "address-value", 1, 10),
+        new SchemaManifest.SchemaReferenceEntry("Country", "country-value", 1, 5));
+    SchemaManifest.SchemaEntry original = new SchemaManifest.SchemaEntry(
+        42, "AVRO", "user-value", 1, "42.avsc", refs);
+
+    String json = original.toJsonString();
+    SchemaManifest.SchemaEntry restored = SchemaManifest.SchemaEntry.fromJsonString(json);
+
+    assertEquals(2, restored.getReferences().size());
+    assertEquals("Address", restored.getReferences().get(0).getName());
+    assertEquals("Country", restored.getReferences().get(1).getName());
   }
 }

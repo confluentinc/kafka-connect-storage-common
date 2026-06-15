@@ -147,12 +147,32 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
 
   // Mode group
   public static final String MODE_CONFIG = "mode";
-  public static final String MODE_DEFAULT = "GENERIC";
+  public static final String MODE_DEFAULT = Mode.GENERIC.name();
   public static final String MODE_DOC =
       "The connector's operation mode. "
       + "GENERIC: standard sink behavior. "
       + "BACKUP_FULL_RECORD: consolidates key, value, headers and metadata "
       + "into a single envelope record per message with pristine schema preservation.";
+
+  /**
+   * Connector operation mode. Determines whether the sink operates in
+   * standard mode or backup envelope mode.
+   */
+  public enum Mode {
+    GENERIC,
+    BACKUP_FULL_RECORD;
+
+    public static Mode of(String name) {
+      for (Mode m : values()) {
+        if (m.name().equalsIgnoreCase(name)) {
+          return m;
+        }
+      }
+      throw new org.apache.kafka.common.config.ConfigException(
+          MODE_CONFIG, name,
+          "Invalid mode. Valid values: " + java.util.Arrays.toString(values()));
+    }
+  }
 
   // CHECKSTYLE:OFF
   public static final ConfigDef.Recommender schemaCompatibilityRecommender =
@@ -460,8 +480,12 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
     return new AvroDataConfig(props);
   }
 
+  public Mode mode() {
+    return Mode.of(getString(MODE_CONFIG));
+  }
+
   public boolean isBackupMode() {
-    return "BACKUP_FULL_RECORD".equalsIgnoreCase(getString(MODE_CONFIG));
+    return mode() == Mode.BACKUP_FULL_RECORD;
   }
 
   public String getEffectiveSchemaCompatibility() {

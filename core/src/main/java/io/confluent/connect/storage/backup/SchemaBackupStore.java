@@ -27,6 +27,5 @@ public interface SchemaBackupStore {
   void backupIfNeeded(
       String topic, int schemaId, int version,
       String schemaType, String subject, String rawSchema,
-      List<SchemaManifest.SchemaReferenceEntry> references,
-      String compatibility);
+      List<SchemaManifest.SchemaReferenceEntry> references);
 }
