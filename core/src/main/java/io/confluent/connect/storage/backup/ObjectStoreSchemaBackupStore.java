@@ -61,7 +61,7 @@ public class ObjectStoreSchemaBackupStore implements SchemaBackupStore {
       return;
     }
 
-    String entryPath = schemasPath(topic) + schemaId + ".entry.json";
+    String entryPath = schemasPath(topic) + schemaId + BackupEnvelope.ENTRY_FILE_SUFFIX;
 
     // Level 2: storage exists check (cold path, after restart)
     if (writer.exists(entryPath)) {
@@ -99,18 +99,12 @@ public class ObjectStoreSchemaBackupStore implements SchemaBackupStore {
       sb.append(topicsDir).append(dirDelim);
     }
     sb.append(topic).append(dirDelim)
-        .append("_metadata").append(dirDelim)
-        .append("schemas").append(dirDelim);
+        .append(BackupEnvelope.METADATA_DIR).append(dirDelim)
+        .append(BackupEnvelope.SCHEMAS_DIR).append(dirDelim);
     return sb.toString();
   }
 
   private String extensionFor(String type) {
-    if (BackupEnvelope.TYPE_AVRO.equals(type)) {
-      return ".avsc";
-    }
-    if (BackupEnvelope.TYPE_PROTOBUF.equals(type)) {
-      return ".proto";
-    }
-    return ".json";
+    return BackupEnvelope.extensionForType(type);
   }
 }

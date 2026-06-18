@@ -50,9 +50,37 @@ public final class BackupEnvelope {
   // User sets: value.converter.schema.backup.enabled=true
   public static final String SCHEMA_BACKUP_ENABLED_CONFIG = "schema.backup.enabled";
 
+  // Schema metadata directory structure
+  public static final String METADATA_DIR = "_metadata";
+  public static final String SCHEMAS_DIR = "schemas";
+  public static final String ENTRY_FILE_SUFFIX = ".entry.json";
+
+  // Schema file extensions by type
+  public static final String EXT_AVRO = ".avsc";
+  public static final String EXT_PROTOBUF = ".proto";
+  public static final String EXT_JSON = ".json";
+  public static final String EXT_DEFAULT = ".schema";
+
+  // Reference tree JSON field names (cross-repo contract).
+  // Must match BackupWrapper.REF_FIELD_* in schema-converter.
+  public static final String REF_FIELD_SUBJECT = "subject";
+  public static final String REF_FIELD_VERSION = "version";
+  public static final String REF_FIELD_GLOBAL_ID = "globalId";
+  public static final String REF_FIELD_SCHEMA_TYPE = "schemaType";
+  public static final String REF_FIELD_SCHEMA = "schema";
+  public static final String REF_FIELD_REFERENCES = "references";
+  public static final String REF_FIELD_NAME = "name";
+
+  // Converter config key constants
+  public static final String KEY_CONVERTER_CONFIG = "key.converter";
+  public static final String VALUE_CONVERTER_CONFIG = "value.converter";
+
   // Schema type constants
+  // TYPE_JSON is the SR-native type name; TYPE_JSON_SCHEMA is the converter-reported name.
+  // Both refer to JSON Schema — SR stores as "JSON", converters report as "JSON_SCHEMA".
   public static final String TYPE_AVRO = "AVRO";
   public static final String TYPE_PROTOBUF = "PROTOBUF";
+  public static final String TYPE_JSON = "JSON";
   public static final String TYPE_JSON_SCHEMA = "JSON_SCHEMA";
   public static final String TYPE_JSON_SCHEMALESS = "JSON_SCHEMALESS";
   public static final String TYPE_JSON_EMBEDDED_SCHEMA = "JSON_EMBEDDED_SCHEMA";
@@ -65,6 +93,33 @@ public final class BackupEnvelope {
   public static final String TYPE_BYTES = "BYTES";
   public static final String TYPE_NONE = "NONE";
   public static final String TYPE_UNKNOWN = "UNKNOWN";
+
+  /**
+   * Returns whether a schema type is Schema Registry-backed
+   * (requires schema metadata for pristine restore).
+   */
+  public static boolean isSrBackedType(String schemaType) {
+    return TYPE_AVRO.equals(schemaType)
+        || TYPE_PROTOBUF.equals(schemaType)
+        || TYPE_JSON_SCHEMA.equals(schemaType)
+        || TYPE_JSON.equals(schemaType);
+  }
+
+  /**
+   * Returns the file extension for a schema type.
+   */
+  public static String extensionForType(String schemaType) {
+    if (TYPE_AVRO.equals(schemaType)) {
+      return EXT_AVRO;
+    }
+    if (TYPE_PROTOBUF.equals(schemaType)) {
+      return EXT_PROTOBUF;
+    }
+    if (TYPE_JSON_SCHEMA.equals(schemaType) || TYPE_JSON.equals(schemaType)) {
+      return EXT_JSON;
+    }
+    return EXT_DEFAULT;
+  }
 
   private BackupEnvelope() {
   }

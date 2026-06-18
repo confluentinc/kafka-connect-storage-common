@@ -15,8 +15,8 @@
 
 package io.confluent.connect.storage.backup;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Maps converter class names to schema type tags used in the backup envelope.
@@ -25,7 +25,7 @@ import java.util.Map;
  */
 public final class ConverterTypeDetector {
 
-  private static final Map<String, String> KNOWN_TYPES = new LinkedHashMap<>();
+  private static final Map<String, String> KNOWN_TYPES = new ConcurrentHashMap<>();
 
   static {
     KNOWN_TYPES.put("io.confluent.connect.avro.AvroConverter", BackupEnvelope.TYPE_AVRO);
@@ -65,7 +65,7 @@ public final class ConverterTypeDetector {
    *
    * @param converterClass fully qualified converter class name
    * @param config task config map (used for JsonConverter schemas.enable check)
-   * @param converterPrefix converter config prefix (e.g. "key.converter.")
+   * @param converterPrefix converter config prefix (e.g. "key.converter")
    * @return the schema type tag, or "UNKNOWN" if not recognized
    */
   public static String detectSchemaType(
@@ -76,7 +76,7 @@ public final class ConverterTypeDetector {
 
     // JsonConverter needs special handling: check schemas.enable
     if ("org.apache.kafka.connect.json.JsonConverter".equals(converterClass)) {
-      String schemasEnable = config.get(converterPrefix + "schemas.enable");
+      String schemasEnable = config.get(converterPrefix + ".schemas.enable");
       return "false".equalsIgnoreCase(schemasEnable)
           ? BackupEnvelope.TYPE_JSON_SCHEMALESS
           : BackupEnvelope.TYPE_JSON_EMBEDDED_SCHEMA;

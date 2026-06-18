@@ -30,7 +30,7 @@ public class ConverterTypeDetectorTest {
     assertEquals(BackupEnvelope.TYPE_AVRO,
         ConverterTypeDetector.detectSchemaType(
             "io.confluent.connect.avro.AvroConverter",
-            Collections.emptyMap(), "value.converter."));
+            Collections.emptyMap(), "value.converter"));
   }
 
   @Test
@@ -38,7 +38,7 @@ public class ConverterTypeDetectorTest {
     assertEquals(BackupEnvelope.TYPE_PROTOBUF,
         ConverterTypeDetector.detectSchemaType(
             "io.confluent.connect.protobuf.ProtobufConverter",
-            Collections.emptyMap(), "value.converter."));
+            Collections.emptyMap(), "value.converter"));
   }
 
   @Test
@@ -46,7 +46,7 @@ public class ConverterTypeDetectorTest {
     assertEquals(BackupEnvelope.TYPE_JSON_SCHEMA,
         ConverterTypeDetector.detectSchemaType(
             "io.confluent.connect.json.JsonSchemaConverter",
-            Collections.emptyMap(), "value.converter."));
+            Collections.emptyMap(), "value.converter"));
   }
 
   @Test
@@ -54,7 +54,7 @@ public class ConverterTypeDetectorTest {
     assertEquals(BackupEnvelope.TYPE_STRING,
         ConverterTypeDetector.detectSchemaType(
             "org.apache.kafka.connect.storage.StringConverter",
-            Collections.emptyMap(), "value.converter."));
+            Collections.emptyMap(), "value.converter"));
   }
 
   @Test
@@ -64,7 +64,7 @@ public class ConverterTypeDetectorTest {
     assertEquals(BackupEnvelope.TYPE_JSON_SCHEMALESS,
         ConverterTypeDetector.detectSchemaType(
             "org.apache.kafka.connect.json.JsonConverter",
-            config, "value.converter."));
+            config, "value.converter"));
   }
 
   @Test
@@ -74,7 +74,7 @@ public class ConverterTypeDetectorTest {
     assertEquals(BackupEnvelope.TYPE_JSON_EMBEDDED_SCHEMA,
         ConverterTypeDetector.detectSchemaType(
             "org.apache.kafka.connect.json.JsonConverter",
-            config, "value.converter."));
+            config, "value.converter"));
   }
 
   @Test
@@ -82,7 +82,7 @@ public class ConverterTypeDetectorTest {
     assertEquals(BackupEnvelope.TYPE_INT32,
         ConverterTypeDetector.detectSchemaType(
             "org.apache.kafka.connect.converters.IntegerConverter",
-            Collections.emptyMap(), "key.converter."));
+            Collections.emptyMap(), "key.converter"));
   }
 
   @Test
@@ -90,7 +90,7 @@ public class ConverterTypeDetectorTest {
     assertEquals(BackupEnvelope.TYPE_INT64,
         ConverterTypeDetector.detectSchemaType(
             "org.apache.kafka.connect.converters.LongConverter",
-            Collections.emptyMap(), "key.converter."));
+            Collections.emptyMap(), "key.converter"));
   }
 
   @Test
@@ -98,14 +98,14 @@ public class ConverterTypeDetectorTest {
     assertEquals(BackupEnvelope.TYPE_BYTES,
         ConverterTypeDetector.detectSchemaType(
             "org.apache.kafka.connect.converters.ByteArrayConverter",
-            Collections.emptyMap(), "value.converter."));
+            Collections.emptyMap(), "value.converter"));
   }
 
   @Test
   public void testNullConverterClass() {
     assertEquals(BackupEnvelope.TYPE_NONE,
         ConverterTypeDetector.detectSchemaType(
-            null, Collections.emptyMap(), "value.converter."));
+            null, Collections.emptyMap(), "value.converter"));
   }
 
   @Test
@@ -113,7 +113,7 @@ public class ConverterTypeDetectorTest {
     assertEquals(BackupEnvelope.TYPE_UNKNOWN,
         ConverterTypeDetector.detectSchemaType(
             "com.example.CustomConverter",
-            Collections.emptyMap(), "value.converter."));
+            Collections.emptyMap(), "value.converter"));
   }
 
   @Test
@@ -122,6 +122,6 @@ public class ConverterTypeDetectorTest {
     assertEquals("MY_TYPE",
         ConverterTypeDetector.detectSchemaType(
             "com.example.MyConverter",
-            Collections.emptyMap(), "value.converter."));
+            Collections.emptyMap(), "value.converter"));
   }
 }

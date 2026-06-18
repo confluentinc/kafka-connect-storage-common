@@ -17,6 +17,7 @@ package io.confluent.connect.storage.format.backup;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.confluent.connect.storage.backup.BackupEnvelope;
 import io.confluent.connect.storage.backup.BackupReferenceParser;
 import io.confluent.connect.storage.backup.EnvelopeSchemaBuilder;
 import io.confluent.connect.storage.backup.SchemaBackupStore;
@@ -129,7 +130,6 @@ public class EnvelopeTransformer {
         record.timestampType());
   }
 
-  @SuppressWarnings("unchecked")
   private void backupSchemaIfNeeded(String topic, Unwrapped unwrapped) {
     if (unwrapped.getSchemaId() == null || unwrapped.getRawSchema() == null) {
       return;
@@ -175,17 +175,21 @@ public class EnvelopeTransformer {
   private void backupSingleReference(
       String topic, Map<String, Object> node,
       Map<String, Map<String, Object>> tree, Set<Integer> visited) {
-    int globalId = node.get("globalId") instanceof Number
-        ? ((Number) node.get("globalId")).intValue() : 0;
+    int globalId = node.get(BackupEnvelope.REF_FIELD_GLOBAL_ID) instanceof Number
+        ? ((Number) node.get(BackupEnvelope.REF_FIELD_GLOBAL_ID)).intValue() : 0;
     if (globalId <= 0 || !visited.add(globalId)) {
+      if (globalId <= 0) {
+        log.warn("Skipping reference with invalid globalId={} in topic={}",
+            globalId, topic);
+      }
       return;
     }
-    String schema = (String) node.get("schema");
-    String subject = (String) node.get("subject");
-    int version = node.get("version") instanceof Number
-        ? ((Number) node.get("version")).intValue() : 0;
-    String schemaType = node.get("schemaType") instanceof String
-        ? (String) node.get("schemaType") : null;
+    String schema = (String) node.get(BackupEnvelope.REF_FIELD_SCHEMA);
+    String subject = (String) node.get(BackupEnvelope.REF_FIELD_SUBJECT);
+    int version = node.get(BackupEnvelope.REF_FIELD_VERSION) instanceof Number
+        ? ((Number) node.get(BackupEnvelope.REF_FIELD_VERSION)).intValue() : 0;
+    String schemaType = node.get(BackupEnvelope.REF_FIELD_SCHEMA_TYPE) instanceof String
+        ? (String) node.get(BackupEnvelope.REF_FIELD_SCHEMA_TYPE) : null;
     if (schema == null || schemaType == null) {
       throw new DataException(
           "Cannot backup reference schema: missing schema text or type"
@@ -201,7 +205,7 @@ public class EnvelopeTransformer {
   @SuppressWarnings("unchecked")
   private List<SchemaManifest.SchemaReferenceEntry> extractChildRefs(
       Map<String, Object> node, Map<String, Map<String, Object>> tree) {
-    Object refsObj = node.get("references");
+    Object refsObj = node.get(BackupEnvelope.REF_FIELD_REFERENCES);
     if (!(refsObj instanceof List)) {
       return Collections.emptyList();
     }
@@ -211,14 +215,14 @@ public class EnvelopeTransformer {
         continue;
       }
       Map<String, Object> m = (Map<String, Object>) item;
-      String refName = (String) m.get("name");
-      String refSubject = (String) m.get("subject");
-      int refVersion = m.get("version") instanceof Number
-          ? ((Number) m.get("version")).intValue() : 0;
+      String refName = (String) m.get(BackupEnvelope.REF_FIELD_NAME);
+      String refSubject = (String) m.get(BackupEnvelope.REF_FIELD_SUBJECT);
+      int refVersion = m.get(BackupEnvelope.REF_FIELD_VERSION) instanceof Number
+          ? ((Number) m.get(BackupEnvelope.REF_FIELD_VERSION)).intValue() : 0;
       Map<String, Object> childNode = tree.get(refName);
       int refGlobalId = childNode != null
-          && childNode.get("globalId") instanceof Number
-          ? ((Number) childNode.get("globalId")).intValue() : 0;
+          && childNode.get(BackupEnvelope.REF_FIELD_GLOBAL_ID) instanceof Number
+          ? ((Number) childNode.get(BackupEnvelope.REF_FIELD_GLOBAL_ID)).intValue() : 0;
       childRefs.add(new SchemaManifest.SchemaReferenceEntry(
           refName, refSubject, refVersion, refGlobalId));
     }

@@ -373,7 +373,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           MODE_CONFIG,
           Type.STRING,
           MODE_DEFAULT,
-          ConfigDef.ValidString.in("GENERIC", "BACKUP_FULL_RECORD"),
+          ConfigDef.ValidString.in(Mode.GENERIC.name(), Mode.BACKUP_FULL_RECORD.name()),
           Importance.MEDIUM,
           MODE_DOC,
           group,

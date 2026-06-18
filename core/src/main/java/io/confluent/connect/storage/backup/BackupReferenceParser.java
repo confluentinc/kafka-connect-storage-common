@@ -17,6 +17,7 @@ package io.confluent.connect.storage.backup;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kafka.connect.errors.DataException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,23 +64,23 @@ public final class BackupReferenceParser {
       List<SchemaManifest.SchemaReferenceEntry> result =
           new ArrayList<>();
       for (Map<String, Object> ref : directRefs) {
-        String name = (String) ref.get("name");
-        String subject = (String) ref.get("subject");
-        int version = ref.get("version") instanceof Number
-            ? ((Number) ref.get("version")).intValue() : 0;
+        String name = (String) ref.get(BackupEnvelope.REF_FIELD_NAME);
+        String subject = (String) ref.get(BackupEnvelope.REF_FIELD_SUBJECT);
+        int version = ref.get(BackupEnvelope.REF_FIELD_VERSION) instanceof Number
+            ? ((Number) ref.get(BackupEnvelope.REF_FIELD_VERSION)).intValue() : 0;
         int globalId = 0;
         Map<String, Object> treeEntry = tree.get(name);
         if (treeEntry != null
-            && treeEntry.get("globalId") instanceof Number) {
+            && treeEntry.get(BackupEnvelope.REF_FIELD_GLOBAL_ID) instanceof Number) {
           globalId =
-              ((Number) treeEntry.get("globalId")).intValue();
+              ((Number) treeEntry.get(BackupEnvelope.REF_FIELD_GLOBAL_ID)).intValue();
         }
         result.add(new SchemaManifest.SchemaReferenceEntry(
             name, subject, version, globalId));
       }
       return result;
     } catch (IOException e) {
-      throw new org.apache.kafka.connect.errors.DataException(
+      throw new DataException(
           "Failed to parse reference JSON. Cannot guarantee "
           + "pristine restore.", e);
     }

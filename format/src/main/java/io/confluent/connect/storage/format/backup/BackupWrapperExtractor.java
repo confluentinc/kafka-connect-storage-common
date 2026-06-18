@@ -18,6 +18,7 @@ package io.confluent.connect.storage.format.backup;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.connect.schema.backup.BackupWrapper;
+import io.confluent.connect.storage.backup.BackupEnvelope;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.errors.DataException;
@@ -88,7 +89,7 @@ public final class BackupWrapperExtractor {
       stringData = data != null ? data.toString() : null;
     }
     return new Unwrapped(stringData, null, null, null,
-        "JSON_SCHEMALESS", null, null, null, null);
+        BackupEnvelope.TYPE_JSON_SCHEMALESS, null, null, null, null);
   }
 
   private static Integer optionalInt32(Struct s, Schema schema, String field) {
@@ -130,7 +131,7 @@ public final class BackupWrapperExtractor {
 
     static Unwrapped tombstone() {
       return new Unwrapped(null, null, null, null,
-          "NONE", null, null, null, null);
+          BackupEnvelope.TYPE_NONE, null, null, null, null);
     }
 
     static Unwrapped passthrough(Object data, Schema schema, String schemaType) {
