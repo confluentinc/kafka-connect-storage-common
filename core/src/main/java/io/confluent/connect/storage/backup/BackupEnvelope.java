@@ -15,11 +15,20 @@
 
 package io.confluent.connect.storage.backup;
 
+import io.confluent.connect.schema.backup.api.BackupWrapper;
+import io.confluent.connect.schema.backup.api.SchemaBackupConfig;
+
 /**
- * Constants for the KafkaRecordEnvelope struct and schema type tags.
+ * Constants for the KafkaRecordEnvelope struct.
+ *
+ * <p>Envelope-specific field names and storage metadata constants live here.
+ * Schema type tags, reference field names, and backup config keys are
+ * defined in {@link SchemaBackupConfig} (single source of truth) and
+ * re-exported here for convenience.
  */
 public final class BackupEnvelope {
 
+  // Envelope struct schema name
   public static final String NAME =
       "io.confluent.connect.storage.KafkaRecordEnvelope";
 
@@ -44,12 +53,6 @@ public final class BackupEnvelope {
   public static final String FIELD_HEADER_VALUE = "headerValue";
   public static final String FIELD_HEADER_SCHEMA_TYPE = "headerSchemaType";
 
-  // Converter schema backup config key.
-  // Must match BackupWrapper.SCHEMA_BACKUP_ENABLED_CONFIG
-  // in the schema-registry repo (cross-repo contract).
-  // User sets: value.converter.schema.backup.enabled=true
-  public static final String SCHEMA_BACKUP_ENABLED_CONFIG = "schema.backup.enabled";
-
   // Schema metadata directory structure
   public static final String METADATA_DIR = "_metadata";
   public static final String SCHEMAS_DIR = "schemas";
@@ -61,48 +64,44 @@ public final class BackupEnvelope {
   public static final String EXT_JSON = ".json";
   public static final String EXT_DEFAULT = ".schema";
 
-  // Reference tree JSON field names (cross-repo contract).
-  // Must match BackupWrapper.REF_FIELD_* in schema-converter.
-  public static final String REF_FIELD_SUBJECT = "subject";
-  public static final String REF_FIELD_VERSION = "version";
-  public static final String REF_FIELD_GLOBAL_ID = "globalId";
-  public static final String REF_FIELD_SCHEMA_TYPE = "schemaType";
-  public static final String REF_FIELD_SCHEMA = "schema";
-  public static final String REF_FIELD_REFERENCES = "references";
-  public static final String REF_FIELD_NAME = "name";
-
   // Converter config key constants
   public static final String KEY_CONVERTER_CONFIG = "key.converter";
   public static final String VALUE_CONVERTER_CONFIG = "value.converter";
 
-  // Schema type constants
-  // TYPE_JSON is the SR-native type name; TYPE_JSON_SCHEMA is the converter-reported name.
-  // Both refer to JSON Schema — SR stores as "JSON", converters report as "JSON_SCHEMA".
-  public static final String TYPE_AVRO = "AVRO";
-  public static final String TYPE_PROTOBUF = "PROTOBUF";
-  public static final String TYPE_JSON = "JSON";
-  public static final String TYPE_JSON_SCHEMA = "JSON_SCHEMA";
-  public static final String TYPE_JSON_SCHEMALESS = "JSON_SCHEMALESS";
-  public static final String TYPE_JSON_EMBEDDED_SCHEMA = "JSON_EMBEDDED_SCHEMA";
-  public static final String TYPE_STRING = "STRING";
-  public static final String TYPE_INT16 = "INT16";
-  public static final String TYPE_INT32 = "INT32";
-  public static final String TYPE_INT64 = "INT64";
-  public static final String TYPE_FLOAT32 = "FLOAT32";
-  public static final String TYPE_FLOAT64 = "FLOAT64";
-  public static final String TYPE_BYTES = "BYTES";
-  public static final String TYPE_NONE = "NONE";
-  public static final String TYPE_UNKNOWN = "UNKNOWN";
+  // Delegated to SchemaBackupConfig (single source of truth) — no duplication
+  public static final String SCHEMA_BACKUP_ENABLED_CONFIG =
+      SchemaBackupConfig.SCHEMA_BACKUP_ENABLED_CONFIG;
+
+  public static final String REF_FIELD_SUBJECT = SchemaBackupConfig.REF_FIELD_SUBJECT;
+  public static final String REF_FIELD_VERSION = SchemaBackupConfig.REF_FIELD_VERSION;
+  public static final String REF_FIELD_GLOBAL_ID = SchemaBackupConfig.REF_FIELD_GLOBAL_ID;
+  public static final String REF_FIELD_SCHEMA_TYPE = SchemaBackupConfig.REF_FIELD_SCHEMA_TYPE;
+  public static final String REF_FIELD_SCHEMA = SchemaBackupConfig.REF_FIELD_SCHEMA;
+  public static final String REF_FIELD_REFERENCES = SchemaBackupConfig.REF_FIELD_REFERENCES;
+  public static final String REF_FIELD_NAME = SchemaBackupConfig.REF_FIELD_NAME;
+
+  public static final String TYPE_AVRO = SchemaBackupConfig.TYPE_AVRO;
+  public static final String TYPE_PROTOBUF = SchemaBackupConfig.TYPE_PROTOBUF;
+  public static final String TYPE_JSON = SchemaBackupConfig.TYPE_JSON;
+  public static final String TYPE_JSON_SCHEMA = SchemaBackupConfig.TYPE_JSON_SCHEMA;
+  public static final String TYPE_JSON_SCHEMALESS = SchemaBackupConfig.TYPE_JSON_SCHEMALESS;
+  public static final String TYPE_JSON_EMBEDDED_SCHEMA =
+      SchemaBackupConfig.TYPE_JSON_EMBEDDED_SCHEMA;
+  public static final String TYPE_STRING = SchemaBackupConfig.TYPE_STRING;
+  public static final String TYPE_INT16 = SchemaBackupConfig.TYPE_INT16;
+  public static final String TYPE_INT32 = SchemaBackupConfig.TYPE_INT32;
+  public static final String TYPE_INT64 = SchemaBackupConfig.TYPE_INT64;
+  public static final String TYPE_FLOAT32 = SchemaBackupConfig.TYPE_FLOAT32;
+  public static final String TYPE_FLOAT64 = SchemaBackupConfig.TYPE_FLOAT64;
+  public static final String TYPE_BYTES = SchemaBackupConfig.TYPE_BYTES;
+  public static final String TYPE_NONE = SchemaBackupConfig.TYPE_NONE;
+  public static final String TYPE_UNKNOWN = SchemaBackupConfig.TYPE_UNKNOWN;
 
   /**
-   * Returns whether a schema type is Schema Registry-backed
-   * (requires schema metadata for pristine restore).
+   * Returns whether a schema type is Schema Registry-backed.
    */
   public static boolean isSrBackedType(String schemaType) {
-    return TYPE_AVRO.equals(schemaType)
-        || TYPE_PROTOBUF.equals(schemaType)
-        || TYPE_JSON_SCHEMA.equals(schemaType)
-        || TYPE_JSON.equals(schemaType);
+    return SchemaBackupConfig.isSrBackedType(schemaType);
   }
 
   /**

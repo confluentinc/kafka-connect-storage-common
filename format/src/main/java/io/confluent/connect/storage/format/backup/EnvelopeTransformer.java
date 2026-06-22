@@ -15,13 +15,8 @@
 
 package io.confluent.connect.storage.format.backup;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.confluent.connect.storage.backup.BackupEnvelope;
-import io.confluent.connect.storage.backup.BackupReferenceParser;
 import io.confluent.connect.storage.backup.EnvelopeSchemaBuilder;
 import io.confluent.connect.storage.backup.SchemaBackupStore;
-import io.confluent.connect.storage.backup.SchemaManifest;
 import io.confluent.connect.storage.format.backup.BackupWrapperExtractor.Unwrapped;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
@@ -32,19 +27,15 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Transforms SinkRecords into envelope-wrapped SinkRecords for backup mode.
  *
- * <p>This transformer wraps each record in an envelope struct that captures
+ * <p>Wraps each record in a {@code KafkaRecordEnvelope} struct that captures
  * the full record context (key, value, headers, topic, partition, offset,
- * timestamp) along with schema metadata. It also backs up schema files
- * (.entry.json + .avsc/.proto/.json) to object storage.
+ * timestamp) along with schema metadata. Schema file backup is delegated
+ * to {@link SchemaBackupOrchestrator}.
  *
  * <p>The resulting envelope SinkRecord has a consistent, non-null schema
  * that changes only when the key or value schema changes — including
@@ -57,9 +48,8 @@ import java.util.Set;
 public class EnvelopeTransformer {
 
   private static final Logger log = LoggerFactory.getLogger(EnvelopeTransformer.class);
-  private static final ObjectMapper JSON = new ObjectMapper();
 
-  private final SchemaBackupStore backupStore;
+  private final SchemaBackupOrchestrator schemaBackup;
   private final String keySchemaTypeDefault;
   private final String valueSchemaTypeDefault;
 
@@ -67,7 +57,7 @@ public class EnvelopeTransformer {
       SchemaBackupStore backupStore,
       String keySchemaTypeDefault,
       String valueSchemaTypeDefault) {
-    this.backupStore = backupStore;
+    this.schemaBackup = new SchemaBackupOrchestrator(backupStore);
     this.keySchemaTypeDefault = keySchemaTypeDefault;
     this.valueSchemaTypeDefault = valueSchemaTypeDefault;
   }
@@ -75,6 +65,9 @@ public class EnvelopeTransformer {
   /**
    * Wraps a batch of SinkRecords in envelope structs.
    * Also backs up schema files for any new schemas encountered.
+   *
+   * @param records the records from {@code put()}
+   * @return wrapped records ready for {@code TopicPartitionWriter}
    */
   public Collection<SinkRecord> wrapAll(Collection<SinkRecord> records) {
     List<SinkRecord> wrapped = new ArrayList<>(records.size());
@@ -87,6 +80,9 @@ public class EnvelopeTransformer {
   /**
    * Wraps a single SinkRecord in an envelope struct.
    * Backs up schema files as a side effect (idempotent).
+   *
+   * @param record the original SinkRecord
+   * @return a new SinkRecord with envelope schema and struct as value
    */
   public SinkRecord wrap(SinkRecord record) {
     Unwrapped key = BackupWrapperExtractor.unwrap(
@@ -107,8 +103,8 @@ public class EnvelopeTransformer {
         key.getSchemaType(), value.getSchemaType(),
         key.getSchemaId(), value.getSchemaId());
 
-    backupSchemaIfNeeded(record.topic(), key);
-    backupSchemaIfNeeded(record.topic(), value);
+    schemaBackup.backupIfNeeded(record.topic(), key);
+    schemaBackup.backupIfNeeded(record.topic(), value);
 
     Schema envelopeSchema = EnvelopeSchemaBuilder
         .buildEnvelopeSchema(key.getSchema(), value.getSchema(),
@@ -128,104 +124,5 @@ public class EnvelopeTransformer {
         record.kafkaOffset(),
         record.timestamp(),
         record.timestampType());
-  }
-
-  private void backupSchemaIfNeeded(String topic, Unwrapped unwrapped) {
-    if (unwrapped.getSchemaId() == null || unwrapped.getRawSchema() == null) {
-      return;
-    }
-    backupReferenceSchemas(topic, unwrapped.getReferenceTreeJson());
-    List<SchemaManifest.SchemaReferenceEntry> refs =
-        BackupReferenceParser.parseDirectRefsToManifestEntries(
-            unwrapped.getDirectRefsJson(),
-            unwrapped.getReferenceTreeJson());
-    backupStore.backupIfNeeded(
-        topic,
-        unwrapped.getSchemaId(),
-        unwrapped.getSchemaVersion() != null ? unwrapped.getSchemaVersion() : 0,
-        unwrapped.getSchemaType(),
-        unwrapped.getSubject(),
-        unwrapped.getRawSchema(),
-        refs);
-  }
-
-  @SuppressWarnings("unchecked")
-  private void backupReferenceSchemas(String topic, String referenceTreeJson) {
-    if (referenceTreeJson == null || referenceTreeJson.isEmpty()) {
-      return;
-    }
-    try {
-      Map<String, Map<String, Object>> tree = JSON.readValue(
-          referenceTreeJson,
-          new TypeReference<Map<String, Map<String, Object>>>() {});
-      Set<Integer> visited = new HashSet<>();
-      for (Map.Entry<String, Map<String, Object>> entry : tree.entrySet()) {
-        backupSingleReference(topic, entry.getValue(), tree, visited);
-      }
-    } catch (DataException de) {
-      throw de;
-    } catch (Exception e) {
-      throw new DataException(
-          "Failed to backup reference schemas for topic="
-          + topic + ". Cannot guarantee pristine restore.", e);
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  private void backupSingleReference(
-      String topic, Map<String, Object> node,
-      Map<String, Map<String, Object>> tree, Set<Integer> visited) {
-    int globalId = node.get(BackupEnvelope.REF_FIELD_GLOBAL_ID) instanceof Number
-        ? ((Number) node.get(BackupEnvelope.REF_FIELD_GLOBAL_ID)).intValue() : 0;
-    if (globalId <= 0 || !visited.add(globalId)) {
-      if (globalId <= 0) {
-        log.warn("Skipping reference with invalid globalId={} in topic={}",
-            globalId, topic);
-      }
-      return;
-    }
-    String schema = (String) node.get(BackupEnvelope.REF_FIELD_SCHEMA);
-    String subject = (String) node.get(BackupEnvelope.REF_FIELD_SUBJECT);
-    int version = node.get(BackupEnvelope.REF_FIELD_VERSION) instanceof Number
-        ? ((Number) node.get(BackupEnvelope.REF_FIELD_VERSION)).intValue() : 0;
-    String schemaType = node.get(BackupEnvelope.REF_FIELD_SCHEMA_TYPE) instanceof String
-        ? (String) node.get(BackupEnvelope.REF_FIELD_SCHEMA_TYPE) : null;
-    if (schema == null || schemaType == null) {
-      throw new DataException(
-          "Cannot backup reference schema: missing schema text or type"
-          + " for globalId=" + globalId + ", subject=" + subject
-          + ", topic=" + topic + ". Cannot guarantee pristine restore.");
-    }
-    List<SchemaManifest.SchemaReferenceEntry> childRefs =
-        extractChildRefs(node, tree);
-    backupStore.backupIfNeeded(
-        topic, globalId, version, schemaType, subject, schema, childRefs);
-  }
-
-  @SuppressWarnings("unchecked")
-  private List<SchemaManifest.SchemaReferenceEntry> extractChildRefs(
-      Map<String, Object> node, Map<String, Map<String, Object>> tree) {
-    Object refsObj = node.get(BackupEnvelope.REF_FIELD_REFERENCES);
-    if (!(refsObj instanceof List)) {
-      return Collections.emptyList();
-    }
-    List<SchemaManifest.SchemaReferenceEntry> childRefs = new ArrayList<>();
-    for (Object item : (List<?>) refsObj) {
-      if (!(item instanceof Map)) {
-        continue;
-      }
-      Map<String, Object> m = (Map<String, Object>) item;
-      String refName = (String) m.get(BackupEnvelope.REF_FIELD_NAME);
-      String refSubject = (String) m.get(BackupEnvelope.REF_FIELD_SUBJECT);
-      int refVersion = m.get(BackupEnvelope.REF_FIELD_VERSION) instanceof Number
-          ? ((Number) m.get(BackupEnvelope.REF_FIELD_VERSION)).intValue() : 0;
-      Map<String, Object> childNode = tree.get(refName);
-      int refGlobalId = childNode != null
-          && childNode.get(BackupEnvelope.REF_FIELD_GLOBAL_ID) instanceof Number
-          ? ((Number) childNode.get(BackupEnvelope.REF_FIELD_GLOBAL_ID)).intValue() : 0;
-      childRefs.add(new SchemaManifest.SchemaReferenceEntry(
-          refName, refSubject, refVersion, refGlobalId));
-    }
-    return childRefs;
   }
 }

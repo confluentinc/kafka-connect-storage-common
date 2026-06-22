@@ -15,7 +15,7 @@
 
 package io.confluent.connect.storage.format.backup;
 
-import io.confluent.connect.schema.backup.BackupWrapper;
+import io.confluent.connect.schema.backup.api.BackupWrapper;
 import io.confluent.connect.storage.format.backup.BackupWrapperExtractor.Unwrapped;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
