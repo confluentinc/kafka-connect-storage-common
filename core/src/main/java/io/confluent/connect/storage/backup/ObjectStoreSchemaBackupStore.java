@@ -15,6 +15,8 @@
 
 package io.confluent.connect.storage.backup;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.apache.kafka.connect.errors.DataException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,13 +81,14 @@ public class ObjectStoreSchemaBackupStore implements SchemaBackupStore {
     SchemaManifest.SchemaEntry entry = new SchemaManifest.SchemaEntry(
         schemaId, schemaType, subject, version,
         schemaId + ext, references);
+    String entryJson;
     try {
-      String entryJson = entry.toJsonString();
-      writer.write(entryPath, entryJson);
-    } catch (Exception e) {
-      log.error("Failed to write entry file: {}. Schema will be retried.", entryPath, e);
-      return;
+      entryJson = entry.toJsonString();
+    } catch (JsonProcessingException e) {
+      throw new DataException(
+          "Failed to serialize schema entry for schemaId=" + schemaId, e);
     }
+    writer.write(entryPath, entryJson);
 
     backedUpKeys.add(key);
     log.info("Backed up schema: topic={}, id={}, subject={}, refs={}",
