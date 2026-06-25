@@ -100,6 +100,14 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final int SCHEMA_CACHE_SIZE_DEFAULT = 1000;
   public static final String SCHEMA_CACHE_SIZE_DISPLAY = "Schema Cache Size";
 
+  public static final String FORMAT_JSON_SCHEMA_ENABLE_CONFIG = "format.json.schema.enable";
+  public static final boolean FORMAT_JSON_SCHEMA_ENABLE_DEFAULT = false;
+  private static final String FORMAT_JSON_SCHEMA_ENABLE_DOC =
+      "Whether to embed the Connect schema in JSON output files. When true, each line "
+      + "is written as {\"schema\":...,\"payload\":...}. Required for BACKUP_FULL_RECORD "
+      + "mode with JsonFormat to enable full restore round-trip.";
+  private static final String FORMAT_JSON_SCHEMA_ENABLE_DISPLAY = "Enable Embedded JSON Schema";
+
   public static final String ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG = "enhanced.avro.schema.support";
   public static final boolean ENHANCED_AVRO_SCHEMA_SUPPORT_DEFAULT = true;
   public static final String ENHANCED_AVRO_SCHEMA_SUPPORT_DOC =
@@ -415,6 +423,17 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
         PARQUET_CODEC_DISPLAY,
         parquetRecommender
     );
+    configDef.define(
+        FORMAT_JSON_SCHEMA_ENABLE_CONFIG,
+        Type.BOOLEAN,
+        FORMAT_JSON_SCHEMA_ENABLE_DEFAULT,
+        Importance.LOW,
+        FORMAT_JSON_SCHEMA_ENABLE_DOC,
+        group,
+        ++orderInGroup,
+        Width.SHORT,
+        FORMAT_JSON_SCHEMA_ENABLE_DISPLAY
+    );
   }
 
   public static class SchemaCompatibilityRecommender extends BooleanParentRecommender {
@@ -486,6 +505,10 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
 
   public boolean isBackupMode() {
     return mode() == Mode.BACKUP_FULL_RECORD;
+  }
+
+  public boolean isJsonSchemaEmbedded() {
+    return getBoolean(FORMAT_JSON_SCHEMA_ENABLE_CONFIG);
   }
 
   public String getEffectiveSchemaCompatibility() {
