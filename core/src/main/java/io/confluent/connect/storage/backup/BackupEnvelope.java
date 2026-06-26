@@ -15,7 +15,6 @@
 
 package io.confluent.connect.storage.backup;
 
-import io.confluent.connect.schema.backup.api.BackupWrapper;
 import io.confluent.connect.schema.backup.api.SchemaBackupConfig;
 
 /**
@@ -47,6 +46,9 @@ public final class BackupEnvelope {
   public static final String FIELD_VALUE_SCHEMA_TYPE = "valueSchemaType";
   public static final String FIELD_KEY_SCHEMA_SUBJECT = "keySchemaSubject";
   public static final String FIELD_VALUE_SCHEMA_SUBJECT = "valueSchemaSubject";
+  public static final String FIELD_FORMAT_VERSION = "formatVersion";
+
+  public static final int FORMAT_VERSION = 1;
 
   // Header struct field names
   public static final String FIELD_HEADER_KEY = "headerKey";

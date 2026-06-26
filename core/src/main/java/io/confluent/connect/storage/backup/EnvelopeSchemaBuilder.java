@@ -62,6 +62,7 @@ public final class EnvelopeSchemaBuilder {
     b.field(BackupEnvelope.FIELD_VALUE_SCHEMA_TYPE, Schema.STRING_SCHEMA);
     b.field(BackupEnvelope.FIELD_KEY_SCHEMA_SUBJECT, Schema.OPTIONAL_STRING_SCHEMA);
     b.field(BackupEnvelope.FIELD_VALUE_SCHEMA_SUBJECT, Schema.OPTIONAL_STRING_SCHEMA);
+    b.field(BackupEnvelope.FIELD_FORMAT_VERSION, Schema.INT32_SCHEMA);
     return b.build();
   }
 
@@ -88,6 +89,7 @@ public final class EnvelopeSchemaBuilder {
     e.put(BackupEnvelope.FIELD_VALUE_SCHEMA_TYPE, valueSchemaType);
     e.put(BackupEnvelope.FIELD_KEY_SCHEMA_SUBJECT, keySubject);
     e.put(BackupEnvelope.FIELD_VALUE_SCHEMA_SUBJECT, valueSubject);
+    e.put(BackupEnvelope.FIELD_FORMAT_VERSION, BackupEnvelope.FORMAT_VERSION);
     return e;
   }
 

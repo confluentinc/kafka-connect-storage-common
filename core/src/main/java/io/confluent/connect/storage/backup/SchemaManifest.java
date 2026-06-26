@@ -39,7 +39,7 @@ public final class SchemaManifest {
   private static final ObjectMapper MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT);
 
-  static final int FORMAT_VERSION = 1;
+  private static final int FORMAT_VERSION = 1;
 
   private static final String JSON_FORMAT = "format";
   private static final String JSON_ID = "id";
