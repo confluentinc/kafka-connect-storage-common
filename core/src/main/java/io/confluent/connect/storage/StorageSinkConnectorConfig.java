@@ -326,40 +326,45 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           FILENAME_OFFSET_ZERO_PAD_WIDTH_DISPLAY
       );
 
-      configDef.define(
-          AVRO_CODEC_CONFIG,
-          Type.STRING,
-          AVRO_CODEC_DEFAULT,
-          ConfigDef.ValidString.in(AVRO_SUPPORTED_CODECS),
-          Importance.LOW,
-          AVRO_CODEC_DOC,
-          group,
-          ++orderInGroup,
-          Width.MEDIUM,
-          AVRO_CODEC_DISPLAY,
-          avroRecommender
-      );
-
-      configDef.define(
-          ALLOW_OPTIONAL_MAP_KEYS,
-          Type.BOOLEAN,
-          ALLOW_OPTIONAL_MAP_KEYS_DEFAULT,
-          Importance.LOW,
-          ALLOW_OPTIONAL_MAP_KEYS_DOC,
-          group,
-          ++orderInGroup,
-          Width.SHORT,
-          ALLOW_OPTIONAL_MAP_KEYS_DISPLAY
-      );
-
+      addCodecAndMapConfigs(configDef, avroRecommender, group, orderInGroup);
     }
+    addSchemaAndModeConfigs(configDef);
+    return configDef;
+  }
 
+  private static void addCodecAndMapConfigs(
+      ConfigDef configDef, ConfigDef.Recommender avroRecommender,
+      String group, int orderInGroup) {
+    configDef.define(
+        AVRO_CODEC_CONFIG,
+        Type.STRING,
+        AVRO_CODEC_DEFAULT,
+        ConfigDef.ValidString.in(AVRO_SUPPORTED_CODECS),
+        Importance.LOW,
+        AVRO_CODEC_DOC,
+        group,
+        ++orderInGroup,
+        Width.MEDIUM,
+        AVRO_CODEC_DISPLAY,
+        avroRecommender
+    );
+    configDef.define(
+        ALLOW_OPTIONAL_MAP_KEYS,
+        Type.BOOLEAN,
+        ALLOW_OPTIONAL_MAP_KEYS_DEFAULT,
+        Importance.LOW,
+        ALLOW_OPTIONAL_MAP_KEYS_DOC,
+        group,
+        ++orderInGroup,
+        Width.SHORT,
+        ALLOW_OPTIONAL_MAP_KEYS_DISPLAY
+    );
+  }
+
+  private static void addSchemaAndModeConfigs(ConfigDef configDef) {
     {
-      // Define Schema configuration group
       final String group = "Schema";
       int orderInGroup = 0;
-
-      // Define Schema configuration group
       configDef.define(
           SCHEMA_COMPATIBILITY_CONFIG,
           Type.STRING,
@@ -373,7 +378,6 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           schemaCompatibilityRecommender
       );
     }
-
     {
       final String group = "Mode";
       int orderInGroup = 0;
@@ -390,7 +394,6 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           "Mode"
       );
     }
-    return configDef;
   }
 
   /**
