@@ -21,6 +21,7 @@ import org.apache.kafka.common.utils.Utils;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
+import org.apache.kafka.common.metrics.PluginMetrics;
 import org.apache.kafka.connect.sink.ErrantRecordReporter;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.sink.SinkTaskContext;
@@ -253,6 +254,11 @@ public class StorageSinkTestBase {
     @Override
     public ErrantRecordReporter errantRecordReporter() {
       throw new UnsupportedOperationException("ErrantRecordReporter is undefined for this class");
+    }
+
+    @Override
+    public PluginMetrics pluginMetrics() {
+      return null;
     }
   }
 
