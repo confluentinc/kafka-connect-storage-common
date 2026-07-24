@@ -25,6 +25,12 @@ import org.apache.kafka.connect.sink.SinkRecord;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Builds the {@code KafkaRecordEnvelope} Connect schema and struct
+ * that wraps a full Kafka record (key, value, headers, metadata)
+ * for backup storage. Used by {@code EnvelopeTransformer} on the
+ * sink path.
+ */
 public final class EnvelopeSchemaBuilder {
 
   private EnvelopeSchemaBuilder() {

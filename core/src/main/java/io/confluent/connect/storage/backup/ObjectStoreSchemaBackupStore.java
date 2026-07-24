@@ -34,6 +34,7 @@ public class ObjectStoreSchemaBackupStore implements SchemaBackupStore {
 
   private static final Logger log =
       LoggerFactory.getLogger(ObjectStoreSchemaBackupStore.class);
+  private static final String DEDUP_KEY_SEPARATOR = ":";
   private final StorageWriter writer;
   private final String topicsDir;
   private final String dirDelim;
@@ -56,7 +57,7 @@ public class ObjectStoreSchemaBackupStore implements SchemaBackupStore {
       log.warn("No schema key for topic={}, skipping backup", topic);
       return;
     }
-    String dedupKey = topic + ":" + schemaKey;
+    String dedupKey = topic + DEDUP_KEY_SEPARATOR + schemaKey;
 
     if (backedUpKeys.contains(dedupKey)) {
       return;

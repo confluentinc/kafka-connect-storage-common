@@ -69,11 +69,11 @@ public final class BackupWrapperExtractor {
     return new Unwrapped(
         w.get(BackupWrapper.FIELD_DATA),
         schema.field(BackupWrapper.FIELD_DATA).schema(),
-        w.getInt32(BackupWrapper.FIELD_SCHEMA_ID),
+        optionalInt32(w, schema, BackupWrapper.FIELD_SCHEMA_ID),
         schemaVersion,
-        w.getString(BackupWrapper.FIELD_SCHEMA_TYPE),
-        w.getString(BackupWrapper.FIELD_SCHEMA_SUBJECT),
-        w.getString(BackupWrapper.FIELD_RAW_SCHEMA),
+        optionalString(w, schema, BackupWrapper.FIELD_SCHEMA_TYPE),
+        optionalString(w, schema, BackupWrapper.FIELD_SCHEMA_SUBJECT),
+        optionalString(w, schema, BackupWrapper.FIELD_RAW_SCHEMA),
         referenceTreeJson,
         directRefsJson,
         schemaGuid);
