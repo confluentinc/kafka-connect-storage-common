@@ -100,6 +100,14 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final int SCHEMA_CACHE_SIZE_DEFAULT = 1000;
   public static final String SCHEMA_CACHE_SIZE_DISPLAY = "Schema Cache Size";
 
+  public static final String FORMAT_JSON_SCHEMA_ENABLE_CONFIG = "format.json.schema.enable";
+  public static final boolean FORMAT_JSON_SCHEMA_ENABLE_DEFAULT = false;
+  private static final String FORMAT_JSON_SCHEMA_ENABLE_DOC =
+      "Whether to embed the Connect schema in JSON output files. When true, each line "
+      + "is written as {\"schema\":...,\"payload\":...}. Required for BACKUP_FULL_RECORD "
+      + "mode with JsonFormat to enable full restore round-trip.";
+  private static final String FORMAT_JSON_SCHEMA_ENABLE_DISPLAY = "Enable Embedded JSON Schema";
+
   public static final String ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG = "enhanced.avro.schema.support";
   public static final boolean ENHANCED_AVRO_SCHEMA_SUPPORT_DEFAULT = true;
   public static final String ENHANCED_AVRO_SCHEMA_SUPPORT_DOC =
@@ -144,6 +152,35 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
       + "supported configurations are NONE, BACKWARD, FORWARD and FULL.";
   public static final String SCHEMA_COMPATIBILITY_DEFAULT = "NONE";
   public static final String SCHEMA_COMPATIBILITY_DISPLAY = "Schema Compatibility";
+
+  // Mode group
+  public static final String MODE_CONFIG = "mode";
+  public static final String MODE_DEFAULT = Mode.GENERIC.name();
+  public static final String MODE_DOC =
+      "The connector's operation mode. "
+      + "GENERIC: standard sink behavior. "
+      + "BACKUP_FULL_RECORD: consolidates key, value, headers and metadata "
+      + "into a single envelope record per message with pristine schema preservation.";
+
+  /**
+   * Connector operation mode. Determines whether the sink operates in
+   * standard mode or backup envelope mode.
+   */
+  public enum Mode {
+    GENERIC,
+    BACKUP_FULL_RECORD;
+
+    public static Mode of(String name) {
+      for (Mode m : values()) {
+        if (m.name().equalsIgnoreCase(name)) {
+          return m;
+        }
+      }
+      throw new org.apache.kafka.common.config.ConfigException(
+          MODE_CONFIG, name,
+          "Invalid mode. Valid values: " + java.util.Arrays.toString(values()));
+    }
+  }
 
   // CHECKSTYLE:OFF
   public static final ConfigDef.Recommender schemaCompatibilityRecommender =
@@ -289,40 +326,45 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           FILENAME_OFFSET_ZERO_PAD_WIDTH_DISPLAY
       );
 
-      configDef.define(
-          AVRO_CODEC_CONFIG,
-          Type.STRING,
-          AVRO_CODEC_DEFAULT,
-          ConfigDef.ValidString.in(AVRO_SUPPORTED_CODECS),
-          Importance.LOW,
-          AVRO_CODEC_DOC,
-          group,
-          ++orderInGroup,
-          Width.MEDIUM,
-          AVRO_CODEC_DISPLAY,
-          avroRecommender
-      );
-
-      configDef.define(
-          ALLOW_OPTIONAL_MAP_KEYS,
-          Type.BOOLEAN,
-          ALLOW_OPTIONAL_MAP_KEYS_DEFAULT,
-          Importance.LOW,
-          ALLOW_OPTIONAL_MAP_KEYS_DOC,
-          group,
-          ++orderInGroup,
-          Width.SHORT,
-          ALLOW_OPTIONAL_MAP_KEYS_DISPLAY
-      );
-
+      addCodecAndMapConfigs(configDef, avroRecommender, group, orderInGroup);
     }
+    addSchemaAndModeConfigs(configDef);
+    return configDef;
+  }
 
+  private static void addCodecAndMapConfigs(
+      ConfigDef configDef, ConfigDef.Recommender avroRecommender,
+      String group, int orderInGroup) {
+    configDef.define(
+        AVRO_CODEC_CONFIG,
+        Type.STRING,
+        AVRO_CODEC_DEFAULT,
+        ConfigDef.ValidString.in(AVRO_SUPPORTED_CODECS),
+        Importance.LOW,
+        AVRO_CODEC_DOC,
+        group,
+        ++orderInGroup,
+        Width.MEDIUM,
+        AVRO_CODEC_DISPLAY,
+        avroRecommender
+    );
+    configDef.define(
+        ALLOW_OPTIONAL_MAP_KEYS,
+        Type.BOOLEAN,
+        ALLOW_OPTIONAL_MAP_KEYS_DEFAULT,
+        Importance.LOW,
+        ALLOW_OPTIONAL_MAP_KEYS_DOC,
+        group,
+        ++orderInGroup,
+        Width.SHORT,
+        ALLOW_OPTIONAL_MAP_KEYS_DISPLAY
+    );
+  }
+
+  private static void addSchemaAndModeConfigs(ConfigDef configDef) {
     {
-      // Define Schema configuration group
       final String group = "Schema";
       int orderInGroup = 0;
-
-      // Define Schema configuration group
       configDef.define(
           SCHEMA_COMPATIBILITY_CONFIG,
           Type.STRING,
@@ -336,7 +378,22 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           schemaCompatibilityRecommender
       );
     }
-    return configDef;
+    {
+      final String group = "Mode";
+      int orderInGroup = 0;
+      configDef.define(
+          MODE_CONFIG,
+          Type.STRING,
+          MODE_DEFAULT,
+          ConfigDef.ValidString.in(Mode.GENERIC.name(), Mode.BACKUP_FULL_RECORD.name()),
+          Importance.MEDIUM,
+          MODE_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          "Mode"
+      );
+    }
   }
 
   /**
@@ -368,6 +425,17 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
         Width.MEDIUM,
         PARQUET_CODEC_DISPLAY,
         parquetRecommender
+    );
+    configDef.define(
+        FORMAT_JSON_SCHEMA_ENABLE_CONFIG,
+        Type.BOOLEAN,
+        FORMAT_JSON_SCHEMA_ENABLE_DEFAULT,
+        Importance.LOW,
+        FORMAT_JSON_SCHEMA_ENABLE_DOC,
+        group,
+        ++orderInGroup,
+        Width.SHORT,
+        FORMAT_JSON_SCHEMA_ENABLE_DISPLAY
     );
   }
 
@@ -432,5 +500,24 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
     props.put(CONNECT_META_DATA_CONFIG, get(CONNECT_META_DATA_CONFIG));
     props.put(ALLOW_OPTIONAL_MAP_KEYS, get(ALLOW_OPTIONAL_MAP_KEYS));
     return new AvroDataConfig(props);
+  }
+
+  public Mode mode() {
+    return Mode.of(getString(MODE_CONFIG));
+  }
+
+  public boolean isBackupMode() {
+    return mode() == Mode.BACKUP_FULL_RECORD;
+  }
+
+  public boolean isJsonSchemaEmbedded() {
+    return getBoolean(FORMAT_JSON_SCHEMA_ENABLE_CONFIG);
+  }
+
+  public String getEffectiveSchemaCompatibility() {
+    if (isBackupMode()) {
+      return "NONE";
+    }
+    return getString(SCHEMA_COMPATIBILITY_CONFIG);
   }
 }
