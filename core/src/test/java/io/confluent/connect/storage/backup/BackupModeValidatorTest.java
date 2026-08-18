@@ -48,6 +48,7 @@ public class BackupModeValidatorTest {
   private static final String TRANSFORMS = "transforms";
   private static final String HEADER_CONVERTER = "header.converter";
   private static final String PARQUET_CODEC = "parquet.codec";
+  private static final String SCHEMA_COMPATIBILITY = "schema.compatibility";
 
   private static final String TRUE = "true";
   private static final String FALSE = "false";
@@ -352,6 +353,30 @@ public class BackupModeValidatorTest {
     configs.put(HEADER_CONVERTER, SIMPLE_HEADER_CONVERTER);
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertEquals(0, errors.size());
+  }
+
+  @Test
+  public void testSchemaCompatibilityNoneExercisesWarnPath() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(SCHEMA_COMPATIBILITY, "NONE");
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertEquals(0, errors.size());
+  }
+
+  @Test
+  public void testSchemaCompatibilityBackwardExercisesWarnPath() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(SCHEMA_COMPATIBILITY, "BACKWARD");
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertEquals(0, errors.size());
+  }
+
+  @Test
+  public void testSchemaCompatibilityAbsentExercisesWarnPath() {
+    List<String> errors = BackupModeValidator.validateSinkConfigs(baseSinkConfigs(), AVRO_FORMAT, true);
     assertEquals(0, errors.size());
   }
 

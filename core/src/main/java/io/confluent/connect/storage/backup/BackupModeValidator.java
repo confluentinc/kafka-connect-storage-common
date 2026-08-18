@@ -208,6 +208,7 @@ public final class BackupModeValidator {
 
     warnParquetCompression(configs, formatClassName);
     warnHeaderConverter(configs);
+    warnSchemaCompatibilityOverride(configs);
   }
 
   private static void warnConverterConfigs(
@@ -274,6 +275,18 @@ public final class BackupModeValidator {
           + "preservation, consider using "
           + "org.apache.kafka.connect.converters.ByteArrayConverter.",
           headerConverter != null ? headerConverter : "(default)");
+    }
+  }
+
+  private static void warnSchemaCompatibilityOverride(
+      Map<String, String> configs) {
+    String userValue = configs.get("schema.compatibility");
+    if (userValue != null && !"NONE".equalsIgnoreCase(userValue)) {
+      log.warn("schema.compatibility={} was set but will be overridden to NONE "
+          + "in BACKUP_FULL_RECORD mode. Backup preserves each record's own "
+          + "schema exactly; compatibility rules do not apply. "
+          + "Remove schema.compatibility (or set to NONE) to silence this warning.",
+          userValue);
     }
   }
 
