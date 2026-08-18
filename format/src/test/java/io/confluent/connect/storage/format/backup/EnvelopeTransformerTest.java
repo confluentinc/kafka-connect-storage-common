@@ -50,8 +50,6 @@ public class EnvelopeTransformerTest {
   private static final int PARTITION = 0;
   private static final long OFFSET = 100L;
   private static final long TIMESTAMP = 1234567890L;
-  private static final String SCHEMA_TYPE_AVRO = "AVRO";
-  private static final String SCHEMA_TYPE_STRING = "STRING";
   private static final String RAW_SCHEMA = "{\"type\":\"record\",\"name\":\"User\","
       + "\"fields\":[{\"name\":\"name\",\"type\":\"string\"}]}";
 
@@ -62,7 +60,7 @@ public class EnvelopeTransformerTest {
   public void setUp() {
     backupStore = mock(SchemaBackupStore.class);
     transformer = new EnvelopeTransformer(
-        backupStore, SCHEMA_TYPE_STRING, SCHEMA_TYPE_AVRO);
+        backupStore, BackupEnvelope.TYPE_STRING, BackupEnvelope.TYPE_AVRO);
   }
 
   @Test
@@ -72,7 +70,7 @@ public class EnvelopeTransformerTest {
     Schema wrapperSchema = BackupWrapper.buildSchema(dataSchema);
     Struct data = new Struct(dataSchema).put("name", "Alice");
     BackupWrapper.WrapperFields fields = new BackupWrapper.WrapperFields(
-        42, 1, SCHEMA_TYPE_AVRO, "test-value", RAW_SCHEMA, null, null);
+        42, 1, BackupEnvelope.TYPE_AVRO, "test-value", RAW_SCHEMA, null, null);
     Struct wrapper = BackupWrapper.buildWrapper(wrapperSchema, data, fields);
 
     SinkRecord record = new SinkRecord(
@@ -99,7 +97,7 @@ public class EnvelopeTransformerTest {
     Schema wrapperSchema = BackupWrapper.buildSchema(dataSchema);
     Struct data = new Struct(dataSchema).put("name", "Alice");
     BackupWrapper.WrapperFields fields = new BackupWrapper.WrapperFields(
-        42, 1, SCHEMA_TYPE_AVRO, "test-value", RAW_SCHEMA, null, null);
+        42, 1, BackupEnvelope.TYPE_AVRO, "test-value", RAW_SCHEMA, null, null);
     Struct wrapper = BackupWrapper.buildWrapper(wrapperSchema, data, fields);
 
     SinkRecord record = new SinkRecord(
@@ -187,7 +185,7 @@ public class EnvelopeTransformerTest {
     Schema wrapperSchema = BackupWrapper.buildSchema(dataSchema);
     Struct data = new Struct(dataSchema).put("name", "Alice");
     BackupWrapper.WrapperFields fields = new BackupWrapper.WrapperFields(
-        42, 1, SCHEMA_TYPE_AVRO, "test-value", RAW_SCHEMA, null, null);
+        42, 1, BackupEnvelope.TYPE_AVRO, "test-value", RAW_SCHEMA, null, null);
     Struct wrapper = BackupWrapper.buildWrapper(wrapperSchema, data, fields);
 
     SinkRecord record = new SinkRecord(

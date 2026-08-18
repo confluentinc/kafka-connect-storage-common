@@ -393,6 +393,17 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           Width.SHORT,
           "Mode"
       );
+      configDef.define(
+          FORMAT_JSON_SCHEMA_ENABLE_CONFIG,
+          Type.BOOLEAN,
+          FORMAT_JSON_SCHEMA_ENABLE_DEFAULT,
+          Importance.LOW,
+          FORMAT_JSON_SCHEMA_ENABLE_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          FORMAT_JSON_SCHEMA_ENABLE_DISPLAY
+      );
     }
   }
 
@@ -425,17 +436,6 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
         Width.MEDIUM,
         PARQUET_CODEC_DISPLAY,
         parquetRecommender
-    );
-    configDef.define(
-        FORMAT_JSON_SCHEMA_ENABLE_CONFIG,
-        Type.BOOLEAN,
-        FORMAT_JSON_SCHEMA_ENABLE_DEFAULT,
-        Importance.LOW,
-        FORMAT_JSON_SCHEMA_ENABLE_DOC,
-        group,
-        ++orderInGroup,
-        Width.SHORT,
-        FORMAT_JSON_SCHEMA_ENABLE_DISPLAY
     );
   }
 

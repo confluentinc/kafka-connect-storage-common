@@ -39,7 +39,6 @@ import static org.mockito.Mockito.verify;
 public class SchemaBackupOrchestratorTest {
 
   private static final String TOPIC = "test-topic";
-  private static final String SCHEMA_TYPE_AVRO = "AVRO";
   private static final String SUBJECT = "test-value";
   private static final String RAW_SCHEMA = "{\"type\":\"record\",\"name\":\"User\","
       + "\"fields\":[{\"name\":\"name\",\"type\":\"string\"}]}";
@@ -57,7 +56,7 @@ public class SchemaBackupOrchestratorTest {
   @Test
   public void backupSkippedWhenRawSchemaNull() {
     Unwrapped unwrapped = BackupWrapperExtractor.unwrap(
-        null, null, false, "AVRO");
+        null, null, false, BackupEnvelope.TYPE_AVRO);
 
     orchestrator.backupIfNeeded(TOPIC, unwrapped);
 
@@ -73,11 +72,11 @@ public class SchemaBackupOrchestratorTest {
     Schema wrapperSchema = BackupWrapper.buildSchema(dataSchema);
     Struct data = new Struct(dataSchema).put("name", "Alice");
     BackupWrapper.WrapperFields fields = new BackupWrapper.WrapperFields(
-        null, 1, SCHEMA_TYPE_AVRO, SUBJECT, RAW_SCHEMA, null, null);
+        null, 1, BackupEnvelope.TYPE_AVRO, SUBJECT, RAW_SCHEMA, null, null);
     Struct wrapper = BackupWrapper.buildWrapper(wrapperSchema, data, fields);
 
     Unwrapped unwrapped = BackupWrapperExtractor.unwrap(
-        wrapper, wrapperSchema, false, SCHEMA_TYPE_AVRO);
+        wrapper, wrapperSchema, false, BackupEnvelope.TYPE_AVRO);
 
     orchestrator.backupIfNeeded(TOPIC, unwrapped);
 
@@ -93,7 +92,7 @@ public class SchemaBackupOrchestratorTest {
     orchestrator.backupIfNeeded(TOPIC, unwrapped);
 
     verify(backupStore).backupIfNeeded(
-        eq(TOPIC), eq("42"), eq(1), eq(SCHEMA_TYPE_AVRO),
+        eq(TOPIC), eq("42"), eq(1), eq(BackupEnvelope.TYPE_AVRO),
         eq(SUBJECT), eq(RAW_SCHEMA), anyList());
   }
 
@@ -104,17 +103,17 @@ public class SchemaBackupOrchestratorTest {
     Schema wrapperSchema = BackupWrapper.buildSchema(dataSchema);
     Struct data = new Struct(dataSchema).put("name", "Alice");
     BackupWrapper.WrapperFields fields = new BackupWrapper.WrapperFields(
-        null, 1, SCHEMA_TYPE_AVRO, SUBJECT, RAW_SCHEMA,
+        null, 1, BackupEnvelope.TYPE_AVRO, SUBJECT, RAW_SCHEMA,
         null, null, SCHEMA_GUID);
     Struct wrapper = BackupWrapper.buildWrapper(wrapperSchema, data, fields);
 
     Unwrapped unwrapped = BackupWrapperExtractor.unwrap(
-        wrapper, wrapperSchema, false, SCHEMA_TYPE_AVRO);
+        wrapper, wrapperSchema, false, BackupEnvelope.TYPE_AVRO);
 
     orchestrator.backupIfNeeded(TOPIC, unwrapped);
 
     verify(backupStore).backupIfNeeded(
-        eq(TOPIC), eq(SCHEMA_GUID), eq(1), eq(SCHEMA_TYPE_AVRO),
+        eq(TOPIC), eq(SCHEMA_GUID), eq(1), eq(BackupEnvelope.TYPE_AVRO),
         eq(SUBJECT), eq(RAW_SCHEMA), anyList());
   }
 
@@ -125,16 +124,16 @@ public class SchemaBackupOrchestratorTest {
     Schema wrapperSchema = BackupWrapper.buildSchema(dataSchema);
     Struct data = new Struct(dataSchema).put("name", "Alice");
     BackupWrapper.WrapperFields fields = new BackupWrapper.WrapperFields(
-        42, null, SCHEMA_TYPE_AVRO, SUBJECT, RAW_SCHEMA, null, null);
+        42, null, BackupEnvelope.TYPE_AVRO, SUBJECT, RAW_SCHEMA, null, null);
     Struct wrapper = BackupWrapper.buildWrapper(wrapperSchema, data, fields);
 
     Unwrapped unwrapped = BackupWrapperExtractor.unwrap(
-        wrapper, wrapperSchema, false, SCHEMA_TYPE_AVRO);
+        wrapper, wrapperSchema, false, BackupEnvelope.TYPE_AVRO);
 
     orchestrator.backupIfNeeded(TOPIC, unwrapped);
 
     verify(backupStore).backupIfNeeded(
-        eq(TOPIC), eq("42"), eq(0), eq(SCHEMA_TYPE_AVRO),
+        eq(TOPIC), eq("42"), eq(0), eq(BackupEnvelope.TYPE_AVRO),
         eq(SUBJECT), eq(RAW_SCHEMA), anyList());
   }
 
@@ -146,7 +145,7 @@ public class SchemaBackupOrchestratorTest {
 
     verify(backupStore).backupIfNeeded(
         eq(TOPIC), anyString(), anyInt(),
-        eq(SCHEMA_TYPE_AVRO), eq(SUBJECT), anyString(), anyList());
+        eq(BackupEnvelope.TYPE_AVRO), eq(SUBJECT), anyString(), anyList());
   }
 
   @Test
@@ -175,19 +174,19 @@ public class SchemaBackupOrchestratorTest {
     Schema wrapperSchema = BackupWrapper.buildSchema(dataSchema);
     Struct data = new Struct(dataSchema).put("name", "Alice");
     BackupWrapper.WrapperFields fields = new BackupWrapper.WrapperFields(
-        42, 1, SCHEMA_TYPE_AVRO, SUBJECT, RAW_SCHEMA, refTree, directRefs);
+        42, 1, BackupEnvelope.TYPE_AVRO, SUBJECT, RAW_SCHEMA, refTree, directRefs);
     Struct wrapper = BackupWrapper.buildWrapper(wrapperSchema, data, fields);
 
     Unwrapped unwrapped = BackupWrapperExtractor.unwrap(
-        wrapper, wrapperSchema, false, SCHEMA_TYPE_AVRO);
+        wrapper, wrapperSchema, false, BackupEnvelope.TYPE_AVRO);
 
     orchestrator.backupIfNeeded(TOPIC, unwrapped);
 
     verify(backupStore).backupIfNeeded(
-        eq(TOPIC), eq("10"), eq(1), eq(SCHEMA_TYPE_AVRO),
+        eq(TOPIC), eq("10"), eq(1), eq(BackupEnvelope.TYPE_AVRO),
         eq("Country"), eq("{}"), anyList());
     verify(backupStore).backupIfNeeded(
-        eq(TOPIC), eq("42"), eq(1), eq(SCHEMA_TYPE_AVRO),
+        eq(TOPIC), eq("42"), eq(1), eq(BackupEnvelope.TYPE_AVRO),
         eq(SUBJECT), eq(RAW_SCHEMA), anyList());
   }
 
@@ -203,11 +202,11 @@ public class SchemaBackupOrchestratorTest {
     Schema wrapperSchema = BackupWrapper.buildSchema(dataSchema);
     Struct data = new Struct(dataSchema).put("name", "Alice");
     BackupWrapper.WrapperFields fields = new BackupWrapper.WrapperFields(
-        42, 1, SCHEMA_TYPE_AVRO, SUBJECT, RAW_SCHEMA, refTree, null);
+        42, 1, BackupEnvelope.TYPE_AVRO, SUBJECT, RAW_SCHEMA, refTree, null);
     Struct wrapper = BackupWrapper.buildWrapper(wrapperSchema, data, fields);
 
     Unwrapped unwrapped = BackupWrapperExtractor.unwrap(
-        wrapper, wrapperSchema, false, SCHEMA_TYPE_AVRO);
+        wrapper, wrapperSchema, false, BackupEnvelope.TYPE_AVRO);
 
     orchestrator.backupIfNeeded(TOPIC, unwrapped);
   }
@@ -218,9 +217,9 @@ public class SchemaBackupOrchestratorTest {
     Schema wrapperSchema = BackupWrapper.buildSchema(dataSchema);
     Struct data = new Struct(dataSchema).put("name", "Alice");
     BackupWrapper.WrapperFields fields = new BackupWrapper.WrapperFields(
-        schemaId, 1, SCHEMA_TYPE_AVRO, SUBJECT, RAW_SCHEMA, null, null);
+        schemaId, 1, BackupEnvelope.TYPE_AVRO, SUBJECT, RAW_SCHEMA, null, null);
     Struct wrapper = BackupWrapper.buildWrapper(wrapperSchema, data, fields);
     return BackupWrapperExtractor.unwrap(
-        wrapper, wrapperSchema, false, SCHEMA_TYPE_AVRO);
+        wrapper, wrapperSchema, false, BackupEnvelope.TYPE_AVRO);
   }
 }

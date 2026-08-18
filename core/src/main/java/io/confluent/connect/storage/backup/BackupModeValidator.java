@@ -73,6 +73,7 @@ public final class BackupModeValidator {
     validateSchemaBackupEnabled(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
     validateSchemaBackupEnabled(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
     validateTransformsRejected(configs, errors);
+    validateStoreKafkaKeysHeadersRejected(configs, errors);
 
     warnSinkSuboptimalConfigs(configs, formatClassName);
 
@@ -171,6 +172,25 @@ public final class BackupModeValidator {
           + "BACKUP_FULL_RECORD mode. SMTs modify data before envelope "
           + "wrapping, which corrupts backup fidelity. "
           + "Remove the 'transforms' config to use backup mode.");
+    }
+  }
+
+  private static void validateStoreKafkaKeysHeadersRejected(
+      Map<String, String> configs, List<String> errors) {
+    if ("true".equalsIgnoreCase(configs.get("store.kafka.keys"))) {
+      errors.add("store.kafka.keys=true cannot be used with "
+          + "BACKUP_FULL_RECORD mode. Envelope mode already captures the "
+          + "Kafka key inside each backup record. Setting this flag would "
+          + "write duplicate key-only files alongside the envelope files. "
+          + "Remove store.kafka.keys (or set to false) to use backup mode.");
+    }
+    if ("true".equalsIgnoreCase(configs.get("store.kafka.headers"))) {
+      errors.add("store.kafka.headers=true cannot be used with "
+          + "BACKUP_FULL_RECORD mode. Envelope mode already captures the "
+          + "Kafka headers inside each backup record. Setting this flag "
+          + "would write duplicate header-only files alongside the envelope "
+          + "files. Remove store.kafka.headers (or set to false) to use "
+          + "backup mode.");
     }
   }
 

@@ -39,7 +39,7 @@ public class EnvelopeSchemaBuilderTest {
         .field("name", Schema.STRING_SCHEMA).build();
 
     Schema envelope = EnvelopeSchemaBuilder.buildEnvelopeSchema(
-        keySchema, valueSchema, "AVRO", "AVRO");
+        keySchema, valueSchema, BackupEnvelope.TYPE_AVRO, BackupEnvelope.TYPE_AVRO);
 
     assertEquals(BackupEnvelope.NAME, envelope.name());
     assertEquals(keySchema,
@@ -51,7 +51,7 @@ public class EnvelopeSchemaBuilderTest {
   @Test
   public void testBuildWithNullSchemas() {
     Schema envelope = EnvelopeSchemaBuilder.buildEnvelopeSchema(
-        null, null, "JSON_SCHEMALESS", "JSON_SCHEMALESS");
+        null, null, BackupEnvelope.TYPE_JSON_SCHEMALESS, BackupEnvelope.TYPE_JSON_SCHEMALESS);
 
     assertEquals(Schema.OPTIONAL_STRING_SCHEMA,
         envelope.field(BackupEnvelope.FIELD_KEY).schema());
@@ -65,7 +65,7 @@ public class EnvelopeSchemaBuilderTest {
         .field("data", Schema.STRING_SCHEMA).build();
 
     Schema envelope = EnvelopeSchemaBuilder.buildEnvelopeSchema(
-        Schema.STRING_SCHEMA, valueSchema, "STRING", "AVRO");
+        Schema.STRING_SCHEMA, valueSchema, BackupEnvelope.TYPE_STRING, BackupEnvelope.TYPE_AVRO);
 
     assertEquals(Schema.STRING_SCHEMA,
         envelope.field(BackupEnvelope.FIELD_KEY).schema());
@@ -77,7 +77,7 @@ public class EnvelopeSchemaBuilderTest {
   public void testBuildWithPrimitiveSchemas() {
     Schema envelope = EnvelopeSchemaBuilder.buildEnvelopeSchema(
         Schema.STRING_SCHEMA, Schema.INT32_SCHEMA,
-        "STRING", "INT32");
+        BackupEnvelope.TYPE_STRING, BackupEnvelope.TYPE_INT32);
 
     assertEquals(Schema.STRING_SCHEMA,
         envelope.field(BackupEnvelope.FIELD_KEY).schema());
@@ -88,7 +88,7 @@ public class EnvelopeSchemaBuilderTest {
   @Test
   public void testEnvelopeHasAllMetadataFields() {
     Schema envelope = EnvelopeSchemaBuilder.buildEnvelopeSchema(
-        null, null, "NONE", "NONE");
+        null, null, BackupEnvelope.TYPE_NONE, BackupEnvelope.TYPE_NONE);
 
     assertNotNull(envelope.field(BackupEnvelope.FIELD_TOPIC));
     assertNotNull(envelope.field(BackupEnvelope.FIELD_PARTITION));
@@ -121,7 +121,7 @@ public class EnvelopeSchemaBuilderTest {
     Schema valueSchema = SchemaBuilder.struct()
         .field("x", Schema.INT32_SCHEMA).build();
     Schema envSchema = EnvelopeSchemaBuilder.buildEnvelopeSchema(
-        keySchema, valueSchema, "STRING", "AVRO");
+        keySchema, valueSchema, BackupEnvelope.TYPE_STRING, BackupEnvelope.TYPE_AVRO);
 
     Struct value = new Struct(valueSchema).put("x", 99);
     ConnectHeaders headers = new ConnectHeaders();
@@ -136,8 +136,8 @@ public class EnvelopeSchemaBuilderTest {
 
     Struct envelope = EnvelopeSchemaBuilder.buildEnvelopeStruct(
         envSchema, record, "key1", value,
-        new EnvelopeSchemaBuilder.SchemaDescriptor(null, "STRING", null, null),
-        new EnvelopeSchemaBuilder.SchemaDescriptor(42, "AVRO", "test-value", null));
+        new EnvelopeSchemaBuilder.SchemaDescriptor(null, BackupEnvelope.TYPE_STRING, null, null),
+        new EnvelopeSchemaBuilder.SchemaDescriptor(42, BackupEnvelope.TYPE_AVRO, "test-value", null));
 
     assertEquals("key1",
         envelope.get(BackupEnvelope.FIELD_KEY));
@@ -159,10 +159,10 @@ public class EnvelopeSchemaBuilderTest {
     assertEquals(42,
         (int) envelope.getInt32(
             BackupEnvelope.FIELD_VALUE_SCHEMA_ID));
-    assertEquals("STRING",
+    assertEquals(BackupEnvelope.TYPE_STRING,
         envelope.getString(
             BackupEnvelope.FIELD_KEY_SCHEMA_TYPE));
-    assertEquals("AVRO",
+    assertEquals(BackupEnvelope.TYPE_AVRO,
         envelope.getString(
             BackupEnvelope.FIELD_VALUE_SCHEMA_TYPE));
     assertNull(
@@ -180,22 +180,22 @@ public class EnvelopeSchemaBuilderTest {
         BackupEnvelope.FIELD_HEADER_KEY));
     assertEquals("val1", hdrs.get(0).getString(
         BackupEnvelope.FIELD_HEADER_VALUE));
-    assertEquals("STRING", hdrs.get(0).getString(
+    assertEquals(BackupEnvelope.TYPE_STRING, hdrs.get(0).getString(
         BackupEnvelope.FIELD_HEADER_SCHEMA_TYPE));
   }
 
   @Test
   public void testBuildEnvelopeStructNullOptionals() {
     Schema envSchema = EnvelopeSchemaBuilder.buildEnvelopeSchema(
-        null, null, "NONE", "NONE");
+        null, null, BackupEnvelope.TYPE_NONE, BackupEnvelope.TYPE_NONE);
 
     SinkRecord record = new SinkRecord(
         "t", 0, null, null, null, null, 0L);
 
     Struct envelope = EnvelopeSchemaBuilder.buildEnvelopeStruct(
         envSchema, record, null, null,
-        new EnvelopeSchemaBuilder.SchemaDescriptor(null, "NONE", null, null),
-        new EnvelopeSchemaBuilder.SchemaDescriptor(null, "NONE", null, null));
+        new EnvelopeSchemaBuilder.SchemaDescriptor(null, BackupEnvelope.TYPE_NONE, null, null),
+        new EnvelopeSchemaBuilder.SchemaDescriptor(null, BackupEnvelope.TYPE_NONE, null, null));
 
     assertNull(envelope.get(BackupEnvelope.FIELD_KEY));
     assertNull(envelope.get(BackupEnvelope.FIELD_VALUE));
@@ -220,7 +220,7 @@ public class EnvelopeSchemaBuilderTest {
   public void testBuildHeadersMultipleTypes() {
     Schema keySchema = Schema.STRING_SCHEMA;
     Schema envSchema = EnvelopeSchemaBuilder.buildEnvelopeSchema(
-        keySchema, null, "STRING", "NONE");
+        keySchema, null, BackupEnvelope.TYPE_STRING, BackupEnvelope.TYPE_NONE);
 
     ConnectHeaders headers = new ConnectHeaders();
     headers.addString("str", "text");
@@ -233,8 +233,8 @@ public class EnvelopeSchemaBuilderTest {
 
     Struct envelope = EnvelopeSchemaBuilder.buildEnvelopeStruct(
         envSchema, record, "k", null,
-        new EnvelopeSchemaBuilder.SchemaDescriptor(null, "STRING", null, null),
-        new EnvelopeSchemaBuilder.SchemaDescriptor(null, "NONE", null, null));
+        new EnvelopeSchemaBuilder.SchemaDescriptor(null, BackupEnvelope.TYPE_STRING, null, null),
+        new EnvelopeSchemaBuilder.SchemaDescriptor(null, BackupEnvelope.TYPE_NONE, null, null));
 
     @SuppressWarnings("unchecked")
     List<Struct> hdrs = (List<Struct>) envelope.get(
@@ -245,14 +245,14 @@ public class EnvelopeSchemaBuilderTest {
         BackupEnvelope.FIELD_HEADER_KEY));
     assertEquals("text", hdrs.get(0).getString(
         BackupEnvelope.FIELD_HEADER_VALUE));
-    assertEquals("STRING", hdrs.get(0).getString(
+    assertEquals(BackupEnvelope.TYPE_STRING, hdrs.get(0).getString(
         BackupEnvelope.FIELD_HEADER_SCHEMA_TYPE));
 
     assertEquals("num", hdrs.get(1).getString(
         BackupEnvelope.FIELD_HEADER_KEY));
     assertEquals("42", hdrs.get(1).getString(
         BackupEnvelope.FIELD_HEADER_VALUE));
-    assertEquals("INT32", hdrs.get(1).getString(
+    assertEquals(BackupEnvelope.TYPE_INT32, hdrs.get(1).getString(
         BackupEnvelope.FIELD_HEADER_SCHEMA_TYPE));
 
     assertEquals("flag", hdrs.get(2).getString(

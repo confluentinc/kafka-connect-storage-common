@@ -30,11 +30,11 @@ public class SchemaManifestTest {
   @Test
   public void testEntryFields() {
     SchemaManifest.SchemaEntry entry = new SchemaManifest.SchemaEntry(
-        "42", "AVRO", "test-value", 1, "42.avsc",
+        "42", BackupEnvelope.TYPE_AVRO, "test-value", 1, "42.avsc",
         Collections.emptyList());
 
     assertEquals("42", entry.getId());
-    assertEquals("AVRO", entry.getType());
+    assertEquals(BackupEnvelope.TYPE_AVRO, entry.getType());
     assertEquals("test-value", entry.getSubject());
     assertEquals(1, entry.getVersion());
     assertEquals("42.avsc", entry.getFile());
@@ -46,7 +46,7 @@ public class SchemaManifestTest {
     SchemaManifest.SchemaReferenceEntry ref = new SchemaManifest.SchemaReferenceEntry(
         "Address", "address-value", 1, 10);
     SchemaManifest.SchemaEntry entry = new SchemaManifest.SchemaEntry(
-        "42", "AVRO", "order-value", 1, "42.avsc",
+        "42", BackupEnvelope.TYPE_AVRO, "order-value", 1, "42.avsc",
         Collections.singletonList(ref));
 
     assertTrue(entry.hasReferences());
@@ -60,7 +60,7 @@ public class SchemaManifestTest {
   @Test
   public void testEntryWithNullReferences() {
     SchemaManifest.SchemaEntry entry = new SchemaManifest.SchemaEntry(
-        "10", "AVRO", "address-value", 1, "10.avsc", null);
+        "10", BackupEnvelope.TYPE_AVRO, "address-value", 1, "10.avsc", null);
     assertFalse(entry.hasReferences());
     assertTrue(entry.getReferences().isEmpty());
   }
@@ -70,7 +70,7 @@ public class SchemaManifestTest {
     SchemaManifest.SchemaReferenceEntry ref = new SchemaManifest.SchemaReferenceEntry(
         "Country", "country-value", 1, 5);
     SchemaManifest.SchemaEntry original = new SchemaManifest.SchemaEntry(
-        "42", "AVRO", "order-value", 3, "42.avsc",
+        "42", BackupEnvelope.TYPE_AVRO, "order-value", 3, "42.avsc",
         Collections.singletonList(ref));
 
     String json = original.toJsonString();
@@ -92,14 +92,14 @@ public class SchemaManifestTest {
   @Test
   public void testEntryJsonRoundTripNoReferences() throws Exception {
     SchemaManifest.SchemaEntry original = new SchemaManifest.SchemaEntry(
-        "5", "PROTOBUF", "address-value", 1, "5.proto",
+        "5", BackupEnvelope.TYPE_PROTOBUF, "address-value", 1, "5.proto",
         Collections.emptyList());
 
     String json = original.toJsonString();
     SchemaManifest.SchemaEntry restored = SchemaManifest.SchemaEntry.fromJsonString(json);
 
     assertEquals("5", restored.getId());
-    assertEquals("PROTOBUF", restored.getType());
+    assertEquals(BackupEnvelope.TYPE_PROTOBUF, restored.getType());
     assertEquals("address-value", restored.getSubject());
     assertEquals(1, restored.getVersion());
     assertEquals("5.proto", restored.getFile());
@@ -109,7 +109,7 @@ public class SchemaManifestTest {
   @Test
   public void testEntryJsonContainsFormatVersion() throws Exception {
     SchemaManifest.SchemaEntry entry = new SchemaManifest.SchemaEntry(
-        "1", "AVRO", "test", 1, "1.avsc", null);
+        "1", BackupEnvelope.TYPE_AVRO, "test", 1, "1.avsc", null);
     String json = entry.toJsonString();
     assertTrue(json.contains("\"format\" : 1"));
   }
@@ -121,7 +121,7 @@ public class SchemaManifestTest {
         SchemaManifest.SchemaEntry.fromJsonString(json);
 
     assertEquals("7", entry.getId());
-    assertEquals("AVRO", entry.getType());
+    assertEquals(BackupEnvelope.TYPE_AVRO, entry.getType());
     assertEquals("test", entry.getSubject());
     assertEquals(0, entry.getVersion());
     assertEquals("7.avsc", entry.getFile());
@@ -160,7 +160,7 @@ public class SchemaManifestTest {
         new SchemaManifest.SchemaReferenceEntry("Address", "address-value", 1, 10),
         new SchemaManifest.SchemaReferenceEntry("Country", "country-value", 1, 5));
     SchemaManifest.SchemaEntry original = new SchemaManifest.SchemaEntry(
-        "42", "AVRO", "user-value", 1, "42.avsc", refs);
+        "42", BackupEnvelope.TYPE_AVRO, "user-value", 1, "42.avsc", refs);
 
     String json = original.toJsonString();
     SchemaManifest.SchemaEntry restored = SchemaManifest.SchemaEntry.fromJsonString(json);
