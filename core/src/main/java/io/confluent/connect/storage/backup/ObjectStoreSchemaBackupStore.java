@@ -59,39 +59,42 @@ public class ObjectStoreSchemaBackupStore implements SchemaBackupStore {
     }
     String dedupKey = topic + DEDUP_KEY_SEPARATOR + schemaKey;
 
-    if (backedUpKeys.contains(dedupKey)) {
+    if (!backedUpKeys.add(dedupKey)) {
       return;
     }
 
-    String entryPath = schemasPath(topic) + schemaKey + BackupEnvelope.ENTRY_FILE_SUFFIX;
-
-    if (writer.exists(entryPath)) {
-      backedUpKeys.add(dedupKey);
-      log.debug("Schema already backed up (exists check): topic={}, key={}",
-          topic, schemaKey);
-      return;
-    }
-
-    String ext = extensionFor(schemaType);
-    String schemaPath = schemasPath(topic) + schemaKey + ext;
-    writer.write(schemaPath, rawSchema);
-
-    SchemaManifest.SchemaEntry entry = new SchemaManifest.SchemaEntry(
-        schemaKey, schemaType, subject, version,
-        schemaKey + ext, references);
-    String entryJson;
     try {
-      entryJson = entry.toJsonString();
-    } catch (JsonProcessingException e) {
-      throw new DataException(
-          "Failed to serialize schema entry for key=" + schemaKey, e);
-    }
-    writer.write(entryPath, entryJson);
+      String entryPath = schemasPath(topic) + schemaKey + BackupEnvelope.ENTRY_FILE_SUFFIX;
 
-    backedUpKeys.add(dedupKey);
-    log.info("Backed up schema: topic={}, key={}, subject={}, refs={}",
-        topic, schemaKey, subject,
-        references != null ? references.size() : 0);
+      if (writer.exists(entryPath)) {
+        log.debug("Schema already backed up (exists check): topic={}, key={}",
+            topic, schemaKey);
+        return;
+      }
+
+      String ext = extensionFor(schemaType);
+      String schemaPath = schemasPath(topic) + schemaKey + ext;
+      writer.write(schemaPath, rawSchema);
+
+      SchemaManifest.SchemaEntry entry = new SchemaManifest.SchemaEntry(
+          schemaKey, schemaType, subject, version,
+          schemaKey + ext, references);
+      String entryJson;
+      try {
+        entryJson = entry.toJsonString();
+      } catch (JsonProcessingException e) {
+        throw new DataException(
+            "Failed to serialize schema entry for key=" + schemaKey, e);
+      }
+      writer.write(entryPath, entryJson);
+
+      log.info("Backed up schema: topic={}, key={}, subject={}, refs={}",
+          topic, schemaKey, subject,
+          references != null ? references.size() : 0);
+    } catch (RuntimeException e) {
+      backedUpKeys.remove(dedupKey);
+      throw e;
+    }
   }
 
   private String schemasPath(String topic) {

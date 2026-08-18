@@ -111,6 +111,21 @@ public class ObjectStoreSchemaBackupStoreTest {
   }
 
   @Test
+  public void testRepeatedCallsShortCircuitBeforeExistsCheck() {
+    when(writer.exists(anyString())).thenReturn(false);
+
+    store.backupIfNeeded(TOPIC, SCHEMA_KEY, VERSION, BackupEnvelope.TYPE_AVRO,
+        SUBJECT, EMPTY_SCHEMA, null);
+    store.backupIfNeeded(TOPIC, SCHEMA_KEY, VERSION, BackupEnvelope.TYPE_AVRO,
+        SUBJECT, EMPTY_SCHEMA, null);
+    store.backupIfNeeded(TOPIC, SCHEMA_KEY, VERSION, BackupEnvelope.TYPE_AVRO,
+        SUBJECT, EMPTY_SCHEMA, null);
+
+    verify(writer, times(1)).exists(anyString());
+    verify(writer, times(2)).write(anyString(), anyString());
+  }
+
+  @Test
   public void testNullOrEmptySchemaKeySkipped() {
     store.backupIfNeeded(TOPIC, null, VERSION, BackupEnvelope.TYPE_AVRO,
         SUBJECT, EMPTY_SCHEMA, null);
