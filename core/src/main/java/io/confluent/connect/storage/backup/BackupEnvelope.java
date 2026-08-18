@@ -39,6 +39,13 @@ public final class BackupEnvelope {
   public static final String FIELD_PARTITION = "partition";
   public static final String FIELD_OFFSET = "offset";
   public static final String FIELD_TIMESTAMP = "timestamp";
+  /**
+   * Informational only. Stores {@code TimestampType.name()} from the source
+   * record. Known values: {@code NO_TIMESTAMP_TYPE}, {@code CREATE_TIME},
+   * {@code LOG_APPEND_TIME}. Not consumed on restore; the destination
+   * topic's {@code message.timestamp.type} setting determines the effective
+   * type of the re-produced record.
+   */
   public static final String FIELD_TIMESTAMP_TYPE = "timestampType";
   public static final String FIELD_KEY_SCHEMA_ID = "keySchemaId";
   public static final String FIELD_VALUE_SCHEMA_ID = "valueSchemaId";

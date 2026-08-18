@@ -185,6 +185,40 @@ public class EnvelopeSchemaBuilderTest {
   }
 
   @Test
+  public void testTimestampTypeLogAppendTime() {
+    Schema envSchema = EnvelopeSchemaBuilder.buildEnvelopeSchema(
+        Schema.STRING_SCHEMA, Schema.STRING_SCHEMA, BackupEnvelope.TYPE_STRING, BackupEnvelope.TYPE_STRING);
+    SinkRecord record = new SinkRecord(
+        "t", 0, Schema.STRING_SCHEMA, "k", Schema.STRING_SCHEMA, "v",
+        0L, 1L, TimestampType.LOG_APPEND_TIME);
+
+    Struct envelope = EnvelopeSchemaBuilder.buildEnvelopeStruct(
+        envSchema, record, "k", "v",
+        new EnvelopeSchemaBuilder.SchemaDescriptor(null, BackupEnvelope.TYPE_STRING, null, null),
+        new EnvelopeSchemaBuilder.SchemaDescriptor(null, BackupEnvelope.TYPE_STRING, null, null));
+
+    assertEquals("LOG_APPEND_TIME",
+        envelope.getString(BackupEnvelope.FIELD_TIMESTAMP_TYPE));
+  }
+
+  @Test
+  public void testTimestampTypeNoTimestampType() {
+    Schema envSchema = EnvelopeSchemaBuilder.buildEnvelopeSchema(
+        Schema.STRING_SCHEMA, Schema.STRING_SCHEMA, BackupEnvelope.TYPE_STRING, BackupEnvelope.TYPE_STRING);
+    SinkRecord record = new SinkRecord(
+        "t", 0, Schema.STRING_SCHEMA, "k", Schema.STRING_SCHEMA, "v",
+        0L, -1L, TimestampType.NO_TIMESTAMP_TYPE);
+
+    Struct envelope = EnvelopeSchemaBuilder.buildEnvelopeStruct(
+        envSchema, record, "k", "v",
+        new EnvelopeSchemaBuilder.SchemaDescriptor(null, BackupEnvelope.TYPE_STRING, null, null),
+        new EnvelopeSchemaBuilder.SchemaDescriptor(null, BackupEnvelope.TYPE_STRING, null, null));
+
+    assertEquals("NO_TIMESTAMP_TYPE",
+        envelope.getString(BackupEnvelope.FIELD_TIMESTAMP_TYPE));
+  }
+
+  @Test
   public void testBuildEnvelopeStructNullOptionals() {
     Schema envSchema = EnvelopeSchemaBuilder.buildEnvelopeSchema(
         null, null, BackupEnvelope.TYPE_NONE, BackupEnvelope.TYPE_NONE);
