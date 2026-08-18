@@ -162,10 +162,6 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
       + "BACKUP_FULL_RECORD: consolidates key, value, headers and metadata "
       + "into a single envelope record per message with pristine schema preservation.";
 
-  /**
-   * Connector operation mode. Determines whether the sink operates in
-   * standard mode or backup envelope mode.
-   */
   public enum Mode {
     GENERIC,
     BACKUP_FULL_RECORD;
@@ -326,45 +322,49 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           FILENAME_OFFSET_ZERO_PAD_WIDTH_DISPLAY
       );
 
-      addCodecAndMapConfigs(configDef, avroRecommender, group, orderInGroup);
+      configDef.define(
+          AVRO_CODEC_CONFIG,
+          Type.STRING,
+          AVRO_CODEC_DEFAULT,
+          ConfigDef.ValidString.in(AVRO_SUPPORTED_CODECS),
+          Importance.LOW,
+          AVRO_CODEC_DOC,
+          group,
+          ++orderInGroup,
+          Width.MEDIUM,
+          AVRO_CODEC_DISPLAY,
+          avroRecommender
+      );
+
+      configDef.define(
+          ALLOW_OPTIONAL_MAP_KEYS,
+          Type.BOOLEAN,
+          ALLOW_OPTIONAL_MAP_KEYS_DEFAULT,
+          Importance.LOW,
+          ALLOW_OPTIONAL_MAP_KEYS_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          ALLOW_OPTIONAL_MAP_KEYS_DISPLAY
+      );
+
+      configDef.define(
+          FORMAT_JSON_SCHEMA_ENABLE_CONFIG,
+          Type.BOOLEAN,
+          FORMAT_JSON_SCHEMA_ENABLE_DEFAULT,
+          Importance.LOW,
+          FORMAT_JSON_SCHEMA_ENABLE_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          FORMAT_JSON_SCHEMA_ENABLE_DISPLAY
+      );
     }
-    addSchemaAndModeConfigs(configDef);
-    return configDef;
-  }
-
-  private static void addCodecAndMapConfigs(
-      ConfigDef configDef, ConfigDef.Recommender avroRecommender,
-      String group, int orderInGroup) {
-    configDef.define(
-        AVRO_CODEC_CONFIG,
-        Type.STRING,
-        AVRO_CODEC_DEFAULT,
-        ConfigDef.ValidString.in(AVRO_SUPPORTED_CODECS),
-        Importance.LOW,
-        AVRO_CODEC_DOC,
-        group,
-        ++orderInGroup,
-        Width.MEDIUM,
-        AVRO_CODEC_DISPLAY,
-        avroRecommender
-    );
-    configDef.define(
-        ALLOW_OPTIONAL_MAP_KEYS,
-        Type.BOOLEAN,
-        ALLOW_OPTIONAL_MAP_KEYS_DEFAULT,
-        Importance.LOW,
-        ALLOW_OPTIONAL_MAP_KEYS_DOC,
-        group,
-        ++orderInGroup,
-        Width.SHORT,
-        ALLOW_OPTIONAL_MAP_KEYS_DISPLAY
-    );
-  }
-
-  private static void addSchemaAndModeConfigs(ConfigDef configDef) {
     {
       final String group = "Schema";
       int orderInGroup = 0;
+
+      // Define Schema configuration group
       configDef.define(
           SCHEMA_COMPATIBILITY_CONFIG,
           Type.STRING,
@@ -393,18 +393,8 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           Width.SHORT,
           "Mode"
       );
-      configDef.define(
-          FORMAT_JSON_SCHEMA_ENABLE_CONFIG,
-          Type.BOOLEAN,
-          FORMAT_JSON_SCHEMA_ENABLE_DEFAULT,
-          Importance.LOW,
-          FORMAT_JSON_SCHEMA_ENABLE_DOC,
-          group,
-          ++orderInGroup,
-          Width.SHORT,
-          FORMAT_JSON_SCHEMA_ENABLE_DISPLAY
-      );
     }
+    return configDef;
   }
 
   /**
