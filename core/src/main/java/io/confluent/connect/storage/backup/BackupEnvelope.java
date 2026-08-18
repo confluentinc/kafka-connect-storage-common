@@ -119,13 +119,14 @@ public final class BackupEnvelope {
    * Returns the file extension for a schema type.
    */
   public static String extensionForType(String schemaType) {
-    if (TYPE_AVRO.equals(schemaType)) {
+    if (TYPE_AVRO.equalsIgnoreCase(schemaType)) {
       return EXT_AVRO;
     }
-    if (TYPE_PROTOBUF.equals(schemaType)) {
+    if (TYPE_PROTOBUF.equalsIgnoreCase(schemaType)) {
       return EXT_PROTOBUF;
     }
-    if (TYPE_JSON_SCHEMA.equals(schemaType) || TYPE_JSON.equals(schemaType)) {
+    if (TYPE_JSON_SCHEMA.equalsIgnoreCase(schemaType)
+        || TYPE_JSON.equalsIgnoreCase(schemaType)) {
       return EXT_JSON;
     }
     return EXT_DEFAULT;

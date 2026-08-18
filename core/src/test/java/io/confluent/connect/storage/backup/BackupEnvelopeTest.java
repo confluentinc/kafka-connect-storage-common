@@ -123,4 +123,12 @@ public class BackupEnvelopeTest {
     assertEquals(BackupEnvelope.EXT_DEFAULT,
         BackupEnvelope.extensionForType(null));
   }
+
+  @Test
+  public void testExtensionForTypeIsCaseInsensitive() {
+    assertEquals(BackupEnvelope.EXT_AVRO, BackupEnvelope.extensionForType("avro"));
+    assertEquals(BackupEnvelope.EXT_PROTOBUF, BackupEnvelope.extensionForType("Protobuf"));
+    assertEquals(BackupEnvelope.EXT_JSON, BackupEnvelope.extensionForType("json_schema"));
+    assertEquals(BackupEnvelope.EXT_JSON, BackupEnvelope.extensionForType("Json"));
+  }
 }
