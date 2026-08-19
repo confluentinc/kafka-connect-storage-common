@@ -79,14 +79,7 @@ public class ObjectStoreSchemaBackupStore implements SchemaBackupStore {
       SchemaManifest.SchemaEntry entry = new SchemaManifest.SchemaEntry(
           schemaKey, schemaType, subject, version,
           schemaKey + ext, references);
-      String entryJson;
-      try {
-        entryJson = entry.toJsonString();
-      } catch (JsonProcessingException e) {
-        throw new DataException(
-            "Failed to serialize schema entry for key=" + schemaKey, e);
-      }
-      writer.write(entryPath, entryJson);
+      writer.write(entryPath, toJson(entry, schemaKey));
 
       log.info("Backed up schema: topic={}, key={}, subject={}, refs={}",
           topic, schemaKey, subject,
@@ -96,6 +89,15 @@ public class ObjectStoreSchemaBackupStore implements SchemaBackupStore {
       log.error("Failed to back up schema: topic={}, key={}",
           topic, schemaKey, e);
       throw e;
+    }
+  }
+
+  private static String toJson(SchemaManifest.SchemaEntry entry, String schemaKey) {
+    try {
+      return entry.toJsonString();
+    } catch (JsonProcessingException e) {
+      throw new DataException(
+          "Failed to serialize schema entry for key=" + schemaKey, e);
     }
   }
 
