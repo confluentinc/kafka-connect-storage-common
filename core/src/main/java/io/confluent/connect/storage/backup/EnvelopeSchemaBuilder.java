@@ -74,20 +74,20 @@ public final class EnvelopeSchemaBuilder {
   }
 
   public static Struct buildEnvelopeStruct(
-      Schema envelopeSchema, SinkRecord record,
+      Schema envelopeSchema, SinkRecord sinkRecord,
       Object keyData, Object valueData,
       SchemaDescriptor key, SchemaDescriptor value) {
 
     Struct e = new Struct(envelopeSchema);
     e.put(BackupEnvelope.FIELD_KEY, keyData);
     e.put(BackupEnvelope.FIELD_VALUE, valueData);
-    e.put(BackupEnvelope.FIELD_HEADERS, buildHeaders(record));
-    e.put(BackupEnvelope.FIELD_TOPIC, record.topic());
-    e.put(BackupEnvelope.FIELD_PARTITION, record.kafkaPartition());
-    e.put(BackupEnvelope.FIELD_OFFSET, record.kafkaOffset());
-    e.put(BackupEnvelope.FIELD_TIMESTAMP, record.timestamp());
-    e.put(BackupEnvelope.FIELD_TIMESTAMP_TYPE, record.timestampType() != null
-        ? record.timestampType().name() : null);
+    e.put(BackupEnvelope.FIELD_HEADERS, buildHeaders(sinkRecord));
+    e.put(BackupEnvelope.FIELD_TOPIC, sinkRecord.topic());
+    e.put(BackupEnvelope.FIELD_PARTITION, sinkRecord.kafkaPartition());
+    e.put(BackupEnvelope.FIELD_OFFSET, sinkRecord.kafkaOffset());
+    e.put(BackupEnvelope.FIELD_TIMESTAMP, sinkRecord.timestamp());
+    e.put(BackupEnvelope.FIELD_TIMESTAMP_TYPE, sinkRecord.timestampType() != null
+        ? sinkRecord.timestampType().name() : null);
     e.put(BackupEnvelope.FIELD_KEY_SCHEMA_ID, key.getSchemaId());
     e.put(BackupEnvelope.FIELD_VALUE_SCHEMA_ID, value.getSchemaId());
     e.put(BackupEnvelope.FIELD_KEY_SCHEMA_TYPE, key.getSchemaType());
@@ -132,10 +132,10 @@ public final class EnvelopeSchemaBuilder {
     }
   }
 
-  private static List<Struct> buildHeaders(SinkRecord record) {
+  private static List<Struct> buildHeaders(SinkRecord sinkRecord) {
     List<Struct> result = new ArrayList<>();
-    if (record.headers() != null) {
-      for (Header h : record.headers()) {
+    if (sinkRecord.headers() != null) {
+      for (Header h : sinkRecord.headers()) {
         Struct hs = new Struct(HEADER_SCHEMA);
         hs.put(BackupEnvelope.FIELD_HEADER_KEY, h.key());
         hs.put(BackupEnvelope.FIELD_HEADER_VALUE,

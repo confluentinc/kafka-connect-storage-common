@@ -72,17 +72,18 @@ public final class BackupWrapperExtractor {
     String schemaGuid = optionalString(wrapper, schema, BackupWrapper.FIELD_SCHEMA_GUID);
     log.debug("Unwrapped Wrapper: schemaType={}, schemaId={}, subject={}, hasReferences={}",
         schemaType, schemaId, subject, referenceTreeJson != null);
-    return new Unwrapped(
-        wrapper.get(BackupWrapper.FIELD_DATA),
-        schema.field(BackupWrapper.FIELD_DATA).schema(),
-        schemaId,
-        schemaVersion,
-        schemaType,
-        subject,
-        optionalString(wrapper, schema, BackupWrapper.FIELD_RAW_SCHEMA),
-        referenceTreeJson,
-        directRefsJson,
-        schemaGuid);
+    return Unwrapped.builder()
+        .data(wrapper.get(BackupWrapper.FIELD_DATA))
+        .schema(schema.field(BackupWrapper.FIELD_DATA).schema())
+        .schemaId(schemaId)
+        .schemaVersion(schemaVersion)
+        .schemaType(schemaType)
+        .subject(subject)
+        .rawSchema(optionalString(wrapper, schema, BackupWrapper.FIELD_RAW_SCHEMA))
+        .referenceTreeJson(referenceTreeJson)
+        .directRefsJson(directRefsJson)
+        .schemaGuid(schemaGuid)
+        .build();
   }
 
   private static Unwrapped unwrapSchemaless(Object data) {
@@ -96,8 +97,10 @@ public final class BackupWrapperExtractor {
         throw new DataException("Failed to serialize schemaless data as JSON", e);
       }
     }
-    return new Unwrapped(stringData, null, null, null,
-        BackupEnvelope.TYPE_JSON_SCHEMALESS, null, null, null, null, null);
+    return Unwrapped.builder()
+        .data(stringData)
+        .schemaType(BackupEnvelope.TYPE_JSON_SCHEMALESS)
+        .build();
   }
 
   private static Integer optionalInt32(Struct wrapper, Schema schema, String field) {
@@ -123,31 +126,96 @@ public final class BackupWrapperExtractor {
     private final String directRefsJson;
     private final String schemaGuid;
 
-    Unwrapped(Object data, Schema schema,
-        Integer schemaId, Integer schemaVersion,
-        String schemaType, String subject, String rawSchema,
-        String referenceTreeJson, String directRefsJson,
-        String schemaGuid) {
-      this.data = data;
-      this.schema = schema;
-      this.schemaId = schemaId;
-      this.schemaVersion = schemaVersion;
-      this.schemaType = schemaType;
-      this.subject = subject;
-      this.rawSchema = rawSchema;
-      this.referenceTreeJson = referenceTreeJson;
-      this.directRefsJson = directRefsJson;
-      this.schemaGuid = schemaGuid;
+    private Unwrapped(Builder b) {
+      this.data = b.data;
+      this.schema = b.schema;
+      this.schemaId = b.schemaId;
+      this.schemaVersion = b.schemaVersion;
+      this.schemaType = b.schemaType;
+      this.subject = b.subject;
+      this.rawSchema = b.rawSchema;
+      this.referenceTreeJson = b.referenceTreeJson;
+      this.directRefsJson = b.directRefsJson;
+      this.schemaGuid = b.schemaGuid;
+    }
+
+    static Builder builder() {
+      return new Builder();
     }
 
     static Unwrapped tombstone() {
-      return new Unwrapped(null, null, null, null,
-          BackupEnvelope.TYPE_NONE, null, null, null, null, null);
+      return builder().schemaType(BackupEnvelope.TYPE_NONE).build();
     }
 
     static Unwrapped passthrough(Object data, Schema schema, String schemaType) {
-      return new Unwrapped(data, schema, null, null,
-          schemaType, null, null, null, null, null);
+      return builder().data(data).schema(schema).schemaType(schemaType).build();
+    }
+
+    static class Builder {
+      private Object data;
+      private Schema schema;
+      private Integer schemaId;
+      private Integer schemaVersion;
+      private String schemaType;
+      private String subject;
+      private String rawSchema;
+      private String referenceTreeJson;
+      private String directRefsJson;
+      private String schemaGuid;
+
+      Builder data(Object v) {
+        this.data = v;
+        return this;
+      }
+
+      Builder schema(Schema v) {
+        this.schema = v;
+        return this;
+      }
+
+      Builder schemaId(Integer v) {
+        this.schemaId = v;
+        return this;
+      }
+
+      Builder schemaVersion(Integer v) {
+        this.schemaVersion = v;
+        return this;
+      }
+
+      Builder schemaType(String v) {
+        this.schemaType = v;
+        return this;
+      }
+
+      Builder subject(String v) {
+        this.subject = v;
+        return this;
+      }
+
+      Builder rawSchema(String v) {
+        this.rawSchema = v;
+        return this;
+      }
+
+      Builder referenceTreeJson(String v) {
+        this.referenceTreeJson = v;
+        return this;
+      }
+
+      Builder directRefsJson(String v) {
+        this.directRefsJson = v;
+        return this;
+      }
+
+      Builder schemaGuid(String v) {
+        this.schemaGuid = v;
+        return this;
+      }
+
+      Unwrapped build() {
+        return new Unwrapped(this);
+      }
     }
 
     public Object getData() {

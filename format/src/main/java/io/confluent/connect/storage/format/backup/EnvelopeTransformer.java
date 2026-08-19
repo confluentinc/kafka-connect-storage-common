@@ -71,8 +71,8 @@ public class EnvelopeTransformer {
    */
   public Collection<SinkRecord> wrapAll(Collection<SinkRecord> records) {
     List<SinkRecord> wrapped = new ArrayList<>(records.size());
-    for (SinkRecord record : records) {
-      wrapped.add(wrap(record));
+    for (SinkRecord sinkRecord : records) {
+      wrapped.add(wrap(sinkRecord));
     }
     return wrapped;
   }
@@ -81,19 +81,19 @@ public class EnvelopeTransformer {
    * Wraps a single SinkRecord in an envelope struct.
    * Backs up schema files as a side effect (idempotent).
    *
-   * @param record the original SinkRecord
+   * @param sinkRecord the original SinkRecord
    * @return a new SinkRecord with envelope schema and struct as value
    */
-  public SinkRecord wrap(SinkRecord record) {
+  public SinkRecord wrap(SinkRecord sinkRecord) {
     Unwrapped key = BackupWrapperExtractor.unwrap(
-        record.key(), record.keySchema(), true, keySchemaTypeDefault);
+        sinkRecord.key(), sinkRecord.keySchema(), true, keySchemaTypeDefault);
     Unwrapped value = BackupWrapperExtractor.unwrap(
-        record.value(), record.valueSchema(), false, valueSchemaTypeDefault);
+        sinkRecord.value(), sinkRecord.valueSchema(), false, valueSchemaTypeDefault);
 
     if (key.getData() == null && value.getData() == null) {
-      String msg = "Cannot backup record at topic=" + record.topic()
-          + ", partition=" + record.kafkaPartition()
-          + ", offset=" + record.kafkaOffset()
+      String msg = "Cannot backup record at topic=" + sinkRecord.topic()
+          + ", partition=" + sinkRecord.kafkaPartition()
+          + ", offset=" + sinkRecord.kafkaOffset()
           + ": both unwrapped key and value are null. This means either"
           + " the source record had null key AND null value (which is not"
           + " a meaningful Kafka message), or a wrapper struct's 'data'"
@@ -104,18 +104,18 @@ public class EnvelopeTransformer {
     }
 
     log.debug("Envelope: topic={}, offset={}, keyType={}, valType={}, keyId={}, valId={}",
-        record.topic(), record.kafkaOffset(),
+        sinkRecord.topic(), sinkRecord.kafkaOffset(),
         key.getSchemaType(), value.getSchemaType(),
         key.getSchemaId(), value.getSchemaId());
 
-    schemaBackup.backupIfNeeded(record.topic(), key);
-    schemaBackup.backupIfNeeded(record.topic(), value);
+    schemaBackup.backupIfNeeded(sinkRecord.topic(), key);
+    schemaBackup.backupIfNeeded(sinkRecord.topic(), value);
 
     Schema envelopeSchema = EnvelopeSchemaBuilder
         .buildEnvelopeSchema(key.getSchema(), value.getSchema());
 
     Struct envelope = EnvelopeSchemaBuilder
-        .buildEnvelopeStruct(envelopeSchema, record,
+        .buildEnvelopeStruct(envelopeSchema, sinkRecord,
             key.getData(), value.getData(),
             new EnvelopeSchemaBuilder.SchemaDescriptor(
                 key.getSchemaId(), key.getSchemaType(),
@@ -125,11 +125,11 @@ public class EnvelopeTransformer {
                 value.getSubject(), value.getSchemaGuid()));
 
     return new SinkRecord(
-        record.topic(), record.kafkaPartition(),
+        sinkRecord.topic(), sinkRecord.kafkaPartition(),
         null, null,
         envelopeSchema, envelope,
-        record.kafkaOffset(),
-        record.timestamp(),
-        record.timestampType());
+        sinkRecord.kafkaOffset(),
+        sinkRecord.timestamp(),
+        sinkRecord.timestampType());
   }
 }

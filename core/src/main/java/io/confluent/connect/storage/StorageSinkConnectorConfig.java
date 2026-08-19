@@ -378,23 +378,25 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           schemaCompatibilityRecommender
       );
     }
-    {
-      final String group = "Mode";
-      int orderInGroup = 0;
-      configDef.define(
-          MODE_CONFIG,
-          Type.STRING,
-          MODE_DEFAULT,
-          ConfigDef.ValidString.in(Mode.GENERIC.name(), Mode.BACKUP_FULL_RECORD.name()),
-          Importance.MEDIUM,
-          MODE_DOC,
-          group,
-          ++orderInGroup,
-          Width.SHORT,
-          "Mode"
-      );
-    }
+    addModeGroup(configDef);
     return configDef;
+  }
+
+  private static void addModeGroup(ConfigDef configDef) {
+    final String group = "Mode";
+    int orderInGroup = 0;
+    configDef.define(
+        MODE_CONFIG,
+        Type.STRING,
+        MODE_DEFAULT,
+        ConfigDef.ValidString.in(Mode.GENERIC.name(), Mode.BACKUP_FULL_RECORD.name()),
+        Importance.MEDIUM,
+        MODE_DOC,
+        group,
+        ++orderInGroup,
+        Width.SHORT,
+        "Mode"
+    );
   }
 
   /**
