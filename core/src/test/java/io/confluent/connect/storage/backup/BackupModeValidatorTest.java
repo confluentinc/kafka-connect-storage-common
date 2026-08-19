@@ -50,6 +50,22 @@ public class BackupModeValidatorTest {
   private static final String PARQUET_CODEC = "parquet.codec";
   private static final String PARTITIONER_CLASS = "partitioner.class";
   private static final String TIMESTAMP_EXTRACTOR = "timestamp.extractor";
+  private static final String VALUE_ENHANCED_AVRO =
+      "value.converter.enhanced.avro.schema.support";
+  private static final String KEY_ENHANCED_AVRO =
+      "key.converter.enhanced.avro.schema.support";
+  private static final String VALUE_ENHANCED_PROTOBUF =
+      "value.converter.enhanced.protobuf.schema.support";
+  private static final String KEY_ENHANCED_PROTOBUF =
+      "key.converter.enhanced.protobuf.schema.support";
+  private static final String VALUE_WRAPPER_FOR_RAW =
+      "value.converter.wrapper.for.raw.primitives";
+  private static final String KEY_WRAPPER_FOR_RAW =
+      "key.converter.wrapper.for.raw.primitives";
+  private static final String VALUE_WRAPPER_FOR_NULLABLES =
+      "value.converter.wrapper.for.nullables";
+  private static final String JSON_TYPE_ALLOWED_PACKAGES =
+      "json.type.allowed.packages";
   private static final String DEFAULT_PARTITIONER =
       "io.confluent.connect.storage.partitioner.DefaultPartitioner";
   private static final String TIME_BASED_PARTITIONER =
@@ -79,7 +95,7 @@ public class BackupModeValidatorTest {
     configs.put(KEY_CONVERTER, STRING_CONVERTER);
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
     configs.put(VALUE_SCHEMA_BACKUP_ENABLED, TRUE);
-    configs.put("value.converter.enhanced.avro.schema.support", TRUE);
+    configs.put(VALUE_ENHANCED_AVRO, TRUE);
     return configs;
   }
 
@@ -205,7 +221,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(KEY_CONVERTER, AVRO_CONVERTER);
     configs.put(KEY_SCHEMA_BACKUP_ENABLED, TRUE);
-    configs.put("key.converter.enhanced.avro.schema.support", TRUE);
+    configs.put(KEY_ENHANCED_AVRO, TRUE);
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
     assertFalse(containsError(errors, "schema.backup.enabled"));
@@ -214,10 +230,10 @@ public class BackupModeValidatorTest {
   @Test
   public void testSinkAvroValueConverterWithoutEnhancedFails() {
     Map<String, String> configs = baseSinkConfigs();
-    configs.remove("value.converter.enhanced.avro.schema.support");
+    configs.remove(VALUE_ENHANCED_AVRO);
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
-    assertTrue(containsError(errors, "value.converter.enhanced.avro.schema.support"));
+    assertTrue(containsError(errors, VALUE_ENHANCED_AVRO));
   }
 
   @Test
@@ -227,14 +243,14 @@ public class BackupModeValidatorTest {
     configs.put(KEY_SCHEMA_BACKUP_ENABLED, TRUE);
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
-    assertTrue(containsError(errors, "key.converter.enhanced.avro.schema.support"));
+    assertTrue(containsError(errors, KEY_ENHANCED_AVRO));
   }
 
   @Test
   public void testSinkNonAvroConverterSkipsEnhancedCheck() {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(VALUE_CONVERTER, STRING_CONVERTER);
-    configs.remove("value.converter.enhanced.avro.schema.support");
+    configs.remove(VALUE_ENHANCED_AVRO);
     configs.remove(VALUE_SCHEMA_BACKUP_ENABLED);
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
@@ -337,7 +353,7 @@ public class BackupModeValidatorTest {
   @Test
   public void testAvroConverterWithEnhancedSchemaSupportExercisesWarnPath() {
     Map<String, String> configs = baseSinkConfigs();
-    configs.put("value.converter.enhanced.avro.schema.support", TRUE);
+    configs.put(VALUE_ENHANCED_AVRO, TRUE);
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
     assertEquals(0, errors.size());
@@ -489,7 +505,7 @@ public class BackupModeValidatorTest {
   public void testValidSourceConfigProducesZeroErrors() {
     Map<String, String> configs = new HashMap<>();
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
-    configs.put("value.converter.enhanced.avro.schema.support", TRUE);
+    configs.put(VALUE_ENHANCED_AVRO, TRUE);
 
     List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
     assertEquals(0, errors.size());
@@ -499,7 +515,7 @@ public class BackupModeValidatorTest {
   public void testByteArrayFormatSourceIsRejected() {
     Map<String, String> configs = new HashMap<>();
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
-    configs.put("value.converter.enhanced.avro.schema.support", TRUE);
+    configs.put(VALUE_ENHANCED_AVRO, TRUE);
 
     List<String> errors = BackupModeValidator.validateSourceConfigs(configs, BYTE_ARRAY_FORMAT);
     assertTrue(containsError(errors, BYTE_ARRAY_FORMAT));
@@ -511,7 +527,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
 
     List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
-    assertTrue(containsError(errors, "value.converter.enhanced.avro.schema.support"));
+    assertTrue(containsError(errors, VALUE_ENHANCED_AVRO));
   }
 
   @Test
@@ -521,7 +537,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, STRING_CONVERTER);
 
     List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
-    assertTrue(containsError(errors, "key.converter.enhanced.avro.schema.support"));
+    assertTrue(containsError(errors, KEY_ENHANCED_AVRO));
   }
 
   @Test
@@ -539,7 +555,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
 
     List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
-    assertTrue(containsError(errors, "value.converter.enhanced.protobuf.schema.support"));
+    assertTrue(containsError(errors, VALUE_ENHANCED_PROTOBUF));
   }
 
   @Test
@@ -558,7 +574,7 @@ public class BackupModeValidatorTest {
     configs.put(PARTITIONER_CLASS, DEFAULT_PARTITIONER);
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
-    assertFalse(containsError(errors, "partitioner.class"));
+    assertFalse(containsError(errors, PARTITIONER_CLASS));
   }
 
   @Test
@@ -567,7 +583,7 @@ public class BackupModeValidatorTest {
     configs.put(PARTITIONER_CLASS, TIME_BASED_PARTITIONER);
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
-    assertFalse(containsError(errors, "partitioner.class"));
+    assertFalse(containsError(errors, PARTITIONER_CLASS));
   }
 
   @Test
@@ -592,7 +608,7 @@ public class BackupModeValidatorTest {
   public void testUnsetPartitionerPasses() {
     List<String> errors = BackupModeValidator.validateSinkConfigs(
         baseSinkConfigs(), AVRO_FORMAT, true);
-    assertFalse(containsError(errors, "partitioner.class"));
+    assertFalse(containsError(errors, PARTITIONER_CLASS));
   }
 
   @Test
@@ -632,8 +648,8 @@ public class BackupModeValidatorTest {
     configs.put(KEY_CONVERTER, STRING_CONVERTER);
     configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
     configs.put(VALUE_SCHEMA_BACKUP_ENABLED, TRUE);
-    configs.put("value.converter.enhanced.protobuf.schema.support", TRUE);
-    configs.put("value.converter.wrapper.for.raw.primitives", FALSE);
+    configs.put(VALUE_ENHANCED_PROTOBUF, TRUE);
+    configs.put(VALUE_WRAPPER_FOR_RAW, FALSE);
     return configs;
   }
 
@@ -648,37 +664,37 @@ public class BackupModeValidatorTest {
   @Test
   public void testProtobufSinkWithoutEnhancedFails() {
     Map<String, String> configs = protobufSinkConfigs();
-    configs.remove("value.converter.enhanced.protobuf.schema.support");
+    configs.remove(VALUE_ENHANCED_PROTOBUF);
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
-    assertTrue(containsError(errors, "value.converter.enhanced.protobuf.schema.support"));
+    assertTrue(containsError(errors, VALUE_ENHANCED_PROTOBUF));
   }
 
   @Test
   public void testProtobufSinkWrapperForRawPrimitivesUnsetFails() {
     Map<String, String> configs = protobufSinkConfigs();
-    configs.remove("value.converter.wrapper.for.raw.primitives");
+    configs.remove(VALUE_WRAPPER_FOR_RAW);
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
-    assertTrue(containsError(errors, "value.converter.wrapper.for.raw.primitives"));
+    assertTrue(containsError(errors, VALUE_WRAPPER_FOR_RAW));
   }
 
   @Test
   public void testProtobufSinkWrapperForRawPrimitivesTrueFails() {
     Map<String, String> configs = protobufSinkConfigs();
-    configs.put("value.converter.wrapper.for.raw.primitives", TRUE);
+    configs.put(VALUE_WRAPPER_FOR_RAW, TRUE);
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
-    assertTrue(containsError(errors, "value.converter.wrapper.for.raw.primitives"));
+    assertTrue(containsError(errors, VALUE_WRAPPER_FOR_RAW));
   }
 
   @Test
   public void testProtobufSinkWrapperForNullablesTrueFails() {
     Map<String, String> configs = protobufSinkConfigs();
-    configs.put("value.converter.wrapper.for.nullables", TRUE);
+    configs.put(VALUE_WRAPPER_FOR_NULLABLES, TRUE);
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
-    assertTrue(containsError(errors, "value.converter.wrapper.for.nullables"));
+    assertTrue(containsError(errors, VALUE_WRAPPER_FOR_NULLABLES));
   }
 
   @Test
@@ -688,8 +704,8 @@ public class BackupModeValidatorTest {
     configs.put(KEY_SCHEMA_BACKUP_ENABLED, TRUE);
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
-    assertTrue(containsError(errors, "key.converter.enhanced.protobuf.schema.support"));
-    assertTrue(containsError(errors, "key.converter.wrapper.for.raw.primitives"));
+    assertTrue(containsError(errors, KEY_ENHANCED_PROTOBUF));
+    assertTrue(containsError(errors, KEY_WRAPPER_FOR_RAW));
   }
 
   @Test
@@ -698,14 +714,14 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
 
     List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
-    assertTrue(containsError(errors, "value.converter.enhanced.protobuf.schema.support"));
+    assertTrue(containsError(errors, VALUE_ENHANCED_PROTOBUF));
   }
 
   @Test
   public void testProtobufSourceWrapperForRawPrimitivesNotValidated() {
     Map<String, String> configs = new HashMap<>();
     configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
-    configs.put("value.converter.enhanced.protobuf.schema.support", TRUE);
+    configs.put(VALUE_ENHANCED_PROTOBUF, TRUE);
 
     List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
     assertFalse(containsError(errors, "wrapper.for.raw.primitives"));
@@ -715,11 +731,11 @@ public class BackupModeValidatorTest {
   public void testProtobufSourceWrapperForNullablesTrueFails() {
     Map<String, String> configs = new HashMap<>();
     configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
-    configs.put("value.converter.enhanced.protobuf.schema.support", TRUE);
-    configs.put("value.converter.wrapper.for.nullables", TRUE);
+    configs.put(VALUE_ENHANCED_PROTOBUF, TRUE);
+    configs.put(VALUE_WRAPPER_FOR_NULLABLES, TRUE);
 
     List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
-    assertTrue(containsError(errors, "value.converter.wrapper.for.nullables"));
+    assertTrue(containsError(errors, VALUE_WRAPPER_FOR_NULLABLES));
   }
 
   @Test
@@ -739,7 +755,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, JSON_SCHEMA_CONVERTER);
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
-    assertFalse(containsError(errors, "json.type.allowed.packages"));
+    assertFalse(containsError(errors, JSON_TYPE_ALLOWED_PACKAGES));
   }
 
   @Test
@@ -749,7 +765,7 @@ public class BackupModeValidatorTest {
     configs.put("value.converter.json.type.allowed.packages", "*");
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
-    assertFalse(containsError(errors, "json.type.allowed.packages"));
+    assertFalse(containsError(errors, JSON_TYPE_ALLOWED_PACKAGES));
   }
 
   @Test
@@ -759,7 +775,7 @@ public class BackupModeValidatorTest {
     configs.put("value.converter.json.type.allowed.packages", "com.example.models");
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
-    assertFalse(containsError(errors, "json.type.allowed.packages"));
+    assertFalse(containsError(errors, JSON_TYPE_ALLOWED_PACKAGES));
   }
 
   @Test
@@ -768,6 +784,6 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, JSON_SCHEMA_CONVERTER);
 
     List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
-    assertFalse(containsError(errors, "json.type.allowed.packages"));
+    assertFalse(containsError(errors, JSON_TYPE_ALLOWED_PACKAGES));
   }
 }

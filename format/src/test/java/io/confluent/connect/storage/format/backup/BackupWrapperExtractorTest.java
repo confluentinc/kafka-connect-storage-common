@@ -37,13 +37,20 @@ import static org.junit.Assert.assertTrue;
 
 public class BackupWrapperExtractorTest {
 
+  private static final String FIELD_NAME = "name";
+  private static final String NAME_ALICE = "Alice";
+  private static final String HELLO = "hello";
+  private static final String FIELD_ADDRESS = "address";
+  private static final String FIELD_CITY = "city";
+  private static final String FIELD_ITEMS = "items";
+
   @Test
   public void testUnwrapSrWrapper() {
     Schema dataSchema = SchemaBuilder.struct()
-        .field("name", Schema.STRING_SCHEMA).build();
+        .field(FIELD_NAME, Schema.STRING_SCHEMA).build();
     Schema wrapperSchema = BackupWrapper.buildSchema(dataSchema);
 
-    Struct data = new Struct(dataSchema).put("name", "Alice");
+    Struct data = new Struct(dataSchema).put(FIELD_NAME, NAME_ALICE);
     BackupWrapper.WrapperFields fields = new BackupWrapper.WrapperFields(
         42, 1, BackupEnvelope.TYPE_AVRO, "test-value", "{\"type\":\"record\"}",
         "{\"tree\":{}}", "[{\"ref\":1}]");
@@ -120,9 +127,9 @@ public class BackupWrapperExtractorTest {
   @Test
   public void testUnwrapNonSrWithSchema() {
     Unwrapped result = BackupWrapperExtractor.unwrap(
-        "hello", Schema.STRING_SCHEMA, true, BackupEnvelope.TYPE_STRING);
+        HELLO, Schema.STRING_SCHEMA, true, BackupEnvelope.TYPE_STRING);
 
-    assertEquals("hello", result.getData());
+    assertEquals(HELLO, result.getData());
     assertEquals(Schema.STRING_SCHEMA, result.getSchema());
     assertEquals(BackupEnvelope.TYPE_STRING, result.getSchemaType());
     assertNull(result.getSchemaId());
@@ -136,7 +143,7 @@ public class BackupWrapperExtractorTest {
 
     BackupWrapper.WrapperFields fields = new BackupWrapper.WrapperFields(
         1, null, BackupEnvelope.TYPE_STRING, "test-key", null, null, null);
-    Struct wrapper = BackupWrapper.buildWrapper(wrapperSchema, "hello", fields);
+    Struct wrapper = BackupWrapper.buildWrapper(wrapperSchema, HELLO, fields);
 
     Unwrapped result = BackupWrapperExtractor.unwrap(
         wrapper, wrapperSchema, true, BackupEnvelope.TYPE_STRING);
@@ -151,11 +158,11 @@ public class BackupWrapperExtractorTest {
   @Test
   public void testUnwrapSchemalessNestedMap() {
     Map<String, Object> inner = new LinkedHashMap<>();
-    inner.put("city", "NYC");
+    inner.put(FIELD_CITY, "NYC");
     inner.put("zip", 10001);
     Map<String, Object> outer = new LinkedHashMap<>();
-    outer.put("name", "Alice");
-    outer.put("address", inner);
+    outer.put(FIELD_NAME, NAME_ALICE);
+    outer.put(FIELD_ADDRESS, inner);
 
     Unwrapped result = BackupWrapperExtractor.unwrap(
         outer, null, false, BackupEnvelope.TYPE_JSON_SCHEMALESS);
@@ -214,11 +221,11 @@ public class BackupWrapperExtractorTest {
   @Test
   public void testUnwrapEmbeddedSchemaStruct() {
     Schema s = SchemaBuilder.struct()
-        .field("name", Schema.STRING_SCHEMA)
+        .field(FIELD_NAME, Schema.STRING_SCHEMA)
         .field("age", Schema.INT32_SCHEMA)
         .build();
     Struct data = new Struct(s)
-        .put("name", "Alice").put("age", 30);
+        .put(FIELD_NAME, NAME_ALICE).put("age", 30);
 
     Unwrapped result = BackupWrapperExtractor.unwrap(
         data, s, false, BackupEnvelope.TYPE_JSON_EMBEDDED_SCHEMA);
@@ -232,20 +239,20 @@ public class BackupWrapperExtractorTest {
   @Test
   public void testUnwrapEmbeddedSchemaNestedStruct() {
     Schema inner = SchemaBuilder.struct()
-        .field("city", Schema.STRING_SCHEMA).build();
+        .field(FIELD_CITY, Schema.STRING_SCHEMA).build();
     Schema outer = SchemaBuilder.struct()
-        .field("name", Schema.STRING_SCHEMA)
-        .field("address", inner).build();
-    Struct addr = new Struct(inner).put("city", "NYC");
+        .field(FIELD_NAME, Schema.STRING_SCHEMA)
+        .field(FIELD_ADDRESS, inner).build();
+    Struct addr = new Struct(inner).put(FIELD_CITY, "NYC");
     Struct data = new Struct(outer)
-        .put("name", "Alice").put("address", addr);
+        .put(FIELD_NAME, NAME_ALICE).put(FIELD_ADDRESS, addr);
 
     Unwrapped result = BackupWrapperExtractor.unwrap(
         data, outer, false, BackupEnvelope.TYPE_JSON_EMBEDDED_SCHEMA);
 
     Struct restored = (Struct) result.getData();
-    Struct restoredAddr = restored.getStruct("address");
-    assertEquals("NYC", restoredAddr.getString("city"));
+    Struct restoredAddr = restored.getStruct(FIELD_ADDRESS);
+    assertEquals("NYC", restoredAddr.getString(FIELD_CITY));
   }
 
   @Test
@@ -253,26 +260,26 @@ public class BackupWrapperExtractorTest {
     Schema itemSchema = SchemaBuilder.struct()
         .field("id", Schema.INT32_SCHEMA).build();
     Schema s = SchemaBuilder.struct()
-        .field("items", SchemaBuilder.array(itemSchema)).build();
+        .field(FIELD_ITEMS, SchemaBuilder.array(itemSchema)).build();
     Struct item1 = new Struct(itemSchema).put("id", 1);
     Struct item2 = new Struct(itemSchema).put("id", 2);
     Struct data = new Struct(s)
-        .put("items", Arrays.asList(item1, item2));
+        .put(FIELD_ITEMS, Arrays.asList(item1, item2));
 
     Unwrapped result = BackupWrapperExtractor.unwrap(
         data, s, false, BackupEnvelope.TYPE_JSON_EMBEDDED_SCHEMA);
 
     Struct restored = (Struct) result.getData();
-    List<?> items = restored.getArray("items");
+    List<?> items = restored.getArray(FIELD_ITEMS);
     assertEquals(2, items.size());
   }
 
   @Test
   public void testUnwrapPrimitiveString() {
     Unwrapped result = BackupWrapperExtractor.unwrap(
-        "hello", Schema.STRING_SCHEMA, true, BackupEnvelope.TYPE_STRING);
+        HELLO, Schema.STRING_SCHEMA, true, BackupEnvelope.TYPE_STRING);
 
-    assertEquals("hello", result.getData());
+    assertEquals(HELLO, result.getData());
     assertEquals(Schema.STRING_SCHEMA, result.getSchema());
     assertEquals(BackupEnvelope.TYPE_STRING, result.getSchemaType());
   }

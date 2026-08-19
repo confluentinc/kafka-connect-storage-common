@@ -18,7 +18,6 @@ package io.confluent.connect.storage.format.backup;
 import io.confluent.connect.schema.backup.api.BackupWrapper;
 import io.confluent.connect.storage.backup.BackupEnvelope;
 import io.confluent.connect.storage.backup.SchemaBackupStore;
-import io.confluent.connect.storage.backup.SchemaManifest;
 import org.apache.kafka.common.record.TimestampType;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
@@ -29,7 +28,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -50,6 +48,10 @@ public class EnvelopeTransformerTest {
   private static final int PARTITION = 0;
   private static final long OFFSET = 100L;
   private static final long TIMESTAMP = 1234567890L;
+  private static final String FIELD_NAME = "name";
+  private static final String NAME_ALICE = "Alice";
+  private static final String HEADER_KEY_1 = "key1";
+  private static final String TEST_VALUE = "test-value";
   private static final String RAW_SCHEMA = "{\"type\":\"record\",\"name\":\"User\","
       + "\"fields\":[{\"name\":\"name\",\"type\":\"string\"}]}";
 
@@ -66,16 +68,16 @@ public class EnvelopeTransformerTest {
   @Test
   public void wrapRecordWithAvroKeyAndValue() {
     Schema dataSchema = SchemaBuilder.struct()
-        .field("name", Schema.STRING_SCHEMA).build();
+        .field(FIELD_NAME, Schema.STRING_SCHEMA).build();
     Schema wrapperSchema = BackupWrapper.buildSchema(dataSchema);
-    Struct data = new Struct(dataSchema).put("name", "Alice");
+    Struct data = new Struct(dataSchema).put(FIELD_NAME, NAME_ALICE);
     BackupWrapper.WrapperFields fields = new BackupWrapper.WrapperFields(
-        42, 1, BackupEnvelope.TYPE_AVRO, "test-value", RAW_SCHEMA, null, null);
+        42, 1, BackupEnvelope.TYPE_AVRO, TEST_VALUE, RAW_SCHEMA, null, null);
     Struct wrapper = BackupWrapper.buildWrapper(wrapperSchema, data, fields);
 
     SinkRecord record = new SinkRecord(
         TOPIC, PARTITION,
-        Schema.STRING_SCHEMA, "key1",
+        Schema.STRING_SCHEMA, HEADER_KEY_1,
         wrapperSchema, wrapper,
         OFFSET, TIMESTAMP, TimestampType.CREATE_TIME);
 
@@ -93,11 +95,11 @@ public class EnvelopeTransformerTest {
   @Test
   public void wrapRecordWithNullKey() {
     Schema dataSchema = SchemaBuilder.struct()
-        .field("name", Schema.STRING_SCHEMA).build();
+        .field(FIELD_NAME, Schema.STRING_SCHEMA).build();
     Schema wrapperSchema = BackupWrapper.buildSchema(dataSchema);
-    Struct data = new Struct(dataSchema).put("name", "Alice");
+    Struct data = new Struct(dataSchema).put(FIELD_NAME, NAME_ALICE);
     BackupWrapper.WrapperFields fields = new BackupWrapper.WrapperFields(
-        42, 1, BackupEnvelope.TYPE_AVRO, "test-value", RAW_SCHEMA, null, null);
+        42, 1, BackupEnvelope.TYPE_AVRO, TEST_VALUE, RAW_SCHEMA, null, null);
     Struct wrapper = BackupWrapper.buildWrapper(wrapperSchema, data, fields);
 
     SinkRecord record = new SinkRecord(
@@ -115,14 +117,14 @@ public class EnvelopeTransformerTest {
   public void wrapRecordWithNullValue() {
     SinkRecord record = new SinkRecord(
         TOPIC, PARTITION,
-        Schema.STRING_SCHEMA, "key1",
+        Schema.STRING_SCHEMA, HEADER_KEY_1,
         null, null, OFFSET);
 
     SinkRecord result = transformer.wrap(record);
 
     assertNotNull(result);
     Struct envelope = (Struct) result.value();
-    assertEquals("key1", envelope.get(BackupEnvelope.FIELD_KEY));
+    assertEquals(HEADER_KEY_1, envelope.get(BackupEnvelope.FIELD_KEY));
   }
 
   @Test(expected = DataException.class)
@@ -165,7 +167,7 @@ public class EnvelopeTransformerTest {
   public void wrapPreservesTopicPartitionOffset() {
     SinkRecord record = new SinkRecord(
         TOPIC, PARTITION,
-        Schema.STRING_SCHEMA, "key1",
+        Schema.STRING_SCHEMA, HEADER_KEY_1,
         Schema.STRING_SCHEMA, "value1",
         OFFSET, TIMESTAMP, TimestampType.CREATE_TIME);
 
@@ -181,11 +183,11 @@ public class EnvelopeTransformerTest {
   @Test
   public void backupStoreCalledForSchema() {
     Schema dataSchema = SchemaBuilder.struct()
-        .field("name", Schema.STRING_SCHEMA).build();
+        .field(FIELD_NAME, Schema.STRING_SCHEMA).build();
     Schema wrapperSchema = BackupWrapper.buildSchema(dataSchema);
-    Struct data = new Struct(dataSchema).put("name", "Alice");
+    Struct data = new Struct(dataSchema).put(FIELD_NAME, NAME_ALICE);
     BackupWrapper.WrapperFields fields = new BackupWrapper.WrapperFields(
-        42, 1, BackupEnvelope.TYPE_AVRO, "test-value", RAW_SCHEMA, null, null);
+        42, 1, BackupEnvelope.TYPE_AVRO, TEST_VALUE, RAW_SCHEMA, null, null);
     Struct wrapper = BackupWrapper.buildWrapper(wrapperSchema, data, fields);
 
     SinkRecord record = new SinkRecord(

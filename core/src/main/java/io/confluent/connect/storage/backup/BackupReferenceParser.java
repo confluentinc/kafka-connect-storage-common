@@ -18,8 +18,6 @@ package io.confluent.connect.storage.backup;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.connect.errors.DataException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,7 +31,6 @@ import java.util.Map;
  */
 public final class BackupReferenceParser {
 
-  private static final Logger log = LoggerFactory.getLogger(BackupReferenceParser.class);
   private static final ObjectMapper JSON = new ObjectMapper();
 
   private BackupReferenceParser() {

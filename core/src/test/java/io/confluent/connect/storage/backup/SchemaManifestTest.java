@@ -27,6 +27,11 @@ import static org.junit.Assert.assertTrue;
 
 public class SchemaManifestTest {
 
+  private static final String REF_ADDRESS = "Address";
+  private static final String REF_ADDRESS_SUBJECT = "address-value";
+  private static final String REF_COUNTRY = "Country";
+  private static final String REF_COUNTRY_SUBJECT = "country-value";
+
   @Test
   public void testEntryFields() {
     SchemaManifest.SchemaEntry entry = new SchemaManifest.SchemaEntry(
@@ -44,15 +49,15 @@ public class SchemaManifestTest {
   @Test
   public void testEntryWithReferences() {
     SchemaManifest.SchemaReferenceEntry ref = new SchemaManifest.SchemaReferenceEntry(
-        "Address", "address-value", 1, 10);
+        REF_ADDRESS, REF_ADDRESS_SUBJECT, 1, 10);
     SchemaManifest.SchemaEntry entry = new SchemaManifest.SchemaEntry(
         "42", BackupEnvelope.TYPE_AVRO, "order-value", 1, "42.avsc",
         Collections.singletonList(ref));
 
     assertTrue(entry.hasReferences());
     assertEquals(1, entry.getReferences().size());
-    assertEquals("Address", entry.getReferences().get(0).getName());
-    assertEquals("address-value", entry.getReferences().get(0).getSubject());
+    assertEquals(REF_ADDRESS, entry.getReferences().get(0).getName());
+    assertEquals(REF_ADDRESS_SUBJECT, entry.getReferences().get(0).getSubject());
     assertEquals(1, entry.getReferences().get(0).getVersion());
     assertEquals(10, entry.getReferences().get(0).getGlobalId());
   }
@@ -60,7 +65,7 @@ public class SchemaManifestTest {
   @Test
   public void testEntryWithNullReferences() {
     SchemaManifest.SchemaEntry entry = new SchemaManifest.SchemaEntry(
-        "10", BackupEnvelope.TYPE_AVRO, "address-value", 1, "10.avsc", null);
+        "10", BackupEnvelope.TYPE_AVRO, REF_ADDRESS_SUBJECT, 1, "10.avsc", null);
     assertFalse(entry.hasReferences());
     assertTrue(entry.getReferences().isEmpty());
   }
@@ -68,7 +73,7 @@ public class SchemaManifestTest {
   @Test
   public void testEntryJsonRoundTrip() throws Exception {
     SchemaManifest.SchemaReferenceEntry ref = new SchemaManifest.SchemaReferenceEntry(
-        "Country", "country-value", 1, 5);
+        REF_COUNTRY, REF_COUNTRY_SUBJECT, 1, 5);
     SchemaManifest.SchemaEntry original = new SchemaManifest.SchemaEntry(
         "42", BackupEnvelope.TYPE_AVRO, "order-value", 3, "42.avsc",
         Collections.singletonList(ref));
@@ -83,8 +88,8 @@ public class SchemaManifestTest {
     assertEquals(original.getFile(), restored.getFile());
     assertTrue(restored.hasReferences());
     assertEquals(1, restored.getReferences().size());
-    assertEquals("Country", restored.getReferences().get(0).getName());
-    assertEquals("country-value", restored.getReferences().get(0).getSubject());
+    assertEquals(REF_COUNTRY, restored.getReferences().get(0).getName());
+    assertEquals(REF_COUNTRY_SUBJECT, restored.getReferences().get(0).getSubject());
     assertEquals(1, restored.getReferences().get(0).getVersion());
     assertEquals(5, restored.getReferences().get(0).getGlobalId());
   }
@@ -92,7 +97,7 @@ public class SchemaManifestTest {
   @Test
   public void testEntryJsonRoundTripNoReferences() throws Exception {
     SchemaManifest.SchemaEntry original = new SchemaManifest.SchemaEntry(
-        "5", BackupEnvelope.TYPE_PROTOBUF, "address-value", 1, "5.proto",
+        "5", BackupEnvelope.TYPE_PROTOBUF, REF_ADDRESS_SUBJECT, 1, "5.proto",
         Collections.emptyList());
 
     String json = original.toJsonString();
@@ -100,7 +105,7 @@ public class SchemaManifestTest {
 
     assertEquals("5", restored.getId());
     assertEquals(BackupEnvelope.TYPE_PROTOBUF, restored.getType());
-    assertEquals("address-value", restored.getSubject());
+    assertEquals(REF_ADDRESS_SUBJECT, restored.getSubject());
     assertEquals(1, restored.getVersion());
     assertEquals("5.proto", restored.getFile());
     assertFalse(restored.hasReferences());
@@ -142,14 +147,14 @@ public class SchemaManifestTest {
   @Test
   public void testReferenceEntryJsonRoundTrip() throws Exception {
     SchemaManifest.SchemaReferenceEntry original =
-        new SchemaManifest.SchemaReferenceEntry("Address", "address-value", 2, 10);
+        new SchemaManifest.SchemaReferenceEntry(REF_ADDRESS, REF_ADDRESS_SUBJECT, 2, 10);
 
     com.fasterxml.jackson.databind.JsonNode json = original.toJson();
     SchemaManifest.SchemaReferenceEntry restored =
         SchemaManifest.SchemaReferenceEntry.fromJson(json);
 
-    assertEquals("Address", restored.getName());
-    assertEquals("address-value", restored.getSubject());
+    assertEquals(REF_ADDRESS, restored.getName());
+    assertEquals(REF_ADDRESS_SUBJECT, restored.getSubject());
     assertEquals(2, restored.getVersion());
     assertEquals(10, restored.getGlobalId());
   }
@@ -157,8 +162,8 @@ public class SchemaManifestTest {
   @Test
   public void testMultipleReferencesRoundTrip() throws Exception {
     List<SchemaManifest.SchemaReferenceEntry> refs = java.util.Arrays.asList(
-        new SchemaManifest.SchemaReferenceEntry("Address", "address-value", 1, 10),
-        new SchemaManifest.SchemaReferenceEntry("Country", "country-value", 1, 5));
+        new SchemaManifest.SchemaReferenceEntry(REF_ADDRESS, REF_ADDRESS_SUBJECT, 1, 10),
+        new SchemaManifest.SchemaReferenceEntry(REF_COUNTRY, REF_COUNTRY_SUBJECT, 1, 5));
     SchemaManifest.SchemaEntry original = new SchemaManifest.SchemaEntry(
         "42", BackupEnvelope.TYPE_AVRO, "user-value", 1, "42.avsc", refs);
 
@@ -166,7 +171,7 @@ public class SchemaManifestTest {
     SchemaManifest.SchemaEntry restored = SchemaManifest.SchemaEntry.fromJsonString(json);
 
     assertEquals(2, restored.getReferences().size());
-    assertEquals("Address", restored.getReferences().get(0).getName());
-    assertEquals("Country", restored.getReferences().get(1).getName());
+    assertEquals(REF_ADDRESS, restored.getReferences().get(0).getName());
+    assertEquals(REF_COUNTRY, restored.getReferences().get(1).getName());
   }
 }

@@ -23,8 +23,6 @@ import io.confluent.connect.storage.backup.SchemaBackupStore;
 import io.confluent.connect.storage.backup.SchemaManifest;
 import io.confluent.connect.storage.format.backup.BackupWrapperExtractor.Unwrapped;
 import org.apache.kafka.connect.errors.DataException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -47,8 +45,6 @@ import java.util.Set;
  */
 final class SchemaBackupOrchestrator {
 
-  private static final Logger log =
-      LoggerFactory.getLogger(SchemaBackupOrchestrator.class);
   private static final ObjectMapper JSON = new ObjectMapper();
 
   private final SchemaBackupStore backupStore;
