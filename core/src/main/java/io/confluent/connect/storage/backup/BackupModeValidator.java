@@ -379,13 +379,6 @@ public final class BackupModeValidator {
     if (converterClass == null) {
       return;
     }
-    if (PROTOBUF_CONVERTER.equals(converterClass)) {
-      warnIfNotTrue(configs, prefix + ".optional.for.nullables",
-          prefix + ": optional.for.nullables=true is recommended for "
-          + "backup and restore modes and must match on both sides. "
-          + "Restore may drop proto3 optional scalars holding default "
-          + "values without it.");
-    }
 
     if (JSON_SCHEMA_CONVERTER.equals(converterClass)) {
       warnJsonTypeAllowedPackages(configs, prefix);
