@@ -115,13 +115,18 @@ public final class BackupModeValidator {
       String formatClassName, String keyType, String valueType) {
     String valConverter = configs.get(BackupEnvelope.VALUE_CONVERTER_CONFIG);
     String keyConverter = configs.get(BackupEnvelope.KEY_CONVERTER_CONFIG);
-    String backupEnabled = configs.get(
+    String keyBackupEnabled = configs.get(
+        BackupEnvelope.KEY_CONVERTER_CONFIG + "."
+        + BackupEnvelope.SCHEMA_BACKUP_ENABLED_CONFIG);
+    String valueBackupEnabled = configs.get(
         BackupEnvelope.VALUE_CONVERTER_CONFIG + "."
         + BackupEnvelope.SCHEMA_BACKUP_ENABLED_CONFIG);
-    log.info("Backup mode started: format={}, keyConverter={} (type={}), "
-        + "valueConverter={} (type={}), schema.backup.enabled={}",
-        formatClassName, keyConverter, keyType, valConverter, valueType,
-        backupEnabled);
+    log.info("Backup mode started: format={}, "
+        + "keyConverter={} (type={}, schema.backup.enabled={}), "
+        + "valueConverter={} (type={}, schema.backup.enabled={})",
+        formatClassName,
+        keyConverter, keyType, keyBackupEnabled,
+        valConverter, valueType, valueBackupEnabled);
   }
 
   // ── Tier 1: FAIL ──────────────────────────────────────────────

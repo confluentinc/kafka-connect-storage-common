@@ -178,6 +178,26 @@ public class BackupModeValidatorTest {
   }
 
   @Test
+  public void testValueHasFlagKeyDoesNotFailsOnlyKey() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(KEY_CONVERTER, AVRO_CONVERTER);
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertTrue(containsError(errors, ERR_SR_BACKED_KEY));
+    assertFalse(containsError(errors, ERR_SR_BACKED_VALUE));
+  }
+
+  @Test
+  public void testBothSrBackedBothHaveFlagPasses() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(KEY_CONVERTER, AVRO_CONVERTER);
+    configs.put(KEY_SCHEMA_BACKUP_ENABLED, TRUE);
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertFalse(containsError(errors, "schema.backup.enabled"));
+  }
+
+  @Test
   public void testTransformsSetIsRejected() {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(TRANSFORMS, "myTransform");
