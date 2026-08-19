@@ -41,7 +41,7 @@ public class EnvelopeSchemaBuilderTest {
         .field("name", Schema.STRING_SCHEMA).build();
 
     Schema envelope = EnvelopeSchemaBuilder.buildEnvelopeSchema(
-        keySchema, valueSchema, BackupEnvelope.TYPE_AVRO, BackupEnvelope.TYPE_AVRO);
+        keySchema, valueSchema);
 
     assertEquals(BackupEnvelope.NAME, envelope.name());
     assertEquals(keySchema,
@@ -53,7 +53,7 @@ public class EnvelopeSchemaBuilderTest {
   @Test
   public void testBuildWithNullSchemas() {
     Schema envelope = EnvelopeSchemaBuilder.buildEnvelopeSchema(
-        null, null, BackupEnvelope.TYPE_JSON_SCHEMALESS, BackupEnvelope.TYPE_JSON_SCHEMALESS);
+        null, null);
 
     assertEquals(Schema.OPTIONAL_STRING_SCHEMA,
         envelope.field(BackupEnvelope.FIELD_KEY).schema());
@@ -67,7 +67,7 @@ public class EnvelopeSchemaBuilderTest {
         .field("data", Schema.STRING_SCHEMA).build();
 
     Schema envelope = EnvelopeSchemaBuilder.buildEnvelopeSchema(
-        Schema.STRING_SCHEMA, valueSchema, BackupEnvelope.TYPE_STRING, BackupEnvelope.TYPE_AVRO);
+        Schema.STRING_SCHEMA, valueSchema);
 
     assertEquals(Schema.STRING_SCHEMA,
         envelope.field(BackupEnvelope.FIELD_KEY).schema());
@@ -78,8 +78,7 @@ public class EnvelopeSchemaBuilderTest {
   @Test
   public void testBuildWithPrimitiveSchemas() {
     Schema envelope = EnvelopeSchemaBuilder.buildEnvelopeSchema(
-        Schema.STRING_SCHEMA, Schema.INT32_SCHEMA,
-        BackupEnvelope.TYPE_STRING, BackupEnvelope.TYPE_INT32);
+        Schema.STRING_SCHEMA, Schema.INT32_SCHEMA);
 
     assertEquals(Schema.STRING_SCHEMA,
         envelope.field(BackupEnvelope.FIELD_KEY).schema());
@@ -90,7 +89,7 @@ public class EnvelopeSchemaBuilderTest {
   @Test
   public void testEnvelopeHasAllMetadataFields() {
     Schema envelope = EnvelopeSchemaBuilder.buildEnvelopeSchema(
-        null, null, BackupEnvelope.TYPE_NONE, BackupEnvelope.TYPE_NONE);
+        null, null);
 
     assertNotNull(envelope.field(BackupEnvelope.FIELD_TOPIC));
     assertNotNull(envelope.field(BackupEnvelope.FIELD_PARTITION));
@@ -123,7 +122,7 @@ public class EnvelopeSchemaBuilderTest {
     Schema valueSchema = SchemaBuilder.struct()
         .field("x", Schema.INT32_SCHEMA).build();
     Schema envSchema = EnvelopeSchemaBuilder.buildEnvelopeSchema(
-        keySchema, valueSchema, BackupEnvelope.TYPE_STRING, BackupEnvelope.TYPE_AVRO);
+        keySchema, valueSchema);
 
     Struct value = new Struct(valueSchema).put("x", 99);
     ConnectHeaders headers = new ConnectHeaders();
@@ -189,7 +188,7 @@ public class EnvelopeSchemaBuilderTest {
   @Test
   public void testTimestampTypeLogAppendTime() {
     Schema envSchema = EnvelopeSchemaBuilder.buildEnvelopeSchema(
-        Schema.STRING_SCHEMA, Schema.STRING_SCHEMA, BackupEnvelope.TYPE_STRING, BackupEnvelope.TYPE_STRING);
+        Schema.STRING_SCHEMA, Schema.STRING_SCHEMA);
     SinkRecord record = new SinkRecord(
         "t", 0, Schema.STRING_SCHEMA, "k", Schema.STRING_SCHEMA, "v",
         0L, 1L, TimestampType.LOG_APPEND_TIME);
@@ -206,7 +205,7 @@ public class EnvelopeSchemaBuilderTest {
   @Test
   public void testTimestampTypeNoTimestampType() {
     Schema envSchema = EnvelopeSchemaBuilder.buildEnvelopeSchema(
-        Schema.STRING_SCHEMA, Schema.STRING_SCHEMA, BackupEnvelope.TYPE_STRING, BackupEnvelope.TYPE_STRING);
+        Schema.STRING_SCHEMA, Schema.STRING_SCHEMA);
     SinkRecord record = new SinkRecord(
         "t", 0, Schema.STRING_SCHEMA, "k", Schema.STRING_SCHEMA, "v",
         0L, -1L, TimestampType.NO_TIMESTAMP_TYPE);
@@ -223,7 +222,7 @@ public class EnvelopeSchemaBuilderTest {
   @Test
   public void testBuildEnvelopeStructNullOptionals() {
     Schema envSchema = EnvelopeSchemaBuilder.buildEnvelopeSchema(
-        null, null, BackupEnvelope.TYPE_NONE, BackupEnvelope.TYPE_NONE);
+        null, null);
 
     SinkRecord record = new SinkRecord(
         "t", 0, null, null, null, null, 0L);
@@ -256,7 +255,7 @@ public class EnvelopeSchemaBuilderTest {
   public void testBuildHeadersMultipleTypes() {
     Schema keySchema = Schema.STRING_SCHEMA;
     Schema envSchema = EnvelopeSchemaBuilder.buildEnvelopeSchema(
-        keySchema, null, BackupEnvelope.TYPE_STRING, BackupEnvelope.TYPE_NONE);
+        keySchema, null);
 
     ConnectHeaders headers = new ConnectHeaders();
     headers.addString("str", "text");

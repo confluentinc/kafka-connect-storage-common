@@ -48,8 +48,7 @@ public final class EnvelopeSchemaBuilder {
       SchemaBuilder.array(HEADER_SCHEMA).optional().build();
 
   public static Schema buildEnvelopeSchema(
-      Schema keySchema, Schema valueSchema,
-      String keySchemaType, String valueSchemaType) {
+      Schema keySchema, Schema valueSchema) {
 
     SchemaBuilder b = SchemaBuilder.struct().name(BackupEnvelope.NAME);
     b.field(BackupEnvelope.FIELD_KEY,

@@ -112,8 +112,7 @@ public class EnvelopeTransformer {
     schemaBackup.backupIfNeeded(record.topic(), value);
 
     Schema envelopeSchema = EnvelopeSchemaBuilder
-        .buildEnvelopeSchema(key.getSchema(), value.getSchema(),
-            key.getSchemaType(), value.getSchemaType());
+        .buildEnvelopeSchema(key.getSchema(), value.getSchema());
 
     Struct envelope = EnvelopeSchemaBuilder
         .buildEnvelopeStruct(envelopeSchema, record,
