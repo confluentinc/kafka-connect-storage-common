@@ -211,6 +211,27 @@ public class SchemaBackupOrchestratorTest {
     orchestrator.backupIfNeeded(TOPIC, unwrapped);
   }
 
+  @Test(expected = DataException.class)
+  public void backupThrowsOnInvalidGlobalIdInRef() {
+    String refTree = "{"
+        + "\"BadRef\":{\"subject\":\"Bad\",\"version\":1,"
+        + "\"globalId\":0,\"schemaType\":\"AVRO\",\"schema\":\"{}\"}"
+        + "}";
+
+    Schema dataSchema = SchemaBuilder.struct()
+        .field("name", Schema.STRING_SCHEMA).build();
+    Schema wrapperSchema = BackupWrapper.buildSchema(dataSchema);
+    Struct data = new Struct(dataSchema).put("name", "Alice");
+    BackupWrapper.WrapperFields fields = new BackupWrapper.WrapperFields(
+        42, 1, BackupEnvelope.TYPE_AVRO, SUBJECT, RAW_SCHEMA, refTree, null);
+    Struct wrapper = BackupWrapper.buildWrapper(wrapperSchema, data, fields);
+
+    Unwrapped unwrapped = BackupWrapperExtractor.unwrap(
+        wrapper, wrapperSchema, false, BackupEnvelope.TYPE_AVRO);
+
+    orchestrator.backupIfNeeded(TOPIC, unwrapped);
+  }
+
   private Unwrapped createUnwrappedWithId(int schemaId) {
     Schema dataSchema = SchemaBuilder.struct()
         .field("name", Schema.STRING_SCHEMA).build();

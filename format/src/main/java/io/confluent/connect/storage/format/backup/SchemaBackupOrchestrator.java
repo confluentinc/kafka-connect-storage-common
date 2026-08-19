@@ -124,11 +124,12 @@ final class SchemaBackupOrchestrator {
       Map<String, Map<String, Object>> tree, Set<Integer> visited) {
     int globalId = node.get(BackupEnvelope.REF_FIELD_GLOBAL_ID) instanceof Number
         ? ((Number) node.get(BackupEnvelope.REF_FIELD_GLOBAL_ID)).intValue() : 0;
-    if (globalId <= 0 || !visited.add(globalId)) {
-      if (globalId <= 0) {
-        log.warn("Skipping reference with invalid globalId={} in topic={}",
-            globalId, topic);
-      }
+    if (globalId <= 0) {
+      throw new DataException(
+          "Cannot backup reference schema: invalid globalId=" + globalId
+          + " in topic=" + topic + ". Cannot guarantee pristine restore.");
+    }
+    if (!visited.add(globalId)) {
       return;
     }
     String schema = (String) node.get(BackupEnvelope.REF_FIELD_SCHEMA);
