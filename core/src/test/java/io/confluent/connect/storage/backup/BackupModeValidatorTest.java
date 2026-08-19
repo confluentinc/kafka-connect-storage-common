@@ -344,32 +344,11 @@ public class BackupModeValidatorTest {
   }
 
   @Test
-  public void testProtobufConverterWithoutOptionalOrWrapperExercisesWarnPath() {
-    Map<String, String> configs = baseSinkConfigs();
-    configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
+  public void testProtobufConverterOptionalForNullablesWarnPath() {
+    Map<String, String> configs = protobufSinkConfigs();
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
-    assertEquals(0, errors.size());
-  }
-
-  @Test
-  public void testProtobufConverterWithOptionalForNullablesExercisesWarnPath() {
-    Map<String, String> configs = baseSinkConfigs();
-    configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
-    configs.put("value.converter.optional.for.nullables", TRUE);
-
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
-    assertEquals(0, errors.size());
-  }
-
-  @Test
-  public void testProtobufConverterWithWrapperForNullablesExercisesWarnPath() {
-    Map<String, String> configs = baseSinkConfigs();
-    configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
-    configs.put("value.converter.wrapper.for.nullables", TRUE);
-
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
-    assertEquals(0, errors.size());
+    assertFalse(containsError(errors, "optional.for.nullables"));
   }
 
   @Test
@@ -555,12 +534,12 @@ public class BackupModeValidatorTest {
   }
 
   @Test
-  public void testSourceProtobufValueConverterWithoutEnhancedExercisesWarnPath() {
+  public void testSourceProtobufValueConverterWithoutEnhancedFails() {
     Map<String, String> configs = new HashMap<>();
     configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
 
     List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
-    assertEquals(0, errors.size());
+    assertTrue(containsError(errors, "value.converter.enhanced.protobuf.schema.support"));
   }
 
   @Test
@@ -634,5 +613,111 @@ public class BackupModeValidatorTest {
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
     assertTrue(containsError(errors, "RecordFieldTimestampExtractor"));
+  }
+
+  // ── Protobuf converter validators ────────────────────────────────
+
+  private Map<String, String> protobufSinkConfigs() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, STRING_CONVERTER);
+    configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
+    configs.put(VALUE_SCHEMA_BACKUP_ENABLED, TRUE);
+    configs.put("value.converter.enhanced.protobuf.schema.support", TRUE);
+    configs.put("value.converter.wrapper.for.raw.primitives", FALSE);
+    return configs;
+  }
+
+  @Test
+  public void testProtobufSinkAllFlagsSetPasses() {
+    List<String> errors = BackupModeValidator.validateSinkConfigs(
+        protobufSinkConfigs(), AVRO_FORMAT, true);
+    assertFalse(containsError(errors, "protobuf"));
+    assertFalse(containsError(errors, "wrapper.for"));
+  }
+
+  @Test
+  public void testProtobufSinkWithoutEnhancedFails() {
+    Map<String, String> configs = protobufSinkConfigs();
+    configs.remove("value.converter.enhanced.protobuf.schema.support");
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertTrue(containsError(errors, "value.converter.enhanced.protobuf.schema.support"));
+  }
+
+  @Test
+  public void testProtobufSinkWrapperForRawPrimitivesUnsetFails() {
+    Map<String, String> configs = protobufSinkConfigs();
+    configs.remove("value.converter.wrapper.for.raw.primitives");
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertTrue(containsError(errors, "value.converter.wrapper.for.raw.primitives"));
+  }
+
+  @Test
+  public void testProtobufSinkWrapperForRawPrimitivesTrueFails() {
+    Map<String, String> configs = protobufSinkConfigs();
+    configs.put("value.converter.wrapper.for.raw.primitives", TRUE);
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertTrue(containsError(errors, "value.converter.wrapper.for.raw.primitives"));
+  }
+
+  @Test
+  public void testProtobufSinkWrapperForNullablesTrueFails() {
+    Map<String, String> configs = protobufSinkConfigs();
+    configs.put("value.converter.wrapper.for.nullables", TRUE);
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertTrue(containsError(errors, "value.converter.wrapper.for.nullables"));
+  }
+
+  @Test
+  public void testProtobufKeyConverterValidatedToo() {
+    Map<String, String> configs = protobufSinkConfigs();
+    configs.put(KEY_CONVERTER, PROTOBUF_CONVERTER);
+    configs.put(KEY_SCHEMA_BACKUP_ENABLED, TRUE);
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertTrue(containsError(errors, "key.converter.enhanced.protobuf.schema.support"));
+    assertTrue(containsError(errors, "key.converter.wrapper.for.raw.primitives"));
+  }
+
+  @Test
+  public void testProtobufSourceWithoutEnhancedFails() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
+
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    assertTrue(containsError(errors, "value.converter.enhanced.protobuf.schema.support"));
+  }
+
+  @Test
+  public void testProtobufSourceWrapperForRawPrimitivesNotValidated() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
+    configs.put("value.converter.enhanced.protobuf.schema.support", TRUE);
+
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    assertFalse(containsError(errors, "wrapper.for.raw.primitives"));
+  }
+
+  @Test
+  public void testProtobufSourceWrapperForNullablesTrueFails() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
+    configs.put("value.converter.enhanced.protobuf.schema.support", TRUE);
+    configs.put("value.converter.wrapper.for.nullables", TRUE);
+
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    assertTrue(containsError(errors, "value.converter.wrapper.for.nullables"));
+  }
+
+  @Test
+  public void testNonProtobufConverterSkipsAllProtobufChecks() {
+    Map<String, String> configs = baseSinkConfigs();
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertFalse(containsError(errors, "protobuf"));
+    assertFalse(containsError(errors, "wrapper.for"));
   }
 }

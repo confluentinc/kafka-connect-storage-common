@@ -88,12 +88,8 @@ public final class BackupModeValidator {
     validateParquetCompression(configs, formatClassName, errors);
     validateConverterExplicitlySet(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
     validateConverterExplicitlySet(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
-    validateSchemaBackupEnabled(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
-    validateSchemaBackupEnabled(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
-    validateEnhancedAvroSchemaSupport(
-        configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
-    validateEnhancedAvroSchemaSupport(
-        configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
+    validateSinkConverter(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
+    validateSinkConverter(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
     validateTransformsRejected(configs, errors);
     validateStoreKafkaKeysHeadersRejected(configs, errors);
     validatePartitionerSupported(configs, errors);
@@ -117,27 +113,87 @@ public final class BackupModeValidator {
     List<String> errors = new ArrayList<>();
 
     validateByteArrayFormat(formatClassName, errors);
-    validateEnhancedAvroSchemaSupport(
-        configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
-    validateEnhancedAvroSchemaSupport(
-        configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
+    validateSourceConverter(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
+    validateSourceConverter(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
     warnSourceSuboptimalConfigs(configs);
 
     return errors;
   }
 
-  private static void validateEnhancedAvroSchemaSupport(
-      Map<String, String> configs, String converterPrefix,
-      List<String> errors) {
-    if (!AVRO_CONVERTER.equals(configs.get(converterPrefix))) {
+  private static void validateSinkConverter(
+      Map<String, String> configs, String prefix, List<String> errors) {
+    String converterClass = configs.get(prefix);
+    if (converterClass == null) {
       return;
     }
-    String key = converterPrefix + ".enhanced.avro.schema.support";
+    validateSchemaBackupEnabled(configs, prefix, errors);
+    if (AVRO_CONVERTER.equals(converterClass)) {
+      requireTrue(configs, prefix + ".enhanced.avro.schema.support",
+          "Restore will fail with AvroTypeException on records that contain "
+          + "enum values (e.g. \"value ACTIVE is not a UserStatus\").",
+          errors);
+    } else if (PROTOBUF_CONVERTER.equals(converterClass)) {
+      requireTrue(configs, prefix + ".enhanced.protobuf.schema.support",
+          "Package qualification in Connect Schema is not preserved, which "
+          + "can break restore.",
+          errors);
+      requireFalse(configs, prefix + ".wrapper.for.raw.primitives",
+          "Default is true. With the default, ProtobufData strips wrapper "
+          + "type info from BackupWrapper.data and restore cannot re-create "
+          + "the wrappers from the flattened Struct.",
+          errors);
+      rejectIfTrue(configs, prefix + ".wrapper.for.nullables",
+          "Breaks records that omit proto3 optional scalar fields with "
+          + "DataException 'Invalid value: null used for required field'.",
+          errors);
+    }
+  }
+
+  private static void validateSourceConverter(
+      Map<String, String> configs, String prefix, List<String> errors) {
+    String converterClass = configs.get(prefix);
+    if (converterClass == null) {
+      return;
+    }
+    if (AVRO_CONVERTER.equals(converterClass)) {
+      requireTrue(configs, prefix + ".enhanced.avro.schema.support",
+          "Restore will fail with AvroTypeException on records that contain "
+          + "enum values (e.g. \"value ACTIVE is not a UserStatus\").",
+          errors);
+    } else if (PROTOBUF_CONVERTER.equals(converterClass)) {
+      requireTrue(configs, prefix + ".enhanced.protobuf.schema.support",
+          "Package qualification in Connect Schema is not preserved, which "
+          + "can break restore.",
+          errors);
+      rejectIfTrue(configs, prefix + ".wrapper.for.nullables",
+          "Breaks records that omit proto3 optional scalar fields with "
+          + "DataException 'Invalid value: null used for required field'.",
+          errors);
+    }
+  }
+
+  private static void requireTrue(
+      Map<String, String> configs, String key, String reason,
+      List<String> errors) {
     if (!"true".equalsIgnoreCase(configs.get(key))) {
-      errors.add(converterPrefix + " uses AvroConverter but " + key
-          + " is not set to true. Restore will fail with AvroTypeException on "
-          + "records that contain enum values (e.g. \"value ACTIVE is not a "
-          + "UserStatus\"). Set " + key + "=true.");
+      errors.add(key + " must be set to true. " + reason);
+    }
+  }
+
+  private static void requireFalse(
+      Map<String, String> configs, String key, String reason,
+      List<String> errors) {
+    String value = configs.get(key);
+    if (value == null || !"false".equalsIgnoreCase(value)) {
+      errors.add(key + " must be set to false. " + reason);
+    }
+  }
+
+  private static void rejectIfTrue(
+      Map<String, String> configs, String key, String reason,
+      List<String> errors) {
+    if ("true".equalsIgnoreCase(configs.get(key))) {
+      errors.add(key + " must not be set to true. " + reason);
     }
   }
 
@@ -314,21 +370,11 @@ public final class BackupModeValidator {
       return;
     }
     if (PROTOBUF_CONVERTER.equals(converterClass)) {
-      warnIfNotTrue(configs, prefix + ".enhanced.protobuf.schema.support",
-          prefix + ": enhanced.protobuf.schema.support=true is recommended "
-          + "for backup mode. Without it, Protobuf schema fidelity may "
-          + "be reduced during restore.");
-
-      String optNullable = configs.get(prefix + ".optional.for.nullables");
-      String wrapNullable = configs.get(prefix + ".wrapper.for.nullables");
-      if (!"true".equalsIgnoreCase(optNullable)
-          && !"true".equalsIgnoreCase(wrapNullable)) {
-        log.warn("{}: neither optional.for.nullables nor "
-            + "wrapper.for.nullables is set. If the Protobuf schema uses "
-            + "nullable fields, they will not be preserved during restore. "
-            + "Set optional.for.nullables=true (recommended) or "
-            + "wrapper.for.nullables=true.", prefix);
-      }
+      warnIfNotTrue(configs, prefix + ".optional.for.nullables",
+          prefix + ": optional.for.nullables=true is recommended for "
+          + "backup mode and must match the source-side setting. Restore "
+          + "may drop proto3 optional scalars holding default values "
+          + "without it.");
     }
 
     if (JSON_SCHEMA_CONVERTER.equals(converterClass)
@@ -374,10 +420,9 @@ public final class BackupModeValidator {
 
     if (PROTOBUF_CONVERTER.equals(valConverter)) {
       warnIfNotTrue(configs,
-          BackupEnvelope.VALUE_CONVERTER_CONFIG
-              + ".enhanced.protobuf.schema.support",
-          "value.converter: enhanced.protobuf.schema.support=true is "
-          + "recommended for restore mode to match backup fidelity.");
+          BackupEnvelope.VALUE_CONVERTER_CONFIG + ".optional.for.nullables",
+          "value.converter: optional.for.nullables=true is recommended "
+          + "for restore mode and must match the sink-side setting.");
     }
 
     warnHeaderConverter(configs);
