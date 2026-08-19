@@ -70,6 +70,7 @@ public final class BackupModeValidator {
 
     validateByteArrayFormat(formatClassName, errors);
     validateJsonFormatSchemaEnable(formatClassName, jsonSchemaEmbedded, errors);
+    validateParquetCompression(configs, formatClassName, errors);
     validateSchemaBackupEnabled(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
     validateSchemaBackupEnabled(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
     validateTransformsRejected(configs, errors);
@@ -175,6 +176,24 @@ public final class BackupModeValidator {
     }
   }
 
+  private static void validateParquetCompression(
+      Map<String, String> configs, String formatClassName,
+      List<String> errors) {
+    if (!FORMAT_SIMPLE_NAME_PARQUET.equals(formatClassName)) {
+      return;
+    }
+    String codec = configs.get("parquet.codec");
+    if (codec == null || !"none".equalsIgnoreCase(codec)) {
+      errors.add("parquet.codec=" + (codec != null ? codec : "snappy (default)")
+          + " cannot be used with BACKUP_FULL_RECORD mode. Backup and restore "
+          + "does not support compression end-to-end: the sink writes files "
+          + "with a codec-prefixed extension (e.g. .snappy.parquet) but the "
+          + "restore file matcher only accepts the bare .parquet extension, "
+          + "so compressed files are silently skipped. "
+          + "Set parquet.codec=none to use backup mode.");
+    }
+  }
+
   private static void validateStoreKafkaKeysHeadersRejected(
       Map<String, String> configs, List<String> errors) {
     if ("true".equalsIgnoreCase(configs.get("store.kafka.keys"))) {
@@ -206,7 +225,6 @@ public final class BackupModeValidator {
     warnConverterConfigs(configs, keyConverter,
         BackupEnvelope.KEY_CONVERTER_CONFIG, formatClassName);
 
-    warnParquetCompression(configs, formatClassName);
     warnHeaderConverter(configs);
     warnSchemaCompatibilityOverride(configs);
   }
@@ -251,19 +269,6 @@ public final class BackupModeValidator {
       warnIfNotTrue(configs, prefix + ".scrub.invalid.names",
           prefix + ": scrub.invalid.names=true is recommended when using "
           + "JsonSchemaConverter with AvroFormat.");
-    }
-  }
-
-  private static void warnParquetCompression(
-      Map<String, String> configs, String formatClassName) {
-    if (!FORMAT_SIMPLE_NAME_PARQUET.equals(formatClassName)) {
-      return;
-    }
-    String codec = configs.get("parquet.codec");
-    if (codec != null && !"none".equalsIgnoreCase(codec)) {
-      log.warn("parquet.codec={} detected with backup mode. "
-          + "parquet.codec=none is recommended for backup mode. "
-          + "Compressed parquet files may cause restore failures.", codec);
     }
   }
 
