@@ -478,6 +478,7 @@ public class BackupModeValidatorTest {
   public void testValidSourceConfigProducesZeroErrors() {
     Map<String, String> configs = new HashMap<>();
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
+    configs.put("value.converter.enhanced.avro.schema.support", TRUE);
 
     List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
     assertEquals(0, errors.size());
@@ -487,18 +488,38 @@ public class BackupModeValidatorTest {
   public void testByteArrayFormatSourceIsRejected() {
     Map<String, String> configs = new HashMap<>();
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
+    configs.put("value.converter.enhanced.avro.schema.support", TRUE);
 
     List<String> errors = BackupModeValidator.validateSourceConfigs(configs, BYTE_ARRAY_FORMAT);
     assertTrue(containsError(errors, BYTE_ARRAY_FORMAT));
   }
 
   @Test
-  public void testSourceAvroValueConverterWithoutEnhancedExercisesWarnPath() {
+  public void testSourceAvroValueConverterWithoutEnhancedFails() {
     Map<String, String> configs = new HashMap<>();
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
 
     List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
-    assertEquals(0, errors.size());
+    assertTrue(containsError(errors, "value.converter.enhanced.avro.schema.support"));
+  }
+
+  @Test
+  public void testSourceAvroKeyConverterWithoutEnhancedFails() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, AVRO_CONVERTER);
+    configs.put(VALUE_CONVERTER, STRING_CONVERTER);
+
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    assertTrue(containsError(errors, "key.converter.enhanced.avro.schema.support"));
+  }
+
+  @Test
+  public void testSourceNonAvroConverterSkipsEnhancedCheck() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(VALUE_CONVERTER, STRING_CONVERTER);
+
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    assertFalse(containsError(errors, "enhanced.avro.schema.support"));
   }
 
   @Test

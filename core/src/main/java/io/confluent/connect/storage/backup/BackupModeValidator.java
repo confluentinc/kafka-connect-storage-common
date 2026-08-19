@@ -113,9 +113,28 @@ public final class BackupModeValidator {
     List<String> errors = new ArrayList<>();
 
     validateByteArrayFormat(formatClassName, errors);
+    validateEnhancedAvroSchemaSupport(
+        configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
+    validateEnhancedAvroSchemaSupport(
+        configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
     warnSourceSuboptimalConfigs(configs);
 
     return errors;
+  }
+
+  private static void validateEnhancedAvroSchemaSupport(
+      Map<String, String> configs, String converterPrefix,
+      List<String> errors) {
+    if (!AVRO_CONVERTER.equals(configs.get(converterPrefix))) {
+      return;
+    }
+    String key = converterPrefix + ".enhanced.avro.schema.support";
+    if (!"true".equalsIgnoreCase(configs.get(key))) {
+      errors.add(converterPrefix + " uses AvroConverter but " + key
+          + " is not set to true. Restore will fail with AvroTypeException on "
+          + "records that contain enum values (e.g. \"value ACTIVE is not a "
+          + "UserStatus\"). Set " + key + "=true.");
+    }
   }
 
   /**
@@ -355,14 +374,6 @@ public final class BackupModeValidator {
   private static void warnSourceSuboptimalConfigs(
       Map<String, String> configs) {
     String valConverter = configs.get(BackupEnvelope.VALUE_CONVERTER_CONFIG);
-
-    if (AVRO_CONVERTER.equals(valConverter)) {
-      warnIfNotTrue(configs,
-          BackupEnvelope.VALUE_CONVERTER_CONFIG
-              + ".enhanced.avro.schema.support",
-          "value.converter: enhanced.avro.schema.support=true is "
-          + "recommended for restore mode to match backup fidelity.");
-    }
 
     if (PROTOBUF_CONVERTER.equals(valConverter)) {
       warnIfNotTrue(configs,
