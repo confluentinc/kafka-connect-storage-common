@@ -23,9 +23,6 @@ import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.errors.DataException;
 
-import java.util.List;
-import java.util.Map;
-
 /**
  * Extracts data and metadata from a backup Wrapper struct.
  * Handles SR-wrapped, tombstone, schemaless JSON, and non-SR record types.
@@ -81,14 +78,14 @@ public final class BackupWrapperExtractor {
 
   private static Unwrapped unwrapSchemaless(Object data) {
     String stringData;
-    if (data instanceof Map || data instanceof List) {
+    if (data == null) {
+      stringData = null;
+    } else {
       try {
         stringData = OBJECT_MAPPER.writeValueAsString(data);
       } catch (JsonProcessingException e) {
         throw new DataException("Failed to serialize schemaless data as JSON", e);
       }
-    } else {
-      stringData = data != null ? data.toString() : null;
     }
     return new Unwrapped(stringData, null, null, null,
         BackupEnvelope.TYPE_JSON_SCHEMALESS, null, null, null, null, null);

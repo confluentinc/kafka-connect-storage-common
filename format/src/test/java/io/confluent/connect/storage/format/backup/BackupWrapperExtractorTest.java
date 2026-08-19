@@ -95,7 +95,25 @@ public class BackupWrapperExtractorTest {
     Unwrapped result = BackupWrapperExtractor.unwrap(
         "plain text", null, false, BackupEnvelope.TYPE_STRING);
 
-    assertEquals("plain text", result.getData());
+    assertEquals("\"plain text\"", result.getData());
+    assertEquals(BackupEnvelope.TYPE_JSON_SCHEMALESS, result.getSchemaType());
+  }
+
+  @Test
+  public void testUnwrapSchemalessNumber() {
+    Unwrapped result = BackupWrapperExtractor.unwrap(
+        42, null, false, BackupEnvelope.TYPE_JSON_SCHEMALESS);
+
+    assertEquals("42", result.getData());
+    assertEquals(BackupEnvelope.TYPE_JSON_SCHEMALESS, result.getSchemaType());
+  }
+
+  @Test
+  public void testUnwrapSchemalessBoolean() {
+    Unwrapped result = BackupWrapperExtractor.unwrap(
+        true, null, false, BackupEnvelope.TYPE_JSON_SCHEMALESS);
+
+    assertEquals("true", result.getData());
     assertEquals(BackupEnvelope.TYPE_JSON_SCHEMALESS, result.getSchemaType());
   }
 
