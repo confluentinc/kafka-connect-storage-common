@@ -377,15 +377,37 @@ public final class BackupModeValidator {
           + "without it.");
     }
 
-    if (JSON_SCHEMA_CONVERTER.equals(converterClass)
-        && FORMAT_SIMPLE_NAME_AVRO.equals(formatClassName)) {
-      warnIfNotTrue(configs, prefix + ".generalized.sum.type.support",
-          prefix + ": generalized.sum.type.support=true is recommended "
-          + "when using JsonSchemaConverter with AvroFormat. "
-          + "oneOf fields may fail without it.");
-      warnIfNotTrue(configs, prefix + ".scrub.invalid.names",
-          prefix + ": scrub.invalid.names=true is recommended when using "
-          + "JsonSchemaConverter with AvroFormat.");
+    if (JSON_SCHEMA_CONVERTER.equals(converterClass)) {
+      warnJsonTypeAllowedPackages(configs, prefix);
+      warnIfNotTrue(configs, prefix + ".preserve.additional.properties",
+          prefix + ": preserve.additional.properties=true is recommended "
+          + "when the JSON schema uses additionalProperties. Default false "
+          + "drops undeclared JSON properties on restore. Must match the "
+          + "source-side setting. Uses reserved field name "
+          + "__connect_additional_properties__; schemas with that literal "
+          + "property name will fail-fast at conversion.");
+      if (FORMAT_SIMPLE_NAME_AVRO.equals(formatClassName)) {
+        warnIfNotTrue(configs, prefix + ".generalized.sum.type.support",
+            prefix + ": generalized.sum.type.support=true is recommended "
+            + "when using JsonSchemaConverter with AvroFormat. "
+            + "oneOf fields may fail without it.");
+        warnIfNotTrue(configs, prefix + ".scrub.invalid.names",
+            prefix + ": scrub.invalid.names=true is recommended when using "
+            + "JsonSchemaConverter with AvroFormat.");
+      }
+    }
+  }
+
+  private static void warnJsonTypeAllowedPackages(
+      Map<String, String> configs, String prefix) {
+    String key = prefix + ".json.type.allowed.packages";
+    String value = configs.get(key);
+    if (value == null || "*".equals(value.trim())) {
+      log.warn("{}: json.type.allowed.packages={} allows any class to be "
+          + "loaded via javaType. Set an explicit whitelist (e.g. "
+          + "\"com.example.models\") or empty string to disallow, and match "
+          + "the setting on the restore side.",
+          prefix, value != null ? value : "* (default)");
     }
   }
 
@@ -423,6 +445,13 @@ public final class BackupModeValidator {
           BackupEnvelope.VALUE_CONVERTER_CONFIG + ".optional.for.nullables",
           "value.converter: optional.for.nullables=true is recommended "
           + "for restore mode and must match the sink-side setting.");
+    }
+    if (JSON_SCHEMA_CONVERTER.equals(valConverter)) {
+      warnJsonTypeAllowedPackages(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG);
+      warnIfNotTrue(configs,
+          BackupEnvelope.VALUE_CONVERTER_CONFIG + ".preserve.additional.properties",
+          "value.converter: preserve.additional.properties=true is "
+          + "recommended for restore mode and must match the sink-side setting.");
     }
 
     warnHeaderConverter(configs);

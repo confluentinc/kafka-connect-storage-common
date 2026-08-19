@@ -720,4 +720,44 @@ public class BackupModeValidatorTest {
     assertFalse(containsError(errors, "protobuf"));
     assertFalse(containsError(errors, "wrapper.for"));
   }
+
+  // ── JsonSchemaConverter json.type.allowed.packages ─────────────
+
+  @Test
+  public void testJsonSchemaConverterWithDefaultAllowedPackagesDoesNotThrow() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(VALUE_CONVERTER, JSON_SCHEMA_CONVERTER);
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertFalse(containsError(errors, "json.type.allowed.packages"));
+  }
+
+  @Test
+  public void testJsonSchemaConverterWithWildcardAllowedPackagesDoesNotThrow() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(VALUE_CONVERTER, JSON_SCHEMA_CONVERTER);
+    configs.put("value.converter.json.type.allowed.packages", "*");
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertFalse(containsError(errors, "json.type.allowed.packages"));
+  }
+
+  @Test
+  public void testJsonSchemaConverterWithExplicitWhitelistDoesNotThrow() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(VALUE_CONVERTER, JSON_SCHEMA_CONVERTER);
+    configs.put("value.converter.json.type.allowed.packages", "com.example.models");
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertFalse(containsError(errors, "json.type.allowed.packages"));
+  }
+
+  @Test
+  public void testJsonSchemaConverterSourceSideExercisesWarn() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(VALUE_CONVERTER, JSON_SCHEMA_CONVERTER);
+
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    assertFalse(containsError(errors, "json.type.allowed.packages"));
+  }
 }
