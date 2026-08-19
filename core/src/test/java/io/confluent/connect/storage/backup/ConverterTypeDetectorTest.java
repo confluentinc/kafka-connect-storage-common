@@ -106,7 +106,7 @@ public class ConverterTypeDetectorTest {
 
   @Test
   public void testNullConverterClass() {
-    assertEquals(BackupEnvelope.TYPE_NONE,
+    assertEquals(BackupEnvelope.TYPE_UNKNOWN,
         ConverterTypeDetector.detectSchemaType(
             null, Collections.emptyMap(), VALUE_CONVERTER));
   }

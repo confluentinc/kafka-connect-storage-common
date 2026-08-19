@@ -66,7 +66,7 @@ public final class ConverterTypeDetector {
   public static String detectSchemaType(
       String converterClass, Map<String, String> config, String converterPrefix) {
     if (converterClass == null) {
-      return BackupEnvelope.TYPE_NONE;
+      return BackupEnvelope.TYPE_UNKNOWN;
     }
 
     // JsonConverter needs special handling: check schemas.enable
