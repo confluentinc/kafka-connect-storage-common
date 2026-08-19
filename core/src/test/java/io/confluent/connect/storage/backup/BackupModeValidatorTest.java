@@ -79,6 +79,7 @@ public class BackupModeValidatorTest {
     configs.put(KEY_CONVERTER, STRING_CONVERTER);
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
     configs.put(VALUE_SCHEMA_BACKUP_ENABLED, TRUE);
+    configs.put("value.converter.enhanced.avro.schema.support", TRUE);
     return configs;
   }
 
@@ -204,9 +205,40 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(KEY_CONVERTER, AVRO_CONVERTER);
     configs.put(KEY_SCHEMA_BACKUP_ENABLED, TRUE);
+    configs.put("key.converter.enhanced.avro.schema.support", TRUE);
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
     assertFalse(containsError(errors, "schema.backup.enabled"));
+  }
+
+  @Test
+  public void testSinkAvroValueConverterWithoutEnhancedFails() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.remove("value.converter.enhanced.avro.schema.support");
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertTrue(containsError(errors, "value.converter.enhanced.avro.schema.support"));
+  }
+
+  @Test
+  public void testSinkAvroKeyConverterWithoutEnhancedFails() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(KEY_CONVERTER, AVRO_CONVERTER);
+    configs.put(KEY_SCHEMA_BACKUP_ENABLED, TRUE);
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertTrue(containsError(errors, "key.converter.enhanced.avro.schema.support"));
+  }
+
+  @Test
+  public void testSinkNonAvroConverterSkipsEnhancedCheck() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(VALUE_CONVERTER, STRING_CONVERTER);
+    configs.remove("value.converter.enhanced.avro.schema.support");
+    configs.remove(VALUE_SCHEMA_BACKUP_ENABLED);
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertFalse(containsError(errors, "enhanced.avro.schema.support"));
   }
 
   @Test

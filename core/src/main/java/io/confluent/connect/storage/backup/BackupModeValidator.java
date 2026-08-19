@@ -90,6 +90,10 @@ public final class BackupModeValidator {
     validateConverterExplicitlySet(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
     validateSchemaBackupEnabled(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
     validateSchemaBackupEnabled(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
+    validateEnhancedAvroSchemaSupport(
+        configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
+    validateEnhancedAvroSchemaSupport(
+        configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
     validateTransformsRejected(configs, errors);
     validateStoreKafkaKeysHeadersRejected(configs, errors);
     validatePartitionerSupported(configs, errors);
@@ -309,13 +313,6 @@ public final class BackupModeValidator {
     if (converterClass == null) {
       return;
     }
-    if (AVRO_CONVERTER.equals(converterClass)) {
-      warnIfNotTrue(configs, prefix + ".enhanced.avro.schema.support",
-          prefix + ": enhanced.avro.schema.support=true is recommended "
-          + "for backup mode. Without it, Avro enum types may not be "
-          + "preserved during restore.");
-    }
-
     if (PROTOBUF_CONVERTER.equals(converterClass)) {
       warnIfNotTrue(configs, prefix + ".enhanced.protobuf.schema.support",
           prefix + ": enhanced.protobuf.schema.support=true is recommended "
