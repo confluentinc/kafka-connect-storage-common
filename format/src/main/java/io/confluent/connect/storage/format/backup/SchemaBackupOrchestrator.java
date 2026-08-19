@@ -23,6 +23,8 @@ import io.confluent.connect.storage.backup.SchemaBackupStore;
 import io.confluent.connect.storage.backup.SchemaManifest;
 import io.confluent.connect.storage.format.backup.BackupWrapperExtractor.Unwrapped;
 import org.apache.kafka.connect.errors.DataException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,6 +47,8 @@ import java.util.Set;
  */
 final class SchemaBackupOrchestrator {
 
+  private static final Logger log =
+      LoggerFactory.getLogger(SchemaBackupOrchestrator.class);
   private static final ObjectMapper JSON = new ObjectMapper();
 
   private final SchemaBackupStore backupStore;
@@ -104,9 +108,10 @@ final class SchemaBackupOrchestrator {
           referenceTreeJson,
           new TypeReference<Map<String, Map<String, Object>>>() {});
     } catch (IOException e) {
-      throw new DataException(
-          "Failed to parse reference tree JSON for topic="
-          + topic + ". Cannot guarantee pristine restore.", e);
+      String msg = "Failed to parse reference tree JSON for topic="
+          + topic + ". Cannot guarantee pristine restore.";
+      log.error(msg, e);
+      throw new DataException(msg, e);
     }
     Set<Integer> visited = new HashSet<>();
     for (Map.Entry<String, Map<String, Object>> entry : tree.entrySet()) {
@@ -121,9 +126,11 @@ final class SchemaBackupOrchestrator {
     int globalId = node.get(BackupEnvelope.REF_FIELD_GLOBAL_ID) instanceof Number
         ? ((Number) node.get(BackupEnvelope.REF_FIELD_GLOBAL_ID)).intValue() : 0;
     if (globalId <= 0) {
-      throw new DataException(
-          "Cannot backup reference schema: invalid globalId=" + globalId
-          + " in topic=" + topic + ". Cannot guarantee pristine restore.");
+      String msg = "Cannot backup reference schema: invalid globalId="
+          + globalId + " in topic=" + topic
+          + ". Cannot guarantee pristine restore.";
+      log.error(msg);
+      throw new DataException(msg);
     }
     if (!visited.add(globalId)) {
       return;
@@ -135,10 +142,11 @@ final class SchemaBackupOrchestrator {
     String schemaType = node.get(BackupEnvelope.REF_FIELD_SCHEMA_TYPE) instanceof String
         ? (String) node.get(BackupEnvelope.REF_FIELD_SCHEMA_TYPE) : null;
     if (schema == null || schemaType == null) {
-      throw new DataException(
-          "Cannot backup reference schema: missing schema text or type"
+      String msg = "Cannot backup reference schema: missing schema text or type"
           + " for globalId=" + globalId + ", subject=" + subject
-          + ", topic=" + topic + ". Cannot guarantee pristine restore.");
+          + ", topic=" + topic + ". Cannot guarantee pristine restore.";
+      log.error(msg);
+      throw new DataException(msg);
     }
     List<SchemaManifest.SchemaReferenceEntry> childRefs =
         extractChildRefs(node, tree);

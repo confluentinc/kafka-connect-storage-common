@@ -22,6 +22,8 @@ import io.confluent.connect.storage.backup.BackupEnvelope;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.errors.DataException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Extracts data and metadata from a backup Wrapper struct.
@@ -29,6 +31,8 @@ import org.apache.kafka.connect.errors.DataException;
  */
 public final class BackupWrapperExtractor {
 
+  private static final Logger log =
+      LoggerFactory.getLogger(BackupWrapperExtractor.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private BackupWrapperExtractor() {
@@ -59,17 +63,22 @@ public final class BackupWrapperExtractor {
     if (schema.field(BackupWrapper.FIELD_DATA) == null) {
       throw new DataException("Wrapper schema missing 'data' field — corrupt Wrapper struct");
     }
+    Integer schemaId = optionalInt32(wrapper, schema, BackupWrapper.FIELD_SCHEMA_ID);
     Integer schemaVersion = optionalInt32(wrapper, schema, BackupWrapper.FIELD_SCHEMA_VERSION);
+    String schemaType = optionalString(wrapper, schema, BackupWrapper.FIELD_SCHEMA_TYPE);
+    String subject = optionalString(wrapper, schema, BackupWrapper.FIELD_SCHEMA_SUBJECT);
     String referenceTreeJson = optionalString(wrapper, schema, BackupWrapper.FIELD_REFERENCE_TREE);
     String directRefsJson = optionalString(wrapper, schema, BackupWrapper.FIELD_DIRECT_REFS);
     String schemaGuid = optionalString(wrapper, schema, BackupWrapper.FIELD_SCHEMA_GUID);
+    log.debug("Unwrapped Wrapper: schemaType={}, schemaId={}, subject={}, hasReferences={}",
+        schemaType, schemaId, subject, referenceTreeJson != null);
     return new Unwrapped(
         wrapper.get(BackupWrapper.FIELD_DATA),
         schema.field(BackupWrapper.FIELD_DATA).schema(),
-        optionalInt32(wrapper, schema, BackupWrapper.FIELD_SCHEMA_ID),
+        schemaId,
         schemaVersion,
-        optionalString(wrapper, schema, BackupWrapper.FIELD_SCHEMA_TYPE),
-        optionalString(wrapper, schema, BackupWrapper.FIELD_SCHEMA_SUBJECT),
+        schemaType,
+        subject,
         optionalString(wrapper, schema, BackupWrapper.FIELD_RAW_SCHEMA),
         referenceTreeJson,
         directRefsJson,

@@ -15,6 +15,9 @@
 
 package io.confluent.connect.storage.backup;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +26,8 @@ import java.util.Map;
  * Maps converter class names to schema type tags used in the backup envelope.
  */
 public final class ConverterTypeDetector {
+
+  private static final Logger log = LoggerFactory.getLogger(ConverterTypeDetector.class);
 
   private static final Map<String, String> KNOWN_TYPES;
 
@@ -65,18 +70,23 @@ public final class ConverterTypeDetector {
    */
   public static String detectSchemaType(
       String converterClass, Map<String, String> config, String converterPrefix) {
+    String detected = detect(converterClass, config, converterPrefix);
+    log.debug("Detected schemaType={} for converter={} at prefix={}",
+        detected, converterClass, converterPrefix);
+    return detected;
+  }
+
+  private static String detect(
+      String converterClass, Map<String, String> config, String converterPrefix) {
     if (converterClass == null) {
       return BackupEnvelope.TYPE_UNKNOWN;
     }
-
-    // JsonConverter needs special handling: check schemas.enable
     if ("org.apache.kafka.connect.json.JsonConverter".equals(converterClass)) {
       String schemasEnable = config.get(converterPrefix + ".schemas.enable");
       return "false".equalsIgnoreCase(schemasEnable)
           ? BackupEnvelope.TYPE_JSON_SCHEMALESS
           : BackupEnvelope.TYPE_JSON_EMBEDDED_SCHEMA;
     }
-
     String type = KNOWN_TYPES.get(converterClass);
     return type != null ? type : BackupEnvelope.TYPE_UNKNOWN;
   }

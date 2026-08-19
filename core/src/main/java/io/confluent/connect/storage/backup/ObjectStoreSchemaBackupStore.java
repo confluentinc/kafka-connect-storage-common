@@ -93,6 +93,8 @@ public class ObjectStoreSchemaBackupStore implements SchemaBackupStore {
           references != null ? references.size() : 0);
     } catch (RuntimeException e) {
       backedUpKeys.remove(dedupKey);
+      log.error("Failed to back up schema: topic={}, key={}",
+          topic, schemaKey, e);
       throw e;
     }
   }

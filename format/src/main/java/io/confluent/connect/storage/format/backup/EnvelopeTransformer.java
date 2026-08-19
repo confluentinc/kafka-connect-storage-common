@@ -91,15 +91,16 @@ public class EnvelopeTransformer {
         record.value(), record.valueSchema(), false, valueSchemaTypeDefault);
 
     if (key.getData() == null && value.getData() == null) {
-      throw new DataException(
-          "Cannot backup record at topic=" + record.topic()
-              + ", partition=" + record.kafkaPartition()
-              + ", offset=" + record.kafkaOffset()
-              + ": both unwrapped key and value are null. This means either"
-              + " the source record had null key AND null value (which is not"
-              + " a meaningful Kafka message), or a wrapper struct's 'data'"
-              + " field was null on both sides. Envelope backup requires at"
-              + " least one non-null side.");
+      String msg = "Cannot backup record at topic=" + record.topic()
+          + ", partition=" + record.kafkaPartition()
+          + ", offset=" + record.kafkaOffset()
+          + ": both unwrapped key and value are null. This means either"
+          + " the source record had null key AND null value (which is not"
+          + " a meaningful Kafka message), or a wrapper struct's 'data'"
+          + " field was null on both sides. Envelope backup requires at"
+          + " least one non-null side.";
+      log.error(msg);
+      throw new DataException(msg);
     }
 
     log.debug("Envelope: topic={}, offset={}, keyType={}, valType={}, keyId={}, valId={}",
