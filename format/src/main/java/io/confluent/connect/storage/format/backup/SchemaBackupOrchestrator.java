@@ -50,6 +50,8 @@ final class SchemaBackupOrchestrator {
   private static final Logger log =
       LoggerFactory.getLogger(SchemaBackupOrchestrator.class);
   private static final ObjectMapper JSON = new ObjectMapper();
+  private static final String CANNOT_GUARANTEE_PRISTINE_RESTORE =
+      ". Cannot guarantee pristine restore.";
 
   private final SchemaBackupStore backupStore;
 
@@ -109,7 +111,7 @@ final class SchemaBackupOrchestrator {
           new TypeReference<Map<String, Map<String, Object>>>() {});
     } catch (IOException e) {
       String msg = "Failed to parse reference tree JSON for topic="
-          + topic + ". Cannot guarantee pristine restore.";
+          + topic + CANNOT_GUARANTEE_PRISTINE_RESTORE;
       log.error(msg, e);
       throw new DataException(msg, e);
     }
@@ -128,7 +130,7 @@ final class SchemaBackupOrchestrator {
     if (globalId <= 0) {
       String msg = "Cannot backup reference schema: invalid globalId="
           + globalId + " in topic=" + topic
-          + ". Cannot guarantee pristine restore.";
+          + CANNOT_GUARANTEE_PRISTINE_RESTORE;
       log.error(msg);
       throw new DataException(msg);
     }
@@ -144,7 +146,7 @@ final class SchemaBackupOrchestrator {
     if (schema == null || schemaType == null) {
       String msg = "Cannot backup reference schema: missing schema text or type"
           + " for globalId=" + globalId + ", subject=" + subject
-          + ", topic=" + topic + ". Cannot guarantee pristine restore.";
+          + ", topic=" + topic + CANNOT_GUARANTEE_PRISTINE_RESTORE;
       log.error(msg);
       throw new DataException(msg);
     }

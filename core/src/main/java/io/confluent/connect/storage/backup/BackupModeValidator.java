@@ -64,6 +64,8 @@ public final class BackupModeValidator {
           "RecordField",
           PARTITIONER_PKG + "TimeBasedPartitioner$RecordFieldTimestampExtractor")));
 
+  private static final String TRUE = "true";
+
   private static final String FORMAT_SIMPLE_NAME_JSON = "JsonFormat";
   private static final String FORMAT_SIMPLE_NAME_BYTE_ARRAY = "ByteArrayFormat";
   private static final String FORMAT_SIMPLE_NAME_AVRO = "AvroFormat";
@@ -179,7 +181,7 @@ public final class BackupModeValidator {
   private static void requireTrue(
       Map<String, String> configs, String key, String reason,
       List<String> errors) {
-    if (!"true".equalsIgnoreCase(configs.get(key))) {
+    if (!TRUE.equalsIgnoreCase(configs.get(key))) {
       errors.add(key + " must be set to true. " + reason);
     }
   }
@@ -196,7 +198,7 @@ public final class BackupModeValidator {
   private static void rejectIfTrue(
       Map<String, String> configs, String key, String reason,
       List<String> errors) {
-    if ("true".equalsIgnoreCase(configs.get(key))) {
+    if (TRUE.equalsIgnoreCase(configs.get(key))) {
       errors.add(key + " must not be set to true. " + reason);
     }
   }
@@ -294,7 +296,7 @@ public final class BackupModeValidator {
     }
     String configKey = converterPrefix + "."
         + BackupEnvelope.SCHEMA_BACKUP_ENABLED_CONFIG;
-    if (!"true".equalsIgnoreCase(configs.get(configKey))) {
+    if (!TRUE.equalsIgnoreCase(configs.get(configKey))) {
       errors.add(converterPrefix + " uses SR-backed converter ("
           + converterClass + ") but " + configKey + " is not set to true. "
           + "Without this config, backup will NOT preserve schema metadata "
@@ -334,14 +336,14 @@ public final class BackupModeValidator {
 
   private static void validateStoreKafkaKeysHeadersRejected(
       Map<String, String> configs, List<String> errors) {
-    if ("true".equalsIgnoreCase(configs.get("store.kafka.keys"))) {
+    if (TRUE.equalsIgnoreCase(configs.get("store.kafka.keys"))) {
       errors.add("store.kafka.keys=true cannot be used with "
           + "BACKUP_FULL_RECORD mode. Envelope mode already captures the "
           + "Kafka key inside each backup record. Setting this flag would "
           + "write duplicate key-only files alongside the envelope files. "
           + "Remove store.kafka.keys (or set to false) to use backup mode.");
     }
-    if ("true".equalsIgnoreCase(configs.get("store.kafka.headers"))) {
+    if (TRUE.equalsIgnoreCase(configs.get("store.kafka.headers"))) {
       errors.add("store.kafka.headers=true cannot be used with "
           + "BACKUP_FULL_RECORD mode. Envelope mode already captures the "
           + "Kafka headers inside each backup record. Setting this flag "
@@ -465,7 +467,7 @@ public final class BackupModeValidator {
 
   private static void warnIfNotTrue(
       Map<String, String> configs, String key, String message) {
-    if (!"true".equalsIgnoreCase(configs.get(key))) {
+    if (!TRUE.equalsIgnoreCase(configs.get(key))) {
       log.warn(message);
     }
   }

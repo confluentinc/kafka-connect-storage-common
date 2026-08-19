@@ -31,6 +31,8 @@ import org.junit.Test;
 
 public class EnvelopeSchemaBuilderTest {
 
+  private static final String KEY1 = "key1";
+
   @Test
   public void testBuildWithStructSchemas() {
     Schema keySchema = SchemaBuilder.struct()
@@ -128,18 +130,18 @@ public class EnvelopeSchemaBuilderTest {
     headers.addString("h1", "val1");
 
     SinkRecord record = new SinkRecord(
-        "test-topic", 0, keySchema, "key1",
+        "test-topic", 0, keySchema, KEY1,
         valueSchema, value, 100L,
         1234567890L,
         TimestampType.CREATE_TIME,
         headers);
 
     Struct envelope = EnvelopeSchemaBuilder.buildEnvelopeStruct(
-        envSchema, record, "key1", value,
+        envSchema, record, KEY1, value,
         new EnvelopeSchemaBuilder.SchemaDescriptor(null, BackupEnvelope.TYPE_STRING, null, null),
         new EnvelopeSchemaBuilder.SchemaDescriptor(42, BackupEnvelope.TYPE_AVRO, "test-value", null));
 
-    assertEquals("key1",
+    assertEquals(KEY1,
         envelope.get(BackupEnvelope.FIELD_KEY));
     assertEquals(value,
         envelope.get(BackupEnvelope.FIELD_VALUE));

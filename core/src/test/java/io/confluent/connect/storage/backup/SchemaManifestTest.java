@@ -31,18 +31,20 @@ public class SchemaManifestTest {
   private static final String REF_ADDRESS_SUBJECT = "address-value";
   private static final String REF_COUNTRY = "Country";
   private static final String REF_COUNTRY_SUBJECT = "country-value";
+  private static final String ID_42 = "42";
+  private static final String FILE_42_AVSC = "42.avsc";
 
   @Test
   public void testEntryFields() {
     SchemaManifest.SchemaEntry entry = new SchemaManifest.SchemaEntry(
-        "42", BackupEnvelope.TYPE_AVRO, "test-value", 1, "42.avsc",
+        ID_42, BackupEnvelope.TYPE_AVRO, "test-value", 1, FILE_42_AVSC,
         Collections.emptyList());
 
-    assertEquals("42", entry.getId());
+    assertEquals(ID_42, entry.getId());
     assertEquals(BackupEnvelope.TYPE_AVRO, entry.getType());
     assertEquals("test-value", entry.getSubject());
     assertEquals(1, entry.getVersion());
-    assertEquals("42.avsc", entry.getFile());
+    assertEquals(FILE_42_AVSC, entry.getFile());
     assertFalse(entry.hasReferences());
   }
 
@@ -51,7 +53,7 @@ public class SchemaManifestTest {
     SchemaManifest.SchemaReferenceEntry ref = new SchemaManifest.SchemaReferenceEntry(
         REF_ADDRESS, REF_ADDRESS_SUBJECT, 1, 10);
     SchemaManifest.SchemaEntry entry = new SchemaManifest.SchemaEntry(
-        "42", BackupEnvelope.TYPE_AVRO, "order-value", 1, "42.avsc",
+        ID_42, BackupEnvelope.TYPE_AVRO, "order-value", 1, FILE_42_AVSC,
         Collections.singletonList(ref));
 
     assertTrue(entry.hasReferences());
@@ -75,7 +77,7 @@ public class SchemaManifestTest {
     SchemaManifest.SchemaReferenceEntry ref = new SchemaManifest.SchemaReferenceEntry(
         REF_COUNTRY, REF_COUNTRY_SUBJECT, 1, 5);
     SchemaManifest.SchemaEntry original = new SchemaManifest.SchemaEntry(
-        "42", BackupEnvelope.TYPE_AVRO, "order-value", 3, "42.avsc",
+        ID_42, BackupEnvelope.TYPE_AVRO, "order-value", 3, FILE_42_AVSC,
         Collections.singletonList(ref));
 
     String json = original.toJsonString();
@@ -165,7 +167,7 @@ public class SchemaManifestTest {
         new SchemaManifest.SchemaReferenceEntry(REF_ADDRESS, REF_ADDRESS_SUBJECT, 1, 10),
         new SchemaManifest.SchemaReferenceEntry(REF_COUNTRY, REF_COUNTRY_SUBJECT, 1, 5));
     SchemaManifest.SchemaEntry original = new SchemaManifest.SchemaEntry(
-        "42", BackupEnvelope.TYPE_AVRO, "user-value", 1, "42.avsc", refs);
+        ID_42, BackupEnvelope.TYPE_AVRO, "user-value", 1, FILE_42_AVSC, refs);
 
     String json = original.toJsonString();
     SchemaManifest.SchemaEntry restored = SchemaManifest.SchemaEntry.fromJsonString(json);
