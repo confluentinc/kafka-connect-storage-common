@@ -477,11 +477,40 @@ public class BackupModeValidatorTest {
   @Test
   public void testValidSourceConfigProducesZeroErrors() {
     Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, STRING_CONVERTER);
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
     configs.put(VALUE_ENHANCED_AVRO, TRUE);
 
     List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
     assertEquals(0, errors.size());
+  }
+
+  @Test
+  public void testSourceMissingKeyConverterFails() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
+    configs.put(VALUE_ENHANCED_AVRO, TRUE);
+
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    assertTrue(containsError(errors, ERR_KEY_CONVERTER_UNSET));
+  }
+
+  @Test
+  public void testSourceMissingValueConverterFails() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, STRING_CONVERTER);
+
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    assertTrue(containsError(errors, ERR_VALUE_CONVERTER_UNSET));
+  }
+
+  @Test
+  public void testSourceMissingBothConvertersFails() {
+    Map<String, String> configs = new HashMap<>();
+
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    assertTrue(containsError(errors, ERR_KEY_CONVERTER_UNSET));
+    assertTrue(containsError(errors, ERR_VALUE_CONVERTER_UNSET));
   }
 
   @Test

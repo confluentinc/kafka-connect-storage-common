@@ -119,6 +119,8 @@ public final class BackupModeValidator {
     List<String> errors = new ArrayList<>();
 
     validateByteArrayFormat(formatClassName, errors);
+    validateConverterExplicitlySet(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
+    validateConverterExplicitlySet(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
     validateSourceConverter(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
     validateSourceConverter(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
     warnSourceSuboptimalConfigs(configs);
@@ -278,10 +280,12 @@ public final class BackupModeValidator {
       List<String> errors) {
     if (configs.get(converterPrefix) == null) {
       errors.add(converterPrefix + " must be set explicitly at the connector "
-          + "level in BACKUP_FULL_RECORD mode. Relying on worker.properties "
-          + "defaults hides the converter class from backup validation, so "
-          + "schema type detection falls through to UNKNOWN and schema files "
-          + "are not written. Set " + converterPrefix + " on the connector.");
+          + "level in backup and restore modes. Relying on worker.properties "
+          + "defaults hides the converter class from connector validation, so "
+          + "schema type detection falls through to UNKNOWN. On backup this "
+          + "skips writing schema files; on restore this skips converter-"
+          + "specific validations. Set "
+          + converterPrefix + " on the connector.");
     }
   }
 
