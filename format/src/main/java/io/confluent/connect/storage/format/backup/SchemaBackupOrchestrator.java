@@ -26,6 +26,7 @@ import org.apache.kafka.connect.errors.DataException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -101,20 +102,19 @@ final class SchemaBackupOrchestrator {
     if (referenceTreeJson == null || referenceTreeJson.isEmpty()) {
       return;
     }
+    Map<String, Map<String, Object>> tree;
     try {
-      Map<String, Map<String, Object>> tree = JSON.readValue(
+      tree = JSON.readValue(
           referenceTreeJson,
           new TypeReference<Map<String, Map<String, Object>>>() {});
-      Set<Integer> visited = new HashSet<>();
-      for (Map.Entry<String, Map<String, Object>> entry : tree.entrySet()) {
-        backupSingleReference(topic, entry.getValue(), tree, visited);
-      }
-    } catch (DataException de) {
-      throw de;
-    } catch (Exception e) {
+    } catch (IOException e) {
       throw new DataException(
-          "Failed to backup reference schemas for topic="
+          "Failed to parse reference tree JSON for topic="
           + topic + ". Cannot guarantee pristine restore.", e);
+    }
+    Set<Integer> visited = new HashSet<>();
+    for (Map.Entry<String, Map<String, Object>> entry : tree.entrySet()) {
+      backupSingleReference(topic, entry.getValue(), tree, visited);
     }
   }
 
