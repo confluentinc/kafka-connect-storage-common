@@ -16,6 +16,7 @@
 package io.confluent.connect.storage.backup;
 
 import io.confluent.connect.schema.backup.api.SchemaBackupConfig;
+import org.apache.kafka.connect.errors.DataException;
 
 /**
  * Constants for the KafkaRecordEnvelope struct.
@@ -73,7 +74,6 @@ public final class BackupEnvelope {
   public static final String EXT_AVRO = ".avsc";
   public static final String EXT_PROTOBUF = ".proto";
   public static final String EXT_JSON = ".json";
-  public static final String EXT_DEFAULT = ".schema";
 
   // Converter config key constants
   public static final String KEY_CONVERTER_CONFIG = "key.converter";
@@ -116,7 +116,12 @@ public final class BackupEnvelope {
   }
 
   /**
-   * Returns the file extension for a schema type.
+   * Returns the schema file extension for the given schema type.
+   *
+   * @param schemaType schema type tag from {@link SchemaBackupConfig}
+   * @return the file extension including the leading dot
+   * @throws DataException if {@code schemaType} is null or not a type
+   *     that backup can serialize to a schema file
    */
   public static String extensionForType(String schemaType) {
     if (TYPE_AVRO.equalsIgnoreCase(schemaType)) {
@@ -129,7 +134,9 @@ public final class BackupEnvelope {
         || TYPE_JSON.equalsIgnoreCase(schemaType)) {
       return EXT_JSON;
     }
-    return EXT_DEFAULT;
+    throw new DataException(
+        "Unsupported schema type for backup: " + schemaType
+            + ". Expected one of AVRO, PROTOBUF, JSON_SCHEMA, JSON.");
   }
 
   private BackupEnvelope() {

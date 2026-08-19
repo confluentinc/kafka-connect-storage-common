@@ -15,10 +15,12 @@
 
 package io.confluent.connect.storage.backup;
 
+import org.apache.kafka.connect.errors.DataException;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 public class BackupEnvelopeTest {
@@ -106,22 +108,23 @@ public class BackupEnvelopeTest {
   }
 
   @Test
-  public void testExtensionForTypeStringReturnsDefault() {
-    assertEquals("non-schema type falls back to default extension",
-        BackupEnvelope.EXT_DEFAULT,
-        BackupEnvelope.extensionForType(BackupEnvelope.TYPE_STRING));
+  public void testExtensionForTypeStringThrows() {
+    DataException e = assertThrows(DataException.class,
+        () -> BackupEnvelope.extensionForType(BackupEnvelope.TYPE_STRING));
+    assertTrue(e.getMessage().contains("STRING"));
   }
 
   @Test
-  public void testExtensionForTypeUnknownReturnsDefault() {
-    assertEquals(BackupEnvelope.EXT_DEFAULT,
-        BackupEnvelope.extensionForType("SOMETHING_ELSE"));
+  public void testExtensionForTypeUnknownThrows() {
+    DataException e = assertThrows(DataException.class,
+        () -> BackupEnvelope.extensionForType("SOMETHING_ELSE"));
+    assertTrue(e.getMessage().contains("SOMETHING_ELSE"));
   }
 
   @Test
-  public void testExtensionForTypeNullReturnsDefault() {
-    assertEquals(BackupEnvelope.EXT_DEFAULT,
-        BackupEnvelope.extensionForType(null));
+  public void testExtensionForTypeNullThrows() {
+    assertThrows(DataException.class,
+        () -> BackupEnvelope.extensionForType(null));
   }
 
   @Test
