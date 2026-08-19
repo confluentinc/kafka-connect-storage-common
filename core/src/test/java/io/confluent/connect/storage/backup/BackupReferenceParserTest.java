@@ -15,11 +15,13 @@
 
 package io.confluent.connect.storage.backup;
 
+import org.apache.kafka.connect.errors.DataException;
 import org.junit.Test;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 public class BackupReferenceParserTest {
@@ -117,17 +119,29 @@ public class BackupReferenceParserTest {
   }
 
   @Test
-  public void testParseDirectRefsRefNotInTreeGlobalIdZero() {
+  public void testParseDirectRefsRefNotInTreeThrows() {
     String directRefs = "[{\"name\":\"Missing\","
         + "\"subject\":\"missing-value\",\"version\":1}]";
     String tree = "{}";
 
-    List<SchemaManifest.SchemaReferenceEntry> result =
-        BackupReferenceParser.parseDirectRefsToManifestEntries(
-            directRefs, tree);
+    DataException e = assertThrows(DataException.class,
+        () -> BackupReferenceParser.parseDirectRefsToManifestEntries(
+            directRefs, tree));
+    assertTrue(e.getMessage().contains("Missing"));
+    assertTrue(e.getMessage().contains("globalId"));
+  }
 
-    assertEquals(1, result.size());
-    assertEquals("Missing", result.get(0).getName());
-    assertEquals(0, result.get(0).getGlobalId());
+  @Test
+  public void testParseDirectRefsInvalidGlobalIdInTreeThrows() {
+    String directRefs = "[{\"name\":\"Zeroed\","
+        + "\"subject\":\"zeroed-value\",\"version\":1}]";
+    String tree = "{\"Zeroed\":{\"subject\":\"zeroed-value\",\"version\":1,"
+        + "\"globalId\":0,\"schemaType\":\"AVRO\",\"schema\":\"{}\"}}";
+
+    DataException e = assertThrows(DataException.class,
+        () -> BackupReferenceParser.parseDirectRefsToManifestEntries(
+            directRefs, tree));
+    assertTrue(e.getMessage().contains("Zeroed"));
+    assertTrue(e.getMessage().contains("invalid globalId"));
   }
 }

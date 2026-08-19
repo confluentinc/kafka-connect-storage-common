@@ -64,19 +64,7 @@ public final class BackupReferenceParser {
       List<SchemaManifest.SchemaReferenceEntry> result =
           new ArrayList<>();
       for (Map<String, Object> ref : directRefs) {
-        String name = (String) ref.get(BackupEnvelope.REF_FIELD_NAME);
-        String subject = (String) ref.get(BackupEnvelope.REF_FIELD_SUBJECT);
-        int version = ref.get(BackupEnvelope.REF_FIELD_VERSION) instanceof Number
-            ? ((Number) ref.get(BackupEnvelope.REF_FIELD_VERSION)).intValue() : 0;
-        int globalId = 0;
-        Map<String, Object> treeEntry = tree.get(name);
-        if (treeEntry != null
-            && treeEntry.get(BackupEnvelope.REF_FIELD_GLOBAL_ID) instanceof Number) {
-          globalId =
-              ((Number) treeEntry.get(BackupEnvelope.REF_FIELD_GLOBAL_ID)).intValue();
-        }
-        result.add(new SchemaManifest.SchemaReferenceEntry(
-            name, subject, version, globalId));
+        result.add(toManifestEntry(ref, tree));
       }
       return result;
     } catch (IOException e) {
@@ -84,6 +72,30 @@ public final class BackupReferenceParser {
           "Failed to parse reference JSON. Cannot guarantee "
           + "pristine restore.", e);
     }
+  }
+
+  private static SchemaManifest.SchemaReferenceEntry toManifestEntry(
+      Map<String, Object> ref, Map<String, Map<String, Object>> tree) {
+    String name = (String) ref.get(BackupEnvelope.REF_FIELD_NAME);
+    String subject = (String) ref.get(BackupEnvelope.REF_FIELD_SUBJECT);
+    int version = ref.get(BackupEnvelope.REF_FIELD_VERSION) instanceof Number
+        ? ((Number) ref.get(BackupEnvelope.REF_FIELD_VERSION)).intValue() : 0;
+    Map<String, Object> treeEntry = tree.get(name);
+    if (treeEntry == null
+        || !(treeEntry.get(BackupEnvelope.REF_FIELD_GLOBAL_ID) instanceof Number)) {
+      throw new DataException(
+          "Direct reference '" + name + "' has no matching entry with a "
+          + "globalId in the reference tree. Cannot guarantee pristine "
+          + "restore; the referenced schema file would be missing.");
+    }
+    int globalId =
+        ((Number) treeEntry.get(BackupEnvelope.REF_FIELD_GLOBAL_ID)).intValue();
+    if (globalId <= 0) {
+      throw new DataException(
+          "Direct reference '" + name + "' has invalid globalId=" + globalId
+          + " in the reference tree. Cannot guarantee pristine restore.");
+    }
+    return new SchemaManifest.SchemaReferenceEntry(name, subject, version, globalId);
   }
 
 }

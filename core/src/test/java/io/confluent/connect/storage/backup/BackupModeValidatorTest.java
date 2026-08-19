@@ -615,6 +615,16 @@ public class BackupModeValidatorTest {
     assertTrue(containsError(errors, "RecordFieldTimestampExtractor"));
   }
 
+  @Test
+  public void testRecordFieldTimestampExtractorShortNameIsRejected() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(PARTITIONER_CLASS, TIME_BASED_PARTITIONER);
+    configs.put(TIMESTAMP_EXTRACTOR, "RecordField");
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertTrue(containsError(errors, "timestamp.extractor=RecordField"));
+  }
+
   // ── Protobuf converter validators ────────────────────────────────
 
   private Map<String, String> protobufSinkConfigs() {

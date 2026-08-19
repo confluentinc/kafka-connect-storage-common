@@ -57,8 +57,12 @@ public final class BackupModeValidator {
           PARTITIONER_PKG + "TimeBasedPartitioner",
           PARTITIONER_PKG + "DailyPartitioner",
           PARTITIONER_PKG + "HourlyPartitioner")));
-  private static final String UNSUPPORTED_TIMESTAMP_EXTRACTOR =
-      PARTITIONER_PKG + "TimeBasedPartitioner$RecordFieldTimestampExtractor";
+  // TimeBasedPartitioner.newTimestampExtractor() expands the short name
+  // "RecordField" to the FQCN at runtime, so both must be rejected.
+  private static final Set<String> UNSUPPORTED_TIMESTAMP_EXTRACTORS =
+      Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+          "RecordField",
+          PARTITIONER_PKG + "TimeBasedPartitioner$RecordFieldTimestampExtractor")));
 
   private static final String FORMAT_SIMPLE_NAME_JSON = "JsonFormat";
   private static final String FORMAT_SIMPLE_NAME_BYTE_ARRAY = "ByteArrayFormat";
@@ -259,11 +263,11 @@ public final class BackupModeValidator {
           + "TimeBasedPartitioner, DailyPartitioner, or HourlyPartitioner.");
     }
     String extractor = configs.get("timestamp.extractor");
-    if (extractor != null && extractor.equals(UNSUPPORTED_TIMESTAMP_EXTRACTOR)) {
-      errors.add("timestamp.extractor=RecordFieldTimestampExtractor is not "
-          + "supported in BACKUP_FULL_RECORD mode. It reads a field from the "
-          + "record value, which is now the envelope Struct. "
-          + "Use Wallclock or Record extractor instead.");
+    if (extractor != null && UNSUPPORTED_TIMESTAMP_EXTRACTORS.contains(extractor)) {
+      errors.add("timestamp.extractor=" + extractor + " is not supported in "
+          + "BACKUP_FULL_RECORD mode. It reads a field from the record value, "
+          + "which is now the envelope Struct. Use Wallclock or Record "
+          + "extractor instead.");
     }
   }
 
