@@ -186,6 +186,38 @@ public class SchemaBackupOrchestratorTest {
     orchestrator.backupIfNeeded(TOPIC, unwrapped);
   }
 
+  @Test(expected = DataException.class)
+  public void backupThrowsWhenChildRefMissingFromTree() {
+    String refTree = "{"
+        + "\"Parent\":{\"subject\":\"Parent\",\"version\":1,"
+        + "\"globalId\":10,\"schemaType\":\"AVRO\",\"schema\":\"{}\","
+        + "\"references\":[{\"name\":\"Orphan\","
+        + "\"subject\":\"Orphan\",\"version\":1}]}"
+        + "}";
+
+    Unwrapped unwrapped = unwrapWith(new BackupWrapper.WrapperFields(
+        42, 1, BackupEnvelope.TYPE_AVRO, SUBJECT, RAW_SCHEMA, refTree, null));
+
+    orchestrator.backupIfNeeded(TOPIC, unwrapped);
+  }
+
+  @Test(expected = DataException.class)
+  public void backupThrowsWhenChildRefHasInvalidGlobalId() {
+    String refTree = "{"
+        + "\"Parent\":{\"subject\":\"Parent\",\"version\":1,"
+        + "\"globalId\":10,\"schemaType\":\"AVRO\",\"schema\":\"{}\","
+        + "\"references\":[{\"name\":\"Bad\","
+        + "\"subject\":\"Bad\",\"version\":1}]},"
+        + "\"Bad\":{\"subject\":\"Bad\",\"version\":1,"
+        + "\"globalId\":0,\"schemaType\":\"AVRO\",\"schema\":\"{}\"}"
+        + "}";
+
+    Unwrapped unwrapped = unwrapWith(new BackupWrapper.WrapperFields(
+        42, 1, BackupEnvelope.TYPE_AVRO, SUBJECT, RAW_SCHEMA, refTree, null));
+
+    orchestrator.backupIfNeeded(TOPIC, unwrapped);
+  }
+
   private Unwrapped createUnwrappedWithId(int schemaId) {
     return unwrapWith(new BackupWrapper.WrapperFields(
         schemaId, 1, BackupEnvelope.TYPE_AVRO, SUBJECT, RAW_SCHEMA, null, null));

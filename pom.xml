@@ -162,7 +162,6 @@
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-connect-schema-backup-api</artifactId>
                 <version>${schema.backup.api.version}</version>
-                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.parquet</groupId>

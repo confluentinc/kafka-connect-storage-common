@@ -174,9 +174,23 @@ final class SchemaBackupOrchestrator {
       int refVersion = m.get(BackupEnvelope.REF_FIELD_VERSION) instanceof Number
           ? ((Number) m.get(BackupEnvelope.REF_FIELD_VERSION)).intValue() : 0;
       Map<String, Object> childNode = tree.get(refName);
-      int refGlobalId = childNode != null
-          && childNode.get(BackupEnvelope.REF_FIELD_GLOBAL_ID) instanceof Number
-          ? ((Number) childNode.get(BackupEnvelope.REF_FIELD_GLOBAL_ID)).intValue() : 0;
+      if (childNode == null
+          || !(childNode.get(BackupEnvelope.REF_FIELD_GLOBAL_ID) instanceof Number)) {
+        String msg = "Cannot backup reference schema: missing child reference '"
+            + refName + "' with a valid globalId in the reference tree"
+            + CANNOT_GUARANTEE_PRISTINE_RESTORE;
+        log.error(msg);
+        throw new DataException(msg);
+      }
+      int refGlobalId =
+          ((Number) childNode.get(BackupEnvelope.REF_FIELD_GLOBAL_ID)).intValue();
+      if (refGlobalId <= 0) {
+        String msg = "Cannot backup reference schema: invalid globalId="
+            + refGlobalId + " for child reference '" + refName + "'"
+            + CANNOT_GUARANTEE_PRISTINE_RESTORE;
+        log.error(msg);
+        throw new DataException(msg);
+      }
       childRefs.add(new SchemaManifest.SchemaReferenceEntry(
           refName, refSubject, refVersion, refGlobalId));
     }
