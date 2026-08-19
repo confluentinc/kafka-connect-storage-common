@@ -15,52 +15,44 @@
 
 package io.confluent.connect.storage.backup;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Maps converter class names to schema type tags used in the backup envelope.
- * Uses a registry pattern for extensibility — new converter types can be
- * registered via {@link #register(String, String)}.
  */
 public final class ConverterTypeDetector {
 
-  private static final Map<String, String> KNOWN_TYPES = new ConcurrentHashMap<>();
+  private static final Map<String, String> KNOWN_TYPES;
 
   static {
-    KNOWN_TYPES.put("io.confluent.connect.avro.AvroConverter", BackupEnvelope.TYPE_AVRO);
-    KNOWN_TYPES.put("io.confluent.connect.protobuf.ProtobufConverter",
+    Map<String, String> m = new HashMap<>();
+    m.put("io.confluent.connect.avro.AvroConverter", BackupEnvelope.TYPE_AVRO);
+    m.put("io.confluent.connect.protobuf.ProtobufConverter",
         BackupEnvelope.TYPE_PROTOBUF);
-    KNOWN_TYPES.put("io.confluent.connect.json.JsonSchemaConverter",
+    m.put("io.confluent.connect.json.JsonSchemaConverter",
         BackupEnvelope.TYPE_JSON_SCHEMA);
-    KNOWN_TYPES.put("org.apache.kafka.connect.storage.StringConverter",
+    m.put("org.apache.kafka.connect.storage.StringConverter",
         BackupEnvelope.TYPE_STRING);
-    KNOWN_TYPES.put("org.apache.kafka.connect.converters.IntegerConverter",
+    m.put("org.apache.kafka.connect.converters.IntegerConverter",
         BackupEnvelope.TYPE_INT32);
-    KNOWN_TYPES.put("org.apache.kafka.connect.converters.LongConverter",
+    m.put("org.apache.kafka.connect.converters.LongConverter",
         BackupEnvelope.TYPE_INT64);
-    KNOWN_TYPES.put("org.apache.kafka.connect.converters.ShortConverter",
+    m.put("org.apache.kafka.connect.converters.ShortConverter",
         BackupEnvelope.TYPE_INT16);
-    KNOWN_TYPES.put("org.apache.kafka.connect.converters.FloatConverter",
+    m.put("org.apache.kafka.connect.converters.FloatConverter",
         BackupEnvelope.TYPE_FLOAT32);
-    KNOWN_TYPES.put("org.apache.kafka.connect.converters.DoubleConverter",
+    m.put("org.apache.kafka.connect.converters.DoubleConverter",
         BackupEnvelope.TYPE_FLOAT64);
-    KNOWN_TYPES.put("org.apache.kafka.connect.converters.ByteArrayConverter",
+    m.put("org.apache.kafka.connect.converters.ByteArrayConverter",
         BackupEnvelope.TYPE_BYTES);
-    KNOWN_TYPES.put(
-        "io.confluent.connect.schema.backup.core.BackupAwareByteArrayConverter",
+    m.put("io.confluent.connect.schema.backup.core.BackupAwareByteArrayConverter",
         BackupEnvelope.TYPE_BYTES);
+    KNOWN_TYPES = Collections.unmodifiableMap(m);
   }
 
   private ConverterTypeDetector() {
-  }
-
-  /**
-   * Register a custom converter type mapping. Call during connector startup
-   * for converters not in the built-in list.
-   */
-  public static void register(String converterClassName, String schemaType) {
-    KNOWN_TYPES.put(converterClassName, schemaType);
   }
 
   /**

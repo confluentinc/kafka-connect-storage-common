@@ -118,11 +118,4 @@ public class ConverterTypeDetectorTest {
             "com.example.CustomConverter", Collections.emptyMap(), VALUE_CONVERTER));
   }
 
-  @Test
-  public void testRegisterCustomConverter() {
-    ConverterTypeDetector.register("com.example.MyConverter", "MY_TYPE");
-    assertEquals("MY_TYPE",
-        ConverterTypeDetector.detectSchemaType(
-            "com.example.MyConverter", Collections.emptyMap(), VALUE_CONVERTER));
-  }
 }
