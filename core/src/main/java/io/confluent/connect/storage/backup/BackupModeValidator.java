@@ -19,8 +19,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Shared config validation for backup and restore modes across all
@@ -44,6 +48,17 @@ public final class BackupModeValidator {
       "io.confluent.connect.protobuf.ProtobufConverter";
   private static final String JSON_SCHEMA_CONVERTER =
       "io.confluent.connect.json.JsonSchemaConverter";
+
+  private static final String PARTITIONER_PKG =
+      "io.confluent.connect.storage.partitioner.";
+  private static final Set<String> SUPPORTED_PARTITIONERS =
+      Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+          PARTITIONER_PKG + "DefaultPartitioner",
+          PARTITIONER_PKG + "TimeBasedPartitioner",
+          PARTITIONER_PKG + "DailyPartitioner",
+          PARTITIONER_PKG + "HourlyPartitioner")));
+  private static final String UNSUPPORTED_TIMESTAMP_EXTRACTOR =
+      PARTITIONER_PKG + "TimeBasedPartitioner$RecordFieldTimestampExtractor";
 
   private static final String FORMAT_SIMPLE_NAME_JSON = "JsonFormat";
   private static final String FORMAT_SIMPLE_NAME_BYTE_ARRAY = "ByteArrayFormat";
@@ -77,6 +92,7 @@ public final class BackupModeValidator {
     validateSchemaBackupEnabled(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
     validateTransformsRejected(configs, errors);
     validateStoreKafkaKeysHeadersRejected(configs, errors);
+    validatePartitionerSupported(configs, errors);
 
     warnSinkSuboptimalConfigs(configs, formatClassName);
 
@@ -149,6 +165,26 @@ public final class BackupModeValidator {
           + "JsonFormat in BACKUP_FULL_RECORD mode. Without it, the "
           + "envelope schema is not embedded and restore cannot parse "
           + "the records.");
+    }
+  }
+
+  private static void validatePartitionerSupported(
+      Map<String, String> configs, List<String> errors) {
+    String partitioner = configs.get("partitioner.class");
+    if (partitioner != null && !SUPPORTED_PARTITIONERS.contains(partitioner)) {
+      errors.add("partitioner.class=" + partitioner + " is not supported in "
+          + "BACKUP_FULL_RECORD mode. The sink task passes a "
+          + "KafkaRecordEnvelope Struct to the partitioner, not the original "
+          + "payload, so partitioners that read user-data fields (e.g. "
+          + "FieldPartitioner) fail. Use DefaultPartitioner, "
+          + "TimeBasedPartitioner, DailyPartitioner, or HourlyPartitioner.");
+    }
+    String extractor = configs.get("timestamp.extractor");
+    if (extractor != null && extractor.equals(UNSUPPORTED_TIMESTAMP_EXTRACTOR)) {
+      errors.add("timestamp.extractor=RecordFieldTimestampExtractor is not "
+          + "supported in BACKUP_FULL_RECORD mode. It reads a field from the "
+          + "record value, which is now the envelope Struct. "
+          + "Use Wallclock or Record extractor instead.");
     }
   }
 

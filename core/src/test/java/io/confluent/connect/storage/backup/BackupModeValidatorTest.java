@@ -48,6 +48,18 @@ public class BackupModeValidatorTest {
   private static final String TRANSFORMS = "transforms";
   private static final String HEADER_CONVERTER = "header.converter";
   private static final String PARQUET_CODEC = "parquet.codec";
+  private static final String PARTITIONER_CLASS = "partitioner.class";
+  private static final String TIMESTAMP_EXTRACTOR = "timestamp.extractor";
+  private static final String DEFAULT_PARTITIONER =
+      "io.confluent.connect.storage.partitioner.DefaultPartitioner";
+  private static final String TIME_BASED_PARTITIONER =
+      "io.confluent.connect.storage.partitioner.TimeBasedPartitioner";
+  private static final String FIELD_PARTITIONER =
+      "io.confluent.connect.storage.partitioner.FieldPartitioner";
+  private static final String RECORD_FIELD_EXTRACTOR =
+      "io.confluent.connect.storage.partitioner.TimeBasedPartitioner$RecordFieldTimestampExtractor";
+  private static final String WALLCLOCK_EXTRACTOR =
+      "io.confluent.connect.storage.partitioner.TimeBasedPartitioner$WallclockTimestampExtractor";
   private static final String SCHEMA_COMPATIBILITY = "schema.compatibility";
 
   private static final String TRUE = "true";
@@ -506,5 +518,68 @@ public class BackupModeValidatorTest {
   @Test
   public void testLogSinkStartupSummaryWithNullConvertersDoesNotThrow() {
     BackupModeValidator.logSinkStartupSummary(new HashMap<>(), AVRO_FORMAT, "NONE", "NONE");
+  }
+
+  @Test
+  public void testDefaultPartitionerPasses() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(PARTITIONER_CLASS, DEFAULT_PARTITIONER);
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertFalse(containsError(errors, "partitioner.class"));
+  }
+
+  @Test
+  public void testTimeBasedPartitionerPasses() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(PARTITIONER_CLASS, TIME_BASED_PARTITIONER);
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertFalse(containsError(errors, "partitioner.class"));
+  }
+
+  @Test
+  public void testFieldPartitionerIsRejected() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(PARTITIONER_CLASS, FIELD_PARTITIONER);
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertTrue(containsError(errors, "FieldPartitioner"));
+  }
+
+  @Test
+  public void testCustomPartitionerIsRejected() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(PARTITIONER_CLASS, "com.example.CustomPartitioner");
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertTrue(containsError(errors, "com.example.CustomPartitioner"));
+  }
+
+  @Test
+  public void testUnsetPartitionerPasses() {
+    List<String> errors = BackupModeValidator.validateSinkConfigs(
+        baseSinkConfigs(), AVRO_FORMAT, true);
+    assertFalse(containsError(errors, "partitioner.class"));
+  }
+
+  @Test
+  public void testWallclockTimestampExtractorPasses() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(PARTITIONER_CLASS, TIME_BASED_PARTITIONER);
+    configs.put(TIMESTAMP_EXTRACTOR, WALLCLOCK_EXTRACTOR);
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertFalse(containsError(errors, "timestamp.extractor"));
+  }
+
+  @Test
+  public void testRecordFieldTimestampExtractorIsRejected() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(PARTITIONER_CLASS, TIME_BASED_PARTITIONER);
+    configs.put(TIMESTAMP_EXTRACTOR, RECORD_FIELD_EXTRACTOR);
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertTrue(containsError(errors, "RecordFieldTimestampExtractor"));
   }
 }
