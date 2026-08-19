@@ -71,6 +71,8 @@ public final class BackupModeValidator {
     validateByteArrayFormat(formatClassName, errors);
     validateJsonFormatSchemaEnable(formatClassName, jsonSchemaEmbedded, errors);
     validateParquetCompression(configs, formatClassName, errors);
+    validateConverterExplicitlySet(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
+    validateConverterExplicitlySet(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
     validateSchemaBackupEnabled(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
     validateSchemaBackupEnabled(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
     validateTransformsRejected(configs, errors);
@@ -142,6 +144,18 @@ public final class BackupModeValidator {
           + "JsonFormat in BACKUP_FULL_RECORD mode. Without it, the "
           + "envelope schema is not embedded and restore cannot parse "
           + "the records.");
+    }
+  }
+
+  private static void validateConverterExplicitlySet(
+      Map<String, String> configs, String converterPrefix,
+      List<String> errors) {
+    if (configs.get(converterPrefix) == null) {
+      errors.add(converterPrefix + " must be set explicitly at the connector "
+          + "level in BACKUP_FULL_RECORD mode. Relying on worker.properties "
+          + "defaults hides the converter class from backup validation, so "
+          + "schema type detection falls through to UNKNOWN and schema files "
+          + "are not written. Set " + converterPrefix + " on the connector.");
     }
   }
 

@@ -59,6 +59,8 @@ public class BackupModeValidatorTest {
   private static final String ERR_SR_BACKED_KEY = "key.converter uses SR-backed converter";
   private static final String ERR_TRANSFORMS = "Single Message Transforms";
   private static final String ERR_JSON_SCHEMA_ENABLE = "format.json.schema.enable=true is required";
+  private static final String ERR_KEY_CONVERTER_UNSET = "key.converter must be set explicitly";
+  private static final String ERR_VALUE_CONVERTER_UNSET = "value.converter must be set explicitly";
 
   private Map<String, String> baseSinkConfigs() {
     Map<String, String> configs = new HashMap<>();
@@ -76,6 +78,35 @@ public class BackupModeValidatorTest {
   public void testValidSinkConfigProducesZeroErrors() {
     List<String> errors = BackupModeValidator.validateSinkConfigs(baseSinkConfigs(), AVRO_FORMAT, true);
     assertEquals(0, errors.size());
+  }
+
+  @Test
+  public void testUnsetKeyConverterFails() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.remove(KEY_CONVERTER);
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertTrue(containsError(errors, ERR_KEY_CONVERTER_UNSET));
+  }
+
+  @Test
+  public void testUnsetValueConverterFails() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.remove(VALUE_CONVERTER);
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertTrue(containsError(errors, ERR_VALUE_CONVERTER_UNSET));
+  }
+
+  @Test
+  public void testUnsetBothConvertersFailsBoth() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.remove(KEY_CONVERTER);
+    configs.remove(VALUE_CONVERTER);
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    assertTrue(containsError(errors, ERR_KEY_CONVERTER_UNSET));
+    assertTrue(containsError(errors, ERR_VALUE_CONVERTER_UNSET));
   }
 
   @Test
