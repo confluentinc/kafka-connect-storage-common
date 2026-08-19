@@ -123,7 +123,7 @@ public final class BackupModeValidator {
     validateConverterExplicitlySet(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
     validateSourceConverter(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
     validateSourceConverter(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
-    warnSourceSuboptimalConfigs(configs);
+    warnSourceSuboptimalConfigs(configs, formatClassName);
 
     return errors;
   }
@@ -382,9 +382,9 @@ public final class BackupModeValidator {
     if (PROTOBUF_CONVERTER.equals(converterClass)) {
       warnIfNotTrue(configs, prefix + ".optional.for.nullables",
           prefix + ": optional.for.nullables=true is recommended for "
-          + "backup mode and must match the source-side setting. Restore "
-          + "may drop proto3 optional scalars holding default values "
-          + "without it.");
+          + "backup and restore modes and must match on both sides. "
+          + "Restore may drop proto3 optional scalars holding default "
+          + "values without it.");
     }
 
     if (JSON_SCHEMA_CONVERTER.equals(converterClass)) {
@@ -392,8 +392,8 @@ public final class BackupModeValidator {
       warnIfNotTrue(configs, prefix + ".preserve.additional.properties",
           prefix + ": preserve.additional.properties=true is recommended "
           + "when the JSON schema uses additionalProperties. Default false "
-          + "drops undeclared JSON properties on restore. Must match the "
-          + "source-side setting. Uses reserved field name "
+          + "drops undeclared JSON properties on restore. Must match on "
+          + "both sides. Uses reserved field name "
           + "__connect_additional_properties__; schemas with that literal "
           + "property name will fail-fast at conversion.");
       if (FORMAT_SIMPLE_NAME_AVRO.equals(formatClassName)) {
@@ -447,22 +447,14 @@ public final class BackupModeValidator {
   // ── Tier 2: WARN (source) ─────────────────────────────────────
 
   private static void warnSourceSuboptimalConfigs(
-      Map<String, String> configs) {
+      Map<String, String> configs, String formatClassName) {
     String valConverter = configs.get(BackupEnvelope.VALUE_CONVERTER_CONFIG);
+    String keyConverter = configs.get(BackupEnvelope.KEY_CONVERTER_CONFIG);
 
-    if (PROTOBUF_CONVERTER.equals(valConverter)) {
-      warnIfNotTrue(configs,
-          BackupEnvelope.VALUE_CONVERTER_CONFIG + ".optional.for.nullables",
-          "value.converter: optional.for.nullables=true is recommended "
-          + "for restore mode and must match the sink-side setting.");
-    }
-    if (JSON_SCHEMA_CONVERTER.equals(valConverter)) {
-      warnJsonTypeAllowedPackages(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG);
-      warnIfNotTrue(configs,
-          BackupEnvelope.VALUE_CONVERTER_CONFIG + ".preserve.additional.properties",
-          "value.converter: preserve.additional.properties=true is "
-          + "recommended for restore mode and must match the sink-side setting.");
-    }
+    warnConverterConfigs(configs, valConverter,
+        BackupEnvelope.VALUE_CONVERTER_CONFIG, formatClassName);
+    warnConverterConfigs(configs, keyConverter,
+        BackupEnvelope.KEY_CONVERTER_CONFIG, formatClassName);
 
     warnHeaderConverter(configs);
   }
