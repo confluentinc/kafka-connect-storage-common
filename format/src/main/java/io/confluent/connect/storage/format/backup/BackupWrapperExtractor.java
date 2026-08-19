@@ -55,25 +55,25 @@ public final class BackupWrapperExtractor {
     return Unwrapped.passthrough(data, schema, schemaTypeDefault);
   }
 
-  private static Unwrapped unwrapFromWrapper(Struct w, Schema schema) {
+  private static Unwrapped unwrapFromWrapper(Struct wrapper, Schema schema) {
     if (schema == null) {
       throw new DataException("Wrapper schema is null — cannot unwrap backup metadata");
     }
     if (schema.field(BackupWrapper.FIELD_DATA) == null) {
       throw new DataException("Wrapper schema missing 'data' field — corrupt Wrapper struct");
     }
-    Integer schemaVersion = optionalInt32(w, schema, BackupWrapper.FIELD_SCHEMA_VERSION);
-    String referenceTreeJson = optionalString(w, schema, BackupWrapper.FIELD_REFERENCE_TREE);
-    String directRefsJson = optionalString(w, schema, BackupWrapper.FIELD_DIRECT_REFS);
-    String schemaGuid = optionalString(w, schema, BackupWrapper.FIELD_SCHEMA_GUID);
+    Integer schemaVersion = optionalInt32(wrapper, schema, BackupWrapper.FIELD_SCHEMA_VERSION);
+    String referenceTreeJson = optionalString(wrapper, schema, BackupWrapper.FIELD_REFERENCE_TREE);
+    String directRefsJson = optionalString(wrapper, schema, BackupWrapper.FIELD_DIRECT_REFS);
+    String schemaGuid = optionalString(wrapper, schema, BackupWrapper.FIELD_SCHEMA_GUID);
     return new Unwrapped(
-        w.get(BackupWrapper.FIELD_DATA),
+        wrapper.get(BackupWrapper.FIELD_DATA),
         schema.field(BackupWrapper.FIELD_DATA).schema(),
-        optionalInt32(w, schema, BackupWrapper.FIELD_SCHEMA_ID),
+        optionalInt32(wrapper, schema, BackupWrapper.FIELD_SCHEMA_ID),
         schemaVersion,
-        optionalString(w, schema, BackupWrapper.FIELD_SCHEMA_TYPE),
-        optionalString(w, schema, BackupWrapper.FIELD_SCHEMA_SUBJECT),
-        optionalString(w, schema, BackupWrapper.FIELD_RAW_SCHEMA),
+        optionalString(wrapper, schema, BackupWrapper.FIELD_SCHEMA_TYPE),
+        optionalString(wrapper, schema, BackupWrapper.FIELD_SCHEMA_SUBJECT),
+        optionalString(wrapper, schema, BackupWrapper.FIELD_RAW_SCHEMA),
         referenceTreeJson,
         directRefsJson,
         schemaGuid);
@@ -94,12 +94,12 @@ public final class BackupWrapperExtractor {
         BackupEnvelope.TYPE_JSON_SCHEMALESS, null, null, null, null, null);
   }
 
-  private static Integer optionalInt32(Struct s, Schema schema, String field) {
-    return schema.field(field) != null ? s.getInt32(field) : null;
+  private static Integer optionalInt32(Struct wrapper, Schema schema, String field) {
+    return schema.field(field) != null ? wrapper.getInt32(field) : null;
   }
 
-  private static String optionalString(Struct s, Schema schema, String field) {
-    return schema.field(field) != null ? s.getString(field) : null;
+  private static String optionalString(Struct wrapper, Schema schema, String field) {
+    return schema.field(field) != null ? wrapper.getString(field) : null;
   }
 
   /**
