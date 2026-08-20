@@ -183,6 +183,21 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
       new SchemaCompatibilityRecommender();
   // CHECKSTYLE:ON
 
+  private static final ConfigDef.Recommender MODE_RECOMMENDER = new ConfigDef.Recommender() {
+    private final List<Object> values =
+        Arrays.asList(Mode.GENERIC.name(), Mode.BACKUP_FULL_RECORD.name());
+
+    @Override
+    public List<Object> validValues(String name, Map<String, Object> parsedConfig) {
+      return values;
+    }
+
+    @Override
+    public boolean visible(String name, Map<String, Object> parsedConfig) {
+      return true;
+    }
+  };
+
   /**
    * Create a new configuration definition.
    *
@@ -352,7 +367,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           FORMAT_JSON_SCHEMA_ENABLE_CONFIG,
           Type.BOOLEAN,
           FORMAT_JSON_SCHEMA_ENABLE_DEFAULT,
-          Importance.LOW,
+          Importance.MEDIUM,
           FORMAT_JSON_SCHEMA_ENABLE_DOC,
           group,
           ++orderInGroup,
@@ -395,7 +410,8 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
         group,
         ++orderInGroup,
         Width.SHORT,
-        "Mode"
+        "Mode",
+        MODE_RECOMMENDER
     );
   }
 

@@ -92,7 +92,7 @@ public final class BackupModeValidator {
     List<String> errors = new ArrayList<>();
 
     validateByteArrayFormat(formatClassName, errors);
-    validateJsonFormatSchemaEnable(formatClassName, jsonSchemaEmbedded, errors);
+    validateJsonFormatSchemaEnable(formatClassName, jsonSchemaEmbedded, modeName, errors);
     validateParquetCompression(configs, formatClassName, errors);
     validateConverterExplicitlySet(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
     validateConverterExplicitlySet(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
@@ -113,16 +113,19 @@ public final class BackupModeValidator {
    *
    * @param configs the full connector config map
    * @param formatClassName the resolved format class simple name
+   * @param jsonSchemaEmbedded whether format.json.schema.enable is true
    * @param modeName the resolved source mode enum name (used in error messages)
    * @return list of error messages (empty if all valid)
    */
   public static List<String> validateSourceConfigs(
       Map<String, String> configs,
       String formatClassName,
+      boolean jsonSchemaEmbedded,
       String modeName) {
     List<String> errors = new ArrayList<>();
 
     validateByteArrayFormat(formatClassName, errors);
+    validateJsonFormatSchemaEnable(formatClassName, jsonSchemaEmbedded, modeName, errors);
     validateConverterExplicitlySet(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
     validateConverterExplicitlySet(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
     validateSourceConverter(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
@@ -250,13 +253,12 @@ public final class BackupModeValidator {
   }
 
   private static void validateJsonFormatSchemaEnable(
-      String formatClassName, boolean jsonSchemaEmbedded,
+      String formatClassName, boolean jsonSchemaEmbedded, String modeName,
       List<String> errors) {
     if (FORMAT_SIMPLE_NAME_JSON.equals(formatClassName) && !jsonSchemaEmbedded) {
-      errors.add("format.json.schema.enable=true is required with "
-          + "JsonFormat in BACKUP_FULL_RECORD mode. Without it, the "
-          + "envelope schema is not embedded and restore cannot parse "
-          + "the records.");
+      errors.add("format.json.schema.enable=true is required with JsonFormat in "
+          + modeName + " mode. Without it, the envelope schema is not embedded, "
+          + "so restore cannot parse the backup files.");
     }
   }
 
@@ -456,6 +458,17 @@ public final class BackupModeValidator {
         BackupEnvelope.KEY_CONVERTER_CONFIG, formatClassName);
 
     warnHeaderConverter(configs);
+    warnFileMetadataHeadersEnabled(configs);
+  }
+
+  private static void warnFileMetadataHeadersEnabled(Map<String, String> configs) {
+    if (TRUE.equalsIgnoreCase(configs.get("file.metadata.headers.enable"))) {
+      log.warn("file.metadata.headers.enable=true adds file-metadata headers "
+          + "(file.path, file.name, file.last.modified, file.size, "
+          + "file.creation.time) to every restored record. This is not pristine "
+          + "restore: the original messages did not carry these headers. "
+          + "Set file.metadata.headers.enable=false for pristine restore.");
+    }
   }
 
   // ── Helpers ───────────────────────────────────────────────────

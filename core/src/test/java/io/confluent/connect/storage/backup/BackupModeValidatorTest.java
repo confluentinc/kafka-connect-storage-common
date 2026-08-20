@@ -484,7 +484,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
     configs.put(VALUE_ENHANCED_AVRO, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
     assertEquals(0, errors.size());
   }
 
@@ -494,7 +494,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
     configs.put(VALUE_ENHANCED_AVRO, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
     assertTrue(containsError(errors, ERR_KEY_CONVERTER_UNSET));
   }
 
@@ -503,7 +503,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = new HashMap<>();
     configs.put(KEY_CONVERTER, STRING_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
     assertTrue(containsError(errors, ERR_VALUE_CONVERTER_UNSET));
   }
 
@@ -511,7 +511,7 @@ public class BackupModeValidatorTest {
   public void testSourceMissingBothConvertersFails() {
     Map<String, String> configs = new HashMap<>();
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
     assertTrue(containsError(errors, ERR_KEY_CONVERTER_UNSET));
     assertTrue(containsError(errors, ERR_VALUE_CONVERTER_UNSET));
   }
@@ -522,7 +522,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
     configs.put(VALUE_ENHANCED_AVRO, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, BYTE_ARRAY_FORMAT, SOURCE_MODE);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, BYTE_ARRAY_FORMAT, true, SOURCE_MODE);
     assertTrue(containsError(errors, BYTE_ARRAY_FORMAT));
   }
 
@@ -531,7 +531,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = new HashMap<>();
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
     assertTrue(containsError(errors, VALUE_ENHANCED_AVRO));
   }
 
@@ -541,7 +541,7 @@ public class BackupModeValidatorTest {
     configs.put(KEY_CONVERTER, AVRO_CONVERTER);
     configs.put(VALUE_CONVERTER, STRING_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
     assertTrue(containsError(errors, KEY_ENHANCED_AVRO));
   }
 
@@ -550,7 +550,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = new HashMap<>();
     configs.put(VALUE_CONVERTER, STRING_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
     assertFalse(containsError(errors, "enhanced.avro.schema.support"));
   }
 
@@ -562,7 +562,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_ENHANCED_AVRO, TRUE);
     configs.put(TRANSFORMS, "myTransform");
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
     assertTrue(containsError(errors, ERR_TRANSFORMS));
   }
 
@@ -573,7 +573,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
     configs.put(VALUE_ENHANCED_AVRO, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
     assertFalse(containsError(errors, ERR_TRANSFORMS));
   }
 
@@ -585,8 +585,58 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_ENHANCED_AVRO, TRUE);
     configs.put(TRANSFORMS, "   ");
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
     assertFalse(containsError(errors, ERR_TRANSFORMS));
+  }
+
+  @Test
+  public void testSourceJsonFormatWithoutSchemaEnableIsRejected() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, STRING_CONVERTER);
+    configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
+    configs.put(VALUE_ENHANCED_AVRO, TRUE);
+
+    List<String> errors =
+        BackupModeValidator.validateSourceConfigs(configs, JSON_FORMAT, false, SOURCE_MODE);
+    assertTrue(containsError(errors, ERR_JSON_SCHEMA_ENABLE));
+  }
+
+  @Test
+  public void testSourceJsonFormatWithSchemaEnableIsAccepted() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, STRING_CONVERTER);
+    configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
+    configs.put(VALUE_ENHANCED_AVRO, TRUE);
+
+    List<String> errors =
+        BackupModeValidator.validateSourceConfigs(configs, JSON_FORMAT, true, SOURCE_MODE);
+    assertFalse(containsError(errors, ERR_JSON_SCHEMA_ENABLE));
+  }
+
+  @Test
+  public void testSourceNonJsonFormatIgnoresSchemaEnable() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, STRING_CONVERTER);
+    configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
+    configs.put(VALUE_ENHANCED_AVRO, TRUE);
+
+    List<String> errors =
+        BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, false, SOURCE_MODE);
+    assertFalse(containsError(errors, ERR_JSON_SCHEMA_ENABLE));
+  }
+
+  @Test
+  public void testSourceFileMetadataHeadersEnabledDoesNotFail() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, STRING_CONVERTER);
+    configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
+    configs.put(VALUE_ENHANCED_AVRO, TRUE);
+    configs.put("file.metadata.headers.enable", TRUE);
+
+    List<String> errors =
+        BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
+    // Warn-only: no error produced. Log side effect verified by absence of failure.
+    assertEquals(0, errors.size());
   }
 
   @Test
@@ -744,7 +794,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = new HashMap<>();
     configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
     assertTrue(containsError(errors, VALUE_ENHANCED_PROTOBUF));
   }
 
@@ -754,7 +804,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
     configs.put(VALUE_ENHANCED_PROTOBUF, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
     assertFalse(containsError(errors, "wrapper.for.raw.primitives"));
   }
 
@@ -765,7 +815,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_ENHANCED_PROTOBUF, TRUE);
     configs.put(VALUE_WRAPPER_FOR_NULLABLES, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
     assertTrue(containsError(errors, VALUE_WRAPPER_FOR_NULLABLES));
   }
 
@@ -814,7 +864,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = new HashMap<>();
     configs.put(VALUE_CONVERTER, JSON_SCHEMA_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
     assertFalse(containsError(errors, JSON_TYPE_ALLOWED_PACKAGES));
   }
 }
