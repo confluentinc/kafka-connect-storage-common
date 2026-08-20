@@ -81,6 +81,9 @@ public class BackupModeValidatorTest {
   private static final String TRUE = "true";
   private static final String FALSE = "false";
 
+  private static final String SINK_MODE = "BACKUP_FULL_RECORD";
+  private static final String SOURCE_MODE = "RESTORE_BACKUP_FULL_RECORD";
+
   private static final String ERR_STORE_KAFKA_KEYS_TRUE = "store.kafka.keys=true";
   private static final String ERR_STORE_KAFKA_HEADERS_TRUE = "store.kafka.headers=true";
   private static final String ERR_SR_BACKED_VALUE = "value.converter uses SR-backed converter";
@@ -105,7 +108,7 @@ public class BackupModeValidatorTest {
 
   @Test
   public void testValidSinkConfigProducesZeroErrors() {
-    List<String> errors = BackupModeValidator.validateSinkConfigs(baseSinkConfigs(), AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(baseSinkConfigs(), AVRO_FORMAT, true, SINK_MODE);
     assertEquals(0, errors.size());
   }
 
@@ -114,7 +117,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.remove(KEY_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, ERR_KEY_CONVERTER_UNSET));
   }
 
@@ -123,7 +126,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.remove(VALUE_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, ERR_VALUE_CONVERTER_UNSET));
   }
 
@@ -133,38 +136,38 @@ public class BackupModeValidatorTest {
     configs.remove(KEY_CONVERTER);
     configs.remove(VALUE_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, ERR_KEY_CONVERTER_UNSET));
     assertTrue(containsError(errors, ERR_VALUE_CONVERTER_UNSET));
   }
 
   @Test
   public void testByteArrayFormatSinkIsRejected() {
-    List<String> errors = BackupModeValidator.validateSinkConfigs(baseSinkConfigs(), BYTE_ARRAY_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(baseSinkConfigs(), BYTE_ARRAY_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, BYTE_ARRAY_FORMAT));
   }
 
   @Test
   public void testAvroFormatSinkPassesFormatCheck() {
-    List<String> errors = BackupModeValidator.validateSinkConfigs(baseSinkConfigs(), AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(baseSinkConfigs(), AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, BYTE_ARRAY_FORMAT));
   }
 
   @Test
   public void testJsonFormatWithoutSchemaEnableIsRejected() {
-    List<String> errors = BackupModeValidator.validateSinkConfigs(baseSinkConfigs(), JSON_FORMAT, false);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(baseSinkConfigs(), JSON_FORMAT, false, SINK_MODE);
     assertTrue(containsError(errors, ERR_JSON_SCHEMA_ENABLE));
   }
 
   @Test
   public void testJsonFormatWithSchemaEnableIsAccepted() {
-    List<String> errors = BackupModeValidator.validateSinkConfigs(baseSinkConfigs(), JSON_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(baseSinkConfigs(), JSON_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, ERR_JSON_SCHEMA_ENABLE));
   }
 
   @Test
   public void testNonJsonFormatIgnoresSchemaEnableFlag() {
-    List<String> errors = BackupModeValidator.validateSinkConfigs(baseSinkConfigs(), AVRO_FORMAT, false);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(baseSinkConfigs(), AVRO_FORMAT, false, SINK_MODE);
     assertFalse(containsError(errors, ERR_JSON_SCHEMA_ENABLE));
   }
 
@@ -173,7 +176,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.remove(VALUE_SCHEMA_BACKUP_ENABLED);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, ERR_SR_BACKED_VALUE));
   }
 
@@ -183,7 +186,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
     configs.remove(VALUE_SCHEMA_BACKUP_ENABLED);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, ERR_SR_BACKED_VALUE));
   }
 
@@ -193,7 +196,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, STRING_CONVERTER);
     configs.remove(VALUE_SCHEMA_BACKUP_ENABLED);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, "schema.backup.enabled"));
   }
 
@@ -202,7 +205,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(KEY_CONVERTER, AVRO_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, ERR_SR_BACKED_KEY));
   }
 
@@ -211,7 +214,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(KEY_CONVERTER, AVRO_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, ERR_SR_BACKED_KEY));
     assertFalse(containsError(errors, ERR_SR_BACKED_VALUE));
   }
@@ -223,7 +226,7 @@ public class BackupModeValidatorTest {
     configs.put(KEY_SCHEMA_BACKUP_ENABLED, TRUE);
     configs.put(KEY_ENHANCED_AVRO, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, "schema.backup.enabled"));
   }
 
@@ -232,7 +235,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.remove(VALUE_ENHANCED_AVRO);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, VALUE_ENHANCED_AVRO));
   }
 
@@ -242,7 +245,7 @@ public class BackupModeValidatorTest {
     configs.put(KEY_CONVERTER, AVRO_CONVERTER);
     configs.put(KEY_SCHEMA_BACKUP_ENABLED, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, KEY_ENHANCED_AVRO));
   }
 
@@ -253,7 +256,7 @@ public class BackupModeValidatorTest {
     configs.remove(VALUE_ENHANCED_AVRO);
     configs.remove(VALUE_SCHEMA_BACKUP_ENABLED);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, "enhanced.avro.schema.support"));
   }
 
@@ -262,7 +265,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(TRANSFORMS, "myTransform");
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, ERR_TRANSFORMS));
   }
 
@@ -271,13 +274,13 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(TRANSFORMS, "   ");
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, ERR_TRANSFORMS));
   }
 
   @Test
   public void testTransformsAbsentIsAccepted() {
-    List<String> errors = BackupModeValidator.validateSinkConfigs(baseSinkConfigs(), AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(baseSinkConfigs(), AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, ERR_TRANSFORMS));
   }
 
@@ -286,7 +289,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(STORE_KAFKA_KEYS, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, ERR_STORE_KAFKA_KEYS_TRUE));
   }
 
@@ -295,7 +298,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(STORE_KAFKA_HEADERS, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, ERR_STORE_KAFKA_HEADERS_TRUE));
   }
 
@@ -304,7 +307,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(STORE_KAFKA_KEYS, FALSE);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, STORE_KAFKA_KEYS));
   }
 
@@ -313,13 +316,13 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(STORE_KAFKA_HEADERS, FALSE);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, STORE_KAFKA_HEADERS));
   }
 
   @Test
   public void testStoreKafkaKeysAbsentIsAccepted() {
-    List<String> errors = BackupModeValidator.validateSinkConfigs(baseSinkConfigs(), AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(baseSinkConfigs(), AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, STORE_KAFKA_KEYS));
   }
 
@@ -329,7 +332,7 @@ public class BackupModeValidatorTest {
     configs.put(STORE_KAFKA_KEYS, TRUE);
     configs.put(STORE_KAFKA_HEADERS, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, ERR_STORE_KAFKA_KEYS_TRUE));
     assertTrue(containsError(errors, ERR_STORE_KAFKA_HEADERS_TRUE));
   }
@@ -339,7 +342,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(STORE_KAFKA_KEYS, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(errors.stream().anyMatch(e ->
         e.contains(ERR_STORE_KAFKA_KEYS_TRUE) && e.contains("Envelope")));
   }
@@ -348,7 +351,7 @@ public class BackupModeValidatorTest {
   public void testProtobufConverterOptionalForNullablesWarnPath() {
     Map<String, String> configs = protobufSinkConfigs();
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, "optional.for.nullables"));
   }
 
@@ -357,7 +360,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(VALUE_CONVERTER, JSON_SCHEMA_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertEquals(0, errors.size());
   }
 
@@ -367,7 +370,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, JSON_SCHEMA_CONVERTER);
     configs.put(PARQUET_CODEC, "none");
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, PARQUET_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, PARQUET_FORMAT, true, SINK_MODE);
     assertEquals(0, errors.size());
   }
 
@@ -377,7 +380,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, STRING_CONVERTER);
     configs.remove(VALUE_SCHEMA_BACKUP_ENABLED);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertEquals(0, errors.size());
   }
 
@@ -386,7 +389,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(PARQUET_CODEC, "snappy");
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, PARQUET_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, PARQUET_FORMAT, true, SINK_MODE);
     assertEquals(1, errors.size());
     assertTrue(errors.get(0).contains("parquet.codec=snappy"));
   }
@@ -396,7 +399,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(PARQUET_CODEC, "gzip");
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, PARQUET_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, PARQUET_FORMAT, true, SINK_MODE);
     assertEquals(1, errors.size());
     assertTrue(errors.get(0).contains("parquet.codec=gzip"));
   }
@@ -406,7 +409,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.remove(PARQUET_CODEC);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, PARQUET_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, PARQUET_FORMAT, true, SINK_MODE);
     assertEquals(1, errors.size());
     assertTrue(errors.get(0).contains("snappy (default)"));
   }
@@ -416,7 +419,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(PARQUET_CODEC, "none");
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, PARQUET_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, PARQUET_FORMAT, true, SINK_MODE);
     assertEquals(0, errors.size());
   }
 
@@ -425,7 +428,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(PARQUET_CODEC, "NONE");
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, PARQUET_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, PARQUET_FORMAT, true, SINK_MODE);
     assertEquals(0, errors.size());
   }
 
@@ -434,7 +437,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(PARQUET_CODEC, "snappy");
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertEquals(0, errors.size());
   }
 
@@ -443,7 +446,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(HEADER_CONVERTER, BYTE_ARRAY_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertEquals(0, errors.size());
   }
 
@@ -452,7 +455,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(HEADER_CONVERTER, SIMPLE_HEADER_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertEquals(0, errors.size());
   }
 
@@ -461,7 +464,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(SCHEMA_COMPATIBILITY, "NONE");
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertEquals(0, errors.size());
   }
 
@@ -470,7 +473,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(SCHEMA_COMPATIBILITY, "BACKWARD");
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertEquals(0, errors.size());
   }
 
@@ -481,7 +484,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
     configs.put(VALUE_ENHANCED_AVRO, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
     assertEquals(0, errors.size());
   }
 
@@ -491,7 +494,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
     configs.put(VALUE_ENHANCED_AVRO, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
     assertTrue(containsError(errors, ERR_KEY_CONVERTER_UNSET));
   }
 
@@ -500,7 +503,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = new HashMap<>();
     configs.put(KEY_CONVERTER, STRING_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
     assertTrue(containsError(errors, ERR_VALUE_CONVERTER_UNSET));
   }
 
@@ -508,7 +511,7 @@ public class BackupModeValidatorTest {
   public void testSourceMissingBothConvertersFails() {
     Map<String, String> configs = new HashMap<>();
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
     assertTrue(containsError(errors, ERR_KEY_CONVERTER_UNSET));
     assertTrue(containsError(errors, ERR_VALUE_CONVERTER_UNSET));
   }
@@ -519,7 +522,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
     configs.put(VALUE_ENHANCED_AVRO, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, BYTE_ARRAY_FORMAT);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, BYTE_ARRAY_FORMAT, SOURCE_MODE);
     assertTrue(containsError(errors, BYTE_ARRAY_FORMAT));
   }
 
@@ -528,7 +531,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = new HashMap<>();
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
     assertTrue(containsError(errors, VALUE_ENHANCED_AVRO));
   }
 
@@ -538,7 +541,7 @@ public class BackupModeValidatorTest {
     configs.put(KEY_CONVERTER, AVRO_CONVERTER);
     configs.put(VALUE_CONVERTER, STRING_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
     assertTrue(containsError(errors, KEY_ENHANCED_AVRO));
   }
 
@@ -547,8 +550,43 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = new HashMap<>();
     configs.put(VALUE_CONVERTER, STRING_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
     assertFalse(containsError(errors, "enhanced.avro.schema.support"));
+  }
+
+  @Test
+  public void testSourceTransformsSetIsRejected() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, STRING_CONVERTER);
+    configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
+    configs.put(VALUE_ENHANCED_AVRO, TRUE);
+    configs.put(TRANSFORMS, "myTransform");
+
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
+    assertTrue(containsError(errors, ERR_TRANSFORMS));
+  }
+
+  @Test
+  public void testSourceTransformsAbsentIsAccepted() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, STRING_CONVERTER);
+    configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
+    configs.put(VALUE_ENHANCED_AVRO, TRUE);
+
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
+    assertFalse(containsError(errors, ERR_TRANSFORMS));
+  }
+
+  @Test
+  public void testSourceTransformsWhitespaceIsAccepted() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, STRING_CONVERTER);
+    configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
+    configs.put(VALUE_ENHANCED_AVRO, TRUE);
+    configs.put(TRANSFORMS, "   ");
+
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
+    assertFalse(containsError(errors, ERR_TRANSFORMS));
   }
 
   @Test
@@ -566,7 +604,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(PARTITIONER_CLASS, DEFAULT_PARTITIONER);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, PARTITIONER_CLASS));
   }
 
@@ -575,7 +613,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(PARTITIONER_CLASS, TIME_BASED_PARTITIONER);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, PARTITIONER_CLASS));
   }
 
@@ -584,7 +622,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(PARTITIONER_CLASS, FIELD_PARTITIONER);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, "FieldPartitioner"));
   }
 
@@ -593,14 +631,14 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(PARTITIONER_CLASS, "com.example.CustomPartitioner");
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, "com.example.CustomPartitioner"));
   }
 
   @Test
   public void testUnsetPartitionerPasses() {
     List<String> errors = BackupModeValidator.validateSinkConfigs(
-        baseSinkConfigs(), AVRO_FORMAT, true);
+        baseSinkConfigs(), AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, PARTITIONER_CLASS));
   }
 
@@ -610,7 +648,7 @@ public class BackupModeValidatorTest {
     configs.put(PARTITIONER_CLASS, TIME_BASED_PARTITIONER);
     configs.put(TIMESTAMP_EXTRACTOR, WALLCLOCK_EXTRACTOR);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, TIMESTAMP_EXTRACTOR));
   }
 
@@ -620,7 +658,7 @@ public class BackupModeValidatorTest {
     configs.put(PARTITIONER_CLASS, TIME_BASED_PARTITIONER);
     configs.put(TIMESTAMP_EXTRACTOR, RECORD_FIELD_EXTRACTOR);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, "RecordFieldTimestampExtractor"));
   }
 
@@ -630,7 +668,7 @@ public class BackupModeValidatorTest {
     configs.put(PARTITIONER_CLASS, TIME_BASED_PARTITIONER);
     configs.put(TIMESTAMP_EXTRACTOR, "RecordField");
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, "timestamp.extractor=RecordField"));
   }
 
@@ -649,7 +687,7 @@ public class BackupModeValidatorTest {
   @Test
   public void testProtobufSinkAllFlagsSetPasses() {
     List<String> errors = BackupModeValidator.validateSinkConfigs(
-        protobufSinkConfigs(), AVRO_FORMAT, true);
+        protobufSinkConfigs(), AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, "protobuf"));
     assertFalse(containsError(errors, "wrapper.for"));
   }
@@ -659,7 +697,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = protobufSinkConfigs();
     configs.remove(VALUE_ENHANCED_PROTOBUF);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, VALUE_ENHANCED_PROTOBUF));
   }
 
@@ -668,7 +706,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = protobufSinkConfigs();
     configs.remove(VALUE_WRAPPER_FOR_RAW);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, VALUE_WRAPPER_FOR_RAW));
   }
 
@@ -677,7 +715,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = protobufSinkConfigs();
     configs.put(VALUE_WRAPPER_FOR_RAW, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, VALUE_WRAPPER_FOR_RAW));
   }
 
@@ -686,7 +724,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = protobufSinkConfigs();
     configs.put(VALUE_WRAPPER_FOR_NULLABLES, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, VALUE_WRAPPER_FOR_NULLABLES));
   }
 
@@ -696,7 +734,7 @@ public class BackupModeValidatorTest {
     configs.put(KEY_CONVERTER, PROTOBUF_CONVERTER);
     configs.put(KEY_SCHEMA_BACKUP_ENABLED, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, KEY_ENHANCED_PROTOBUF));
     assertTrue(containsError(errors, KEY_WRAPPER_FOR_RAW));
   }
@@ -706,7 +744,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = new HashMap<>();
     configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
     assertTrue(containsError(errors, VALUE_ENHANCED_PROTOBUF));
   }
 
@@ -716,7 +754,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
     configs.put(VALUE_ENHANCED_PROTOBUF, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
     assertFalse(containsError(errors, "wrapper.for.raw.primitives"));
   }
 
@@ -727,7 +765,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_ENHANCED_PROTOBUF, TRUE);
     configs.put(VALUE_WRAPPER_FOR_NULLABLES, TRUE);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
     assertTrue(containsError(errors, VALUE_WRAPPER_FOR_NULLABLES));
   }
 
@@ -735,7 +773,7 @@ public class BackupModeValidatorTest {
   public void testNonProtobufConverterSkipsAllProtobufChecks() {
     Map<String, String> configs = baseSinkConfigs();
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, "protobuf"));
     assertFalse(containsError(errors, "wrapper.for"));
   }
@@ -747,7 +785,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(VALUE_CONVERTER, JSON_SCHEMA_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, JSON_TYPE_ALLOWED_PACKAGES));
   }
 
@@ -757,7 +795,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, JSON_SCHEMA_CONVERTER);
     configs.put("value.converter.json.type.allowed.packages", "*");
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, JSON_TYPE_ALLOWED_PACKAGES));
   }
 
@@ -767,7 +805,7 @@ public class BackupModeValidatorTest {
     configs.put(VALUE_CONVERTER, JSON_SCHEMA_CONVERTER);
     configs.put("value.converter.json.type.allowed.packages", "com.example.models");
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true);
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, JSON_TYPE_ALLOWED_PACKAGES));
   }
 
@@ -776,7 +814,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = new HashMap<>();
     configs.put(VALUE_CONVERTER, JSON_SCHEMA_CONVERTER);
 
-    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT);
+    List<String> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, SOURCE_MODE);
     assertFalse(containsError(errors, JSON_TYPE_ALLOWED_PACKAGES));
   }
 }

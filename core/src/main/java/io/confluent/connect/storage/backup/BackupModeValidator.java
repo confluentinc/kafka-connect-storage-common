@@ -81,12 +81,14 @@ public final class BackupModeValidator {
    * @param configs the full connector config map
    * @param formatClassName the resolved format class simple name
    * @param jsonSchemaEmbedded whether format.json.schema.enable is true
+   * @param modeName the resolved sink mode enum name (used in error messages)
    * @return list of error messages (empty if all valid)
    */
   public static List<String> validateSinkConfigs(
       Map<String, String> configs,
       String formatClassName,
-      boolean jsonSchemaEmbedded) {
+      boolean jsonSchemaEmbedded,
+      String modeName) {
     List<String> errors = new ArrayList<>();
 
     validateByteArrayFormat(formatClassName, errors);
@@ -96,7 +98,7 @@ public final class BackupModeValidator {
     validateConverterExplicitlySet(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
     validateSinkConverter(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
     validateSinkConverter(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
-    validateTransformsRejected(configs, errors);
+    validateTransformsRejected(configs, errors, modeName);
     validateStoreKafkaKeysHeadersRejected(configs, errors);
     validatePartitionerSupported(configs, errors);
 
@@ -111,11 +113,13 @@ public final class BackupModeValidator {
    *
    * @param configs the full connector config map
    * @param formatClassName the resolved format class simple name
+   * @param modeName the resolved source mode enum name (used in error messages)
    * @return list of error messages (empty if all valid)
    */
   public static List<String> validateSourceConfigs(
       Map<String, String> configs,
-      String formatClassName) {
+      String formatClassName,
+      String modeName) {
     List<String> errors = new ArrayList<>();
 
     validateByteArrayFormat(formatClassName, errors);
@@ -123,6 +127,7 @@ public final class BackupModeValidator {
     validateConverterExplicitlySet(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
     validateSourceConverter(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
     validateSourceConverter(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
+    validateTransformsRejected(configs, errors, modeName);
     warnSourceSuboptimalConfigs(configs, formatClassName);
 
     return errors;
@@ -310,13 +315,14 @@ public final class BackupModeValidator {
   }
 
   private static void validateTransformsRejected(
-      Map<String, String> configs, List<String> errors) {
+      Map<String, String> configs, List<String> errors, String modeName) {
     String transforms = configs.get("transforms");
     if (transforms != null && !transforms.trim().isEmpty()) {
       errors.add("Single Message Transforms (SMTs) cannot be used with "
-          + "BACKUP_FULL_RECORD mode. SMTs modify data before envelope "
-          + "wrapping, which corrupts backup fidelity. "
-          + "Remove the 'transforms' config to use backup mode.");
+          + modeName + " mode. SMTs alter records around the envelope "
+          + "wrap/unwrap boundary, which corrupts backup and restore "
+          + "fidelity. Remove the 'transforms' config to use "
+          + modeName + " mode.");
     }
   }
 
