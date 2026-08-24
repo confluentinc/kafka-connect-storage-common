@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -177,6 +178,34 @@ public class EnvelopeTransformerTest {
     assertEquals(OFFSET, (long) result.kafkaOffset());
     assertEquals(TIMESTAMP, (long) result.timestamp());
     assertEquals(TimestampType.CREATE_TIME, result.timestampType());
+  }
+
+  @Test
+  public void wrapProducesDistinctEnvelopeSchemaPerValueSchema() {
+    // Load-bearing for TopicPartitionWriter file rotation: the envelope value schema must
+    // differ across records whose underlying value schema differs, so schema-change
+    // detection triggers a file rotation on the sink side.
+    SinkRecord stringValue = new SinkRecord(
+        TOPIC, PARTITION,
+        Schema.STRING_SCHEMA, HEADER_KEY_1,
+        Schema.STRING_SCHEMA, TEST_VALUE, OFFSET);
+    SinkRecord int64Value = new SinkRecord(
+        TOPIC, PARTITION,
+        Schema.STRING_SCHEMA, HEADER_KEY_1,
+        Schema.INT64_SCHEMA, 123L, OFFSET + 1);
+    SinkRecord tombstone = new SinkRecord(
+        TOPIC, PARTITION,
+        Schema.STRING_SCHEMA, HEADER_KEY_1,
+        null, null, OFFSET + 2);
+
+    Schema envelopeForString = transformer.wrap(stringValue).valueSchema();
+    Schema envelopeForInt64 = transformer.wrap(int64Value).valueSchema();
+    Schema envelopeForTombstone = transformer.wrap(tombstone).valueSchema();
+
+    assertNotEquals(envelopeForString, envelopeForInt64);
+    assertNotEquals(envelopeForString, envelopeForTombstone);
+    assertNotEquals(envelopeForInt64, envelopeForTombstone);
+    assertEquals(envelopeForString, transformer.wrap(stringValue).valueSchema());
   }
 
   @Test
