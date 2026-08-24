@@ -87,6 +87,7 @@
         <jline.version>2.12.1</jline.version>
         <joda.version>2.13.1</joda.version>
         <kafka.connect.storage.common.version>12.1.0-SNAPSHOT</kafka.connect.storage.common.version>
+        <schema.backup.api.version>8.3.2-20</schema.backup.api.version>
         <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
         <netty.version>4.1.130.Final</netty.version>
         <parquet.version>1.15.2</parquet.version>
@@ -156,6 +157,11 @@
                 <artifactId>kafka-connect-protobuf-converter</artifactId>
                 <version>${confluent.version.range}</version>
                 <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.confluent</groupId>
+                <artifactId>kafka-connect-schema-backup-api</artifactId>
+                <version>${schema.backup.api.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.parquet</groupId>
