@@ -349,7 +349,7 @@
                 <configuration>
                     <showWarnings>true</showWarnings>
                     <compilerArgs>
-                        <arg>-Xlint:-processing</arg>
+                        <arg>-Xlint:-processing,-options</arg>
                         <arg>-Werror</arg>
                     </compilerArgs>
                 </configuration>
