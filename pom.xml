@@ -86,7 +86,7 @@
         <jetty.version>9.4.59</jetty.version>
         <jline.version>2.12.1</jline.version>
         <joda.version>2.13.1</joda.version>
-        <kafka.connect.storage.common.version>12.1.0-SNAPSHOT</kafka.connect.storage.common.version>
+        <kafka.connect.storage.common.version>12.1.0-SNAPSHOT-dirty-snapshot</kafka.connect.storage.common.version>
         <schema.backup.api.version>8.3.2-20</schema.backup.api.version>
         <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
         <netty.version>4.1.130.Final</netty.version>
