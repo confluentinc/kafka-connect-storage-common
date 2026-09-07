@@ -202,6 +202,11 @@ public class StorageSinkTestBase {
     }
 
     @Override
+    public org.apache.kafka.common.metrics.PluginMetrics pluginMetrics() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void offset(Map<TopicPartition, Long> offsets) {
       this.offsets.putAll(offsets);
     }
