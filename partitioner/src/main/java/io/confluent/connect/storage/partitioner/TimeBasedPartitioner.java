@@ -273,7 +273,8 @@ public class TimeBasedPartitioner<T> extends DefaultPartitioner<T> {
     @Override
     public void configure(Map<String, Object> config) {
       fieldName = (String) config.get(PartitionerConfig.TIMESTAMP_FIELD_NAME_CONFIG);
-      dateTime = ISODateTimeFormat.dateTimeParser();
+      String formatPattern = (String) config.get(PartitionerConfig.TIMESTAMP_FIELD_FORMAT_PATTERN_CONFIG);
+      dateTime = formatPattern.isEmpty() ? ISODateTimeFormat.dateTimeParser() : DateTimeFormat.forPattern(formatPattern);
     }
 
     @Override
