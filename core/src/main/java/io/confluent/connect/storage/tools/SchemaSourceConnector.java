@@ -16,7 +16,6 @@
 package io.confluent.connect.storage.tools;
 
 import org.apache.kafka.common.config.ConfigDef;
-import org.apache.kafka.common.utils.AppInfoParser;
 import org.apache.kafka.connect.connector.Task;
 import org.apache.kafka.connect.source.SourceConnector;
 
@@ -30,7 +29,13 @@ public class SchemaSourceConnector extends SourceConnector {
 
   @Override
   public String version() {
-    return AppInfoParser.getVersion();
+    // Version-neutral: read this module's own version from the jar manifest's
+    // Implementation-Version instead of AppInfoParser. AppInfoParser reports the
+    // Kafka version and, in CP 8.4 / Apache Kafka 4.x, moved to
+    // org.apache.kafka.common.utils.internals, so referencing it forces an
+    // 8.4-only jar. This keeps a single jar loadable on both 8.3 and 8.4 workers.
+    String version = getClass().getPackage().getImplementationVersion();
+    return version != null ? version : "unknown";
   }
 
   @Override
