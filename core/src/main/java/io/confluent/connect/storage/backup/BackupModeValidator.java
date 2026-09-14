@@ -65,11 +65,37 @@ public final class BackupModeValidator {
           PARTITIONER_PKG + "TimeBasedPartitioner$RecordFieldTimestampExtractor")));
 
   private static final String TRUE = "true";
+  private static final String FALSE = "false";
 
   private static final String FORMAT_SIMPLE_NAME_JSON = "JsonFormat";
   private static final String FORMAT_SIMPLE_NAME_BYTE_ARRAY = "ByteArrayFormat";
   private static final String FORMAT_SIMPLE_NAME_AVRO = "AvroFormat";
   private static final String FORMAT_SIMPLE_NAME_PARQUET = "ParquetFormat";
+
+  // Connector-level config keys referenced by validation logic.
+  private static final String TRANSFORMS_CONFIG = "transforms";
+  private static final String TRANSFORM_TYPE_SUFFIX = ".type";
+  private static final String HEADER_CONVERTER_CONFIG = "header.converter";
+  private static final String PARQUET_CODEC_CONFIG = "parquet.codec";
+  private static final String PARTITIONER_CLASS_CONFIG = "partitioner.class";
+  private static final String TIMESTAMP_EXTRACTOR_CONFIG = "timestamp.extractor";
+  private static final String STORE_KAFKA_KEYS_CONFIG = "store.kafka.keys";
+  private static final String STORE_KAFKA_HEADERS_CONFIG = "store.kafka.headers";
+  private static final String PARQUET_CODEC_NONE = "none";
+  private static final String BYTE_ARRAY_CONVERTER =
+      "org.apache.kafka.connect.converters.ByteArrayConverter";
+
+  // Transform classes that are safe to run alongside backup/restore because
+  // they do not mutate record contents around the envelope wrap/unwrap
+  // boundary. Extend cautiously: any class added here must be verified to be
+  // fidelity-preserving on both the sink (backup) and source (restore) paths.
+  //
+  //   RequireTimestampTransform - Confluent Cloud system SMT auto-injected on
+  //     every sink template. Validates the presence of a Kafka timestamp;
+  //     does not mutate record key, value or headers.
+  private static final Set<String> ALLOWED_SMT_CLASSES =
+      Collections.unmodifiableSet(new HashSet<>(Collections.singletonList(
+          "io.confluent.cctransforms.RequireTimestampTransform")));
 
   private BackupModeValidator() {
   }
@@ -200,7 +226,7 @@ public final class BackupModeValidator {
       Map<String, String> configs, String key, String reason,
       List<String> errors) {
     String value = configs.get(key);
-    if (value == null || !"false".equalsIgnoreCase(value)) {
+    if (value == null || !FALSE.equalsIgnoreCase(value)) {
       errors.add(key + " must be set to false. " + reason);
     }
   }
@@ -264,7 +290,7 @@ public final class BackupModeValidator {
 
   private static void validatePartitionerSupported(
       Map<String, String> configs, List<String> errors) {
-    String partitioner = configs.get("partitioner.class");
+    String partitioner = configs.get(PARTITIONER_CLASS_CONFIG);
     if (partitioner != null && !SUPPORTED_PARTITIONERS.contains(partitioner)) {
       errors.add("partitioner.class=" + partitioner + " is not supported in "
           + "BACKUP_FULL_RECORD mode. The sink task passes a "
@@ -273,7 +299,7 @@ public final class BackupModeValidator {
           + "FieldPartitioner) fail. Use DefaultPartitioner, "
           + "TimeBasedPartitioner, DailyPartitioner, or HourlyPartitioner.");
     }
-    String extractor = configs.get("timestamp.extractor");
+    String extractor = configs.get(TIMESTAMP_EXTRACTOR_CONFIG);
     if (extractor != null && UNSUPPORTED_TIMESTAMP_EXTRACTORS.contains(extractor)) {
       errors.add("timestamp.extractor=" + extractor + " is not supported in "
           + "BACKUP_FULL_RECORD mode. It reads a field from the record value, "
@@ -318,12 +344,28 @@ public final class BackupModeValidator {
 
   private static void validateTransformsRejected(
       Map<String, String> configs, List<String> errors, String modeName) {
-    String transforms = configs.get("transforms");
-    if (transforms != null && !transforms.trim().isEmpty()) {
+    String transforms = configs.get(TRANSFORMS_CONFIG);
+    if (transforms == null || transforms.trim().isEmpty()) {
+      return;
+    }
+    List<String> disallowed = new ArrayList<>();
+    for (String rawName : transforms.split(",")) {
+      String name = rawName.trim();
+      if (name.isEmpty()) {
+        continue;
+      }
+      String typeKey = TRANSFORMS_CONFIG + "." + name + TRANSFORM_TYPE_SUFFIX;
+      String cls = configs.get(typeKey);
+      if (cls == null || !ALLOWED_SMT_CLASSES.contains(cls)) {
+        disallowed.add(name + (cls != null ? " (class=" + cls + ")" : " (no " + typeKey + " set)"));
+      }
+    }
+    if (!disallowed.isEmpty()) {
       errors.add("Single Message Transforms (SMTs) cannot be used with "
           + modeName + " mode. SMTs alter records around the envelope "
           + "wrap/unwrap boundary, which corrupts backup and restore "
-          + "fidelity. Remove the 'transforms' config to use "
+          + "fidelity. Rejected transforms: " + String.join(", ", disallowed)
+          + ". Remove them from the 'transforms' config to use "
           + modeName + " mode.");
     }
   }
@@ -334,8 +376,8 @@ public final class BackupModeValidator {
     if (!FORMAT_SIMPLE_NAME_PARQUET.equals(formatClassName)) {
       return;
     }
-    String codec = configs.get("parquet.codec");
-    if (codec == null || !"none".equalsIgnoreCase(codec)) {
+    String codec = configs.get(PARQUET_CODEC_CONFIG);
+    if (codec == null || !PARQUET_CODEC_NONE.equalsIgnoreCase(codec)) {
       errors.add("parquet.codec=" + (codec != null ? codec : "snappy (default)")
           + " cannot be used with BACKUP_FULL_RECORD mode. Backup and restore "
           + "does not support compression end-to-end: the sink writes files "
@@ -348,14 +390,14 @@ public final class BackupModeValidator {
 
   private static void validateStoreKafkaKeysHeadersRejected(
       Map<String, String> configs, List<String> errors) {
-    if (TRUE.equalsIgnoreCase(configs.get("store.kafka.keys"))) {
+    if (TRUE.equalsIgnoreCase(configs.get(STORE_KAFKA_KEYS_CONFIG))) {
       errors.add("store.kafka.keys=true cannot be used with "
           + "BACKUP_FULL_RECORD mode. Envelope mode already captures the "
           + "Kafka key inside each backup record. Setting this flag would "
           + "write duplicate key-only files alongside the envelope files. "
           + "Remove store.kafka.keys (or set to false) to use backup mode.");
     }
-    if (TRUE.equalsIgnoreCase(configs.get("store.kafka.headers"))) {
+    if (TRUE.equalsIgnoreCase(configs.get(STORE_KAFKA_HEADERS_CONFIG))) {
       errors.add("store.kafka.headers=true cannot be used with "
           + "BACKUP_FULL_RECORD mode. Envelope mode already captures the "
           + "Kafka headers inside each backup record. Setting this flag "
@@ -423,9 +465,9 @@ public final class BackupModeValidator {
   }
 
   private static void warnHeaderConverter(Map<String, String> configs) {
-    String headerConverter = configs.get("header.converter");
+    String headerConverter = configs.get(HEADER_CONVERTER_CONFIG);
     if (headerConverter == null
-        || !headerConverter.contains("ByteArrayConverter")) {
+        || !BYTE_ARRAY_CONVERTER.equals(headerConverter)) {
       log.info("header.converter={} — for pristine byte-level header "
           + "preservation, consider using "
           + "org.apache.kafka.connect.converters.ByteArrayConverter.",

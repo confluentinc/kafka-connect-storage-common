@@ -285,6 +285,79 @@ public class BackupModeValidatorTest {
   }
 
   @Test
+  public void testTransformsNamedButNoTypeSetIsRejected() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(TRANSFORMS, "someTransform");
+    // no transforms.someTransform.type — cannot be whitelisted
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
+    assertTrue(containsError(errors, ERR_TRANSFORMS));
+    assertTrue(containsError(errors, "no transforms.someTransform.type set"));
+  }
+
+  @Test
+  public void testTransformsCcSystemRequireTimestampIsAccepted() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(TRANSFORMS, "requireTimestampTransform");
+    configs.put("transforms.requireTimestampTransform.type",
+        "io.confluent.cctransforms.RequireTimestampTransform");
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
+    assertFalse(containsError(errors, ERR_TRANSFORMS));
+  }
+
+  @Test
+  public void testTransformsCcSystemRequireTimestampWithUserRenameIsAccepted() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(TRANSFORMS, "myRenamed");
+    configs.put("transforms.myRenamed.type",
+        "io.confluent.cctransforms.RequireTimestampTransform");
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
+    assertFalse(containsError(errors, ERR_TRANSFORMS));
+  }
+
+  @Test
+  public void testTransformsNonWhitelistedClassIsRejected() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(TRANSFORMS, "route");
+    configs.put("transforms.route.type", "org.apache.kafka.connect.transforms.RegexRouter");
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
+    assertTrue(containsError(errors, ERR_TRANSFORMS));
+    assertTrue(containsError(errors, "route (class=org.apache.kafka.connect.transforms.RegexRouter)"));
+  }
+
+  @Test
+  public void testTransformsMixedRejectsOnlyNonWhitelisted() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(TRANSFORMS, "requireTimestampTransform,route");
+    configs.put("transforms.requireTimestampTransform.type",
+        "io.confluent.cctransforms.RequireTimestampTransform");
+    configs.put("transforms.route.type", "org.apache.kafka.connect.transforms.RegexRouter");
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
+    assertTrue(containsError(errors, ERR_TRANSFORMS));
+    assertTrue(containsError(errors, "route (class=org.apache.kafka.connect.transforms.RegexRouter)"));
+    // whitelisted transform must NOT appear in the rejected list
+    List<String> transformErrors = errors.stream()
+        .filter(e -> e.contains(ERR_TRANSFORMS))
+        .collect(java.util.stream.Collectors.toList());
+    assertFalse(transformErrors.stream().anyMatch(e -> e.contains("requireTimestampTransform (")));
+  }
+
+  @Test
+  public void testTransformsCommaWhitespaceAllWhitelistedIsAccepted() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(TRANSFORMS, "  requireTimestampTransform  ,   ");
+    configs.put("transforms.requireTimestampTransform.type",
+        "io.confluent.cctransforms.RequireTimestampTransform");
+
+    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
+    assertFalse(containsError(errors, ERR_TRANSFORMS));
+  }
+
+  @Test
   public void testStoreKafkaKeysTrueIsRejected() {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(STORE_KAFKA_KEYS, TRUE);
