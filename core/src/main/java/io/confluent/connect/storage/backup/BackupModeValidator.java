@@ -70,18 +70,15 @@ public final class BackupModeValidator {
   private static final String FORMAT_SIMPLE_NAME_JSON = "JsonFormat";
   private static final String FORMAT_SIMPLE_NAME_BYTE_ARRAY = "ByteArrayFormat";
   private static final String FORMAT_SIMPLE_NAME_AVRO = "AvroFormat";
-  private static final String FORMAT_SIMPLE_NAME_PARQUET = "ParquetFormat";
 
   // Connector-level config keys referenced by validation logic.
   private static final String TRANSFORMS_CONFIG = "transforms";
   private static final String TRANSFORM_TYPE_SUFFIX = ".type";
   private static final String HEADER_CONVERTER_CONFIG = "header.converter";
-  private static final String PARQUET_CODEC_CONFIG = "parquet.codec";
   private static final String PARTITIONER_CLASS_CONFIG = "partitioner.class";
   private static final String TIMESTAMP_EXTRACTOR_CONFIG = "timestamp.extractor";
   private static final String STORE_KAFKA_KEYS_CONFIG = "store.kafka.keys";
   private static final String STORE_KAFKA_HEADERS_CONFIG = "store.kafka.headers";
-  private static final String PARQUET_CODEC_NONE = "none";
   private static final String BYTE_ARRAY_CONVERTER =
       "org.apache.kafka.connect.converters.ByteArrayConverter";
 
@@ -119,7 +116,6 @@ public final class BackupModeValidator {
 
     validateByteArrayFormat(formatClassName, errors);
     validateJsonFormatSchemaEnable(formatClassName, jsonSchemaEmbedded, modeName, errors);
-    validateParquetCompression(configs, formatClassName, errors);
     validateConverterExplicitlySet(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
     validateConverterExplicitlySet(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
     validateSinkConverter(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
@@ -367,24 +363,6 @@ public final class BackupModeValidator {
           + "fidelity. Rejected transforms: " + String.join(", ", disallowed)
           + ". Remove them from the 'transforms' config to use "
           + modeName + " mode.");
-    }
-  }
-
-  private static void validateParquetCompression(
-      Map<String, String> configs, String formatClassName,
-      List<String> errors) {
-    if (!FORMAT_SIMPLE_NAME_PARQUET.equals(formatClassName)) {
-      return;
-    }
-    String codec = configs.get(PARQUET_CODEC_CONFIG);
-    if (codec == null || !PARQUET_CODEC_NONE.equalsIgnoreCase(codec)) {
-      errors.add("parquet.codec=" + (codec != null ? codec : "snappy (default)")
-          + " cannot be used with BACKUP_FULL_RECORD mode. Backup and restore "
-          + "does not support compression end-to-end: the sink writes files "
-          + "with a codec-prefixed extension (e.g. .snappy.parquet) but the "
-          + "restore file matcher only accepts the bare .parquet extension, "
-          + "so compressed files are silently skipped. "
-          + "Set parquet.codec=none to use backup mode.");
     }
   }
 

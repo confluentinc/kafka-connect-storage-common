@@ -458,59 +458,22 @@ public class BackupModeValidatorTest {
   }
 
   @Test
-  public void testParquetFormatWithSnappyCodecFails() {
-    Map<String, String> configs = baseSinkConfigs();
-    configs.put(PARQUET_CODEC, "snappy");
+  public void testParquetFormatWithAnyCodecPasses() {
+    for (String codec : new String[] {"snappy", "gzip", "lz4", "zstd", "none", "NONE"}) {
+      Map<String, String> configs = baseSinkConfigs();
+      configs.put(PARQUET_CODEC, codec);
 
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, PARQUET_FORMAT, true, SINK_MODE);
-    assertEquals(1, errors.size());
-    assertTrue(errors.get(0).contains("parquet.codec=snappy"));
+      List<String> errors = BackupModeValidator.validateSinkConfigs(configs, PARQUET_FORMAT, true, SINK_MODE);
+      assertEquals("parquet.codec=" + codec + " should be accepted", 0, errors.size());
+    }
   }
 
   @Test
-  public void testParquetFormatWithGzipCodecFails() {
-    Map<String, String> configs = baseSinkConfigs();
-    configs.put(PARQUET_CODEC, "gzip");
-
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, PARQUET_FORMAT, true, SINK_MODE);
-    assertEquals(1, errors.size());
-    assertTrue(errors.get(0).contains("parquet.codec=gzip"));
-  }
-
-  @Test
-  public void testParquetFormatWithUnsetCodecFails() {
+  public void testParquetFormatWithUnsetCodecPasses() {
     Map<String, String> configs = baseSinkConfigs();
     configs.remove(PARQUET_CODEC);
 
     List<String> errors = BackupModeValidator.validateSinkConfigs(configs, PARQUET_FORMAT, true, SINK_MODE);
-    assertEquals(1, errors.size());
-    assertTrue(errors.get(0).contains("snappy (default)"));
-  }
-
-  @Test
-  public void testParquetFormatWithNoneCodecPasses() {
-    Map<String, String> configs = baseSinkConfigs();
-    configs.put(PARQUET_CODEC, "none");
-
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, PARQUET_FORMAT, true, SINK_MODE);
-    assertEquals(0, errors.size());
-  }
-
-  @Test
-  public void testParquetFormatWithNoneCodecCaseInsensitivePasses() {
-    Map<String, String> configs = baseSinkConfigs();
-    configs.put(PARQUET_CODEC, "NONE");
-
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, PARQUET_FORMAT, true, SINK_MODE);
-    assertEquals(0, errors.size());
-  }
-
-  @Test
-  public void testNonParquetFormatIgnoresParquetCodec() {
-    Map<String, String> configs = baseSinkConfigs();
-    configs.put(PARQUET_CODEC, "snappy");
-
-    List<String> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertEquals(0, errors.size());
   }
 
