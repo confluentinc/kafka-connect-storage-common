@@ -16,21 +16,43 @@
 package io.confluent.connect.storage.tools;
 
 import org.apache.kafka.common.config.ConfigDef;
-import org.apache.kafka.common.utils.AppInfoParser;
 import org.apache.kafka.connect.connector.Task;
 import org.apache.kafka.connect.source.SourceConnector;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 public class SchemaSourceConnector extends SourceConnector {
+  private static final String VERSION = loadKafkaVersion();
+
   private Map<String, String> config;
 
   @Override
   public String version() {
-    return AppInfoParser.getVersion();
+    return VERSION;
+  }
+
+  // Minimal inline equivalent of AppInfoParser.getVersion(): read the Kafka
+  // version from /kafka/kafka-version.properties (shipped in kafka-clients)
+  // instead of referencing AppInfoParser, whose class moved from
+  // org.apache.kafka.common.utils to ...utils.internals in CP 8.4 / Apache
+  // Kafka 4.x. Referencing no Kafka class keeps a single jar loadable on both
+  // 8.3 and 8.4 workers.
+  private static String loadKafkaVersion() {
+    Properties props = new Properties();
+    try (InputStream in = SchemaSourceConnector.class
+        .getResourceAsStream("/kafka/kafka-version.properties")) {
+      if (in != null) {
+        props.load(in);
+      }
+    } catch (Exception e) {
+      // ignore and fall back to "unknown"
+    }
+    return props.getProperty("version", "unknown").trim();
   }
 
   @Override
