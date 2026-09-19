@@ -446,9 +446,10 @@ public final class BackupModeValidator {
     String headerConverter = configs.get(HEADER_CONVERTER_CONFIG);
     if (headerConverter == null
         || !BYTE_ARRAY_CONVERTER.equals(headerConverter)) {
-      log.info("header.converter={} — for pristine byte-level header "
-          + "preservation, consider using "
-          + "org.apache.kafka.connect.converters.ByteArrayConverter.",
+      log.warn("header.converter={} - logical-type and structured (STRUCT/ARRAY/MAP) "
+          + "headers will lose their schema on restore because only the base Type is "
+          + "preserved. Use org.apache.kafka.connect.converters.ByteArrayConverter "
+          + "for pristine byte-level round-trip of ALL header types.",
           headerConverter != null ? headerConverter : "(default)");
     }
   }
