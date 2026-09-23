@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -67,6 +68,27 @@ public final class BackupModeValidator {
   private static final String TRUE = "true";
   private static final String FALSE = "false";
 
+  private static final String KEY_CONVERTER_PREFIX = "key.converter.";
+  private static final String VALUE_CONVERTER_PREFIX = "value.converter.";
+
+  private static final String MUST_BE_TRUE_SUFFIX = " must be set to true. ";
+  private static final String MUST_BE_FALSE_SUFFIX = " must be set to false. ";
+  private static final String MUST_NOT_BE_TRUE_SUFFIX = " must not be set to true. ";
+
+  private static final String AVRO_ENUM_FAILURE_REASON =
+      "Restore will fail with AvroTypeException on records that contain "
+      + "enum values (e.g. \"value ACTIVE is not a UserStatus\").";
+  private static final String PROTOBUF_PACKAGE_LOSS_REASON =
+      "Package qualification in Connect Schema is not preserved, which "
+      + "can break restore.";
+  private static final String PROTOBUF_WRAPPER_NULLABLES_REASON =
+      "Breaks records that omit proto3 optional scalar fields with "
+      + "DataException 'Invalid value: null used for required field'.";
+  private static final String PROTOBUF_WRAPPER_RAW_PRIMITIVES_REASON =
+      "Default is true. With the default, ProtobufData strips wrapper "
+      + "type info from BackupWrapper.data and restore cannot re-create "
+      + "the wrappers from the flattened Struct.";
+
   private static final String FORMAT_SIMPLE_NAME_JSON = "JsonFormat";
   private static final String FORMAT_SIMPLE_NAME_BYTE_ARRAY = "ByteArrayFormat";
   private static final String FORMAT_SIMPLE_NAME_AVRO = "AvroFormat";
@@ -79,6 +101,9 @@ public final class BackupModeValidator {
   private static final String TIMESTAMP_EXTRACTOR_CONFIG = "timestamp.extractor";
   private static final String STORE_KAFKA_KEYS_CONFIG = "store.kafka.keys";
   private static final String STORE_KAFKA_HEADERS_CONFIG = "store.kafka.headers";
+  private static final String FORMAT_CLASS_CONFIG = "format.class";
+  private static final String FORMAT_JSON_SCHEMA_ENABLE_CONFIG =
+      "format.json.schema.enable";
   private static final String BYTE_ARRAY_CONVERTER =
       "org.apache.kafka.connect.converters.ByteArrayConverter";
 
@@ -98,21 +123,53 @@ public final class BackupModeValidator {
   }
 
   /**
-   * Validates sink (backup) connector configs. Returns a list of error
-   * messages for Tier 1 failures. Logs Tier 2 warnings.
-   *
-   * @param configs the full connector config map
-   * @param formatClassName the resolved format class simple name
-   * @param jsonSchemaEmbedded whether format.json.schema.enable is true
-   * @param modeName the resolved sink mode enum name (used in error messages)
-   * @return list of error messages (empty if all valid)
+   * A validation error paired with the config key it should attach to. Callers
+   * that need per-field error placement (e.g. CC UI validation) should attach
+   * each error to {@link #configKey}; callers that only need error messages
+   * (e.g. {@link #validateSinkConfigs}) receive a flattened {@code List<String>}.
    */
-  public static List<String> validateSinkConfigs(
+  public static final class Entry {
+    public final String configKey;
+    public final String message;
+
+    public Entry(String configKey, String message) {
+      this.configKey = Objects.requireNonNull(configKey);
+      this.message = Objects.requireNonNull(message);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof Entry)) {
+        return false;
+      }
+      Entry other = (Entry) o;
+      return configKey.equals(other.configKey) && message.equals(other.message);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(configKey, message);
+    }
+
+    @Override
+    public String toString() {
+      return configKey + ": " + message;
+    }
+  }
+
+  /**
+   * Validates sink (backup) connector configs. Returns typed error entries
+   * suitable for per-field attachment. Logs Tier 2 warnings.
+   */
+  public static List<Entry> validateSinkConfigs(
       Map<String, String> configs,
       String formatClassName,
       boolean jsonSchemaEmbedded,
       String modeName) {
-    List<String> errors = new ArrayList<>();
+    List<Entry> errors = new ArrayList<>();
 
     validateByteArrayFormat(formatClassName, errors);
     validateJsonFormatSchemaEnable(formatClassName, jsonSchemaEmbedded, modeName, errors);
@@ -130,21 +187,15 @@ public final class BackupModeValidator {
   }
 
   /**
-   * Validates source (restore) connector configs. Returns a list of error
-   * messages for Tier 1 failures. Logs Tier 2 warnings.
-   *
-   * @param configs the full connector config map
-   * @param formatClassName the resolved format class simple name
-   * @param jsonSchemaEmbedded whether format.json.schema.enable is true
-   * @param modeName the resolved source mode enum name (used in error messages)
-   * @return list of error messages (empty if all valid)
+   * Validates source (restore) connector configs. Returns typed error entries
+   * suitable for per-field attachment. Logs Tier 2 warnings.
    */
-  public static List<String> validateSourceConfigs(
+  public static List<Entry> validateSourceConfigs(
       Map<String, String> configs,
       String formatClassName,
       boolean jsonSchemaEmbedded,
       String modeName) {
-    List<String> errors = new ArrayList<>();
+    List<Entry> errors = new ArrayList<>();
 
     validateByteArrayFormat(formatClassName, errors);
     validateJsonFormatSchemaEnable(formatClassName, jsonSchemaEmbedded, modeName, errors);
@@ -158,8 +209,23 @@ public final class BackupModeValidator {
     return errors;
   }
 
+  /**
+   * Collapses {@code key.converter.*} and {@code value.converter.*} subkeys to
+   * their umbrella config name so validation errors land on a UI-visible field
+   * via built-in reverse-mapping. Other keys pass through unchanged.
+   */
+  private static String toAttachKey(String configKey) {
+    if (configKey.startsWith(KEY_CONVERTER_PREFIX)) {
+      return BackupEnvelope.KEY_CONVERTER_CONFIG;
+    }
+    if (configKey.startsWith(VALUE_CONVERTER_PREFIX)) {
+      return BackupEnvelope.VALUE_CONVERTER_CONFIG;
+    }
+    return configKey;
+  }
+
   private static void validateSinkConverter(
-      Map<String, String> configs, String prefix, List<String> errors) {
+      Map<String, String> configs, String prefix, List<Entry> errors) {
     String converterClass = configs.get(prefix);
     if (converterClass == null) {
       return;
@@ -167,71 +233,56 @@ public final class BackupModeValidator {
     validateSchemaBackupEnabled(configs, prefix, errors);
     if (AVRO_CONVERTER.equals(converterClass)) {
       requireTrue(configs, prefix + ".enhanced.avro.schema.support",
-          "Restore will fail with AvroTypeException on records that contain "
-          + "enum values (e.g. \"value ACTIVE is not a UserStatus\").",
-          errors);
+          AVRO_ENUM_FAILURE_REASON, errors);
     } else if (PROTOBUF_CONVERTER.equals(converterClass)) {
       requireTrue(configs, prefix + ".enhanced.protobuf.schema.support",
-          "Package qualification in Connect Schema is not preserved, which "
-          + "can break restore.",
-          errors);
+          PROTOBUF_PACKAGE_LOSS_REASON, errors);
       requireFalse(configs, prefix + ".wrapper.for.raw.primitives",
-          "Default is true. With the default, ProtobufData strips wrapper "
-          + "type info from BackupWrapper.data and restore cannot re-create "
-          + "the wrappers from the flattened Struct.",
-          errors);
+          PROTOBUF_WRAPPER_RAW_PRIMITIVES_REASON, errors);
       rejectIfTrue(configs, prefix + ".wrapper.for.nullables",
-          "Breaks records that omit proto3 optional scalar fields with "
-          + "DataException 'Invalid value: null used for required field'.",
-          errors);
+          PROTOBUF_WRAPPER_NULLABLES_REASON, errors);
     }
   }
 
   private static void validateSourceConverter(
-      Map<String, String> configs, String prefix, List<String> errors) {
+      Map<String, String> configs, String prefix, List<Entry> errors) {
     String converterClass = configs.get(prefix);
     if (converterClass == null) {
       return;
     }
     if (AVRO_CONVERTER.equals(converterClass)) {
       requireTrue(configs, prefix + ".enhanced.avro.schema.support",
-          "Restore will fail with AvroTypeException on records that contain "
-          + "enum values (e.g. \"value ACTIVE is not a UserStatus\").",
-          errors);
+          AVRO_ENUM_FAILURE_REASON, errors);
     } else if (PROTOBUF_CONVERTER.equals(converterClass)) {
       requireTrue(configs, prefix + ".enhanced.protobuf.schema.support",
-          "Package qualification in Connect Schema is not preserved, which "
-          + "can break restore.",
-          errors);
+          PROTOBUF_PACKAGE_LOSS_REASON, errors);
       rejectIfTrue(configs, prefix + ".wrapper.for.nullables",
-          "Breaks records that omit proto3 optional scalar fields with "
-          + "DataException 'Invalid value: null used for required field'.",
-          errors);
+          PROTOBUF_WRAPPER_NULLABLES_REASON, errors);
     }
   }
 
   private static void requireTrue(
       Map<String, String> configs, String key, String reason,
-      List<String> errors) {
+      List<Entry> errors) {
     if (!TRUE.equalsIgnoreCase(configs.get(key))) {
-      errors.add(key + " must be set to true. " + reason);
+      errors.add(new Entry(toAttachKey(key), key + MUST_BE_TRUE_SUFFIX + reason));
     }
   }
 
   private static void requireFalse(
       Map<String, String> configs, String key, String reason,
-      List<String> errors) {
+      List<Entry> errors) {
     String value = configs.get(key);
     if (value == null || !FALSE.equalsIgnoreCase(value)) {
-      errors.add(key + " must be set to false. " + reason);
+      errors.add(new Entry(toAttachKey(key), key + MUST_BE_FALSE_SUFFIX + reason));
     }
   }
 
   private static void rejectIfTrue(
       Map<String, String> configs, String key, String reason,
-      List<String> errors) {
+      List<Entry> errors) {
     if (TRUE.equalsIgnoreCase(configs.get(key))) {
-      errors.add(key + " must not be set to true. " + reason);
+      errors.add(new Entry(toAttachKey(key), key + MUST_NOT_BE_TRUE_SUFFIX + reason));
     }
   }
 
@@ -265,62 +316,67 @@ public final class BackupModeValidator {
   // ── Tier 1: FAIL ──────────────────────────────────────────────
 
   private static void validateByteArrayFormat(
-      String formatClassName, List<String> errors) {
+      String formatClassName, List<Entry> errors) {
     if (FORMAT_SIMPLE_NAME_BYTE_ARRAY.equals(formatClassName)) {
-      errors.add("format.class=ByteArrayFormat cannot be used with "
+      errors.add(new Entry(FORMAT_CLASS_CONFIG,
+          "format.class=ByteArrayFormat cannot be used with "
           + "BACKUP_FULL_RECORD mode. ByteArrayFormat does not support "
           + "structured schema metadata required for envelope wrapping. "
-          + "Use AvroFormat, JsonFormat, or ParquetFormat instead.");
+          + "Use AvroFormat, JsonFormat, or ParquetFormat instead."));
     }
   }
 
   private static void validateJsonFormatSchemaEnable(
       String formatClassName, boolean jsonSchemaEmbedded, String modeName,
-      List<String> errors) {
+      List<Entry> errors) {
     if (FORMAT_SIMPLE_NAME_JSON.equals(formatClassName) && !jsonSchemaEmbedded) {
-      errors.add("format.json.schema.enable=true is required with JsonFormat in "
+      errors.add(new Entry(FORMAT_JSON_SCHEMA_ENABLE_CONFIG,
+          "format.json.schema.enable=true is required with JsonFormat in "
           + modeName + " mode. Without it, the envelope schema is not embedded, "
-          + "so restore cannot parse the backup files.");
+          + "so restore cannot parse the backup files."));
     }
   }
 
   private static void validatePartitionerSupported(
-      Map<String, String> configs, List<String> errors) {
+      Map<String, String> configs, List<Entry> errors) {
     String partitioner = configs.get(PARTITIONER_CLASS_CONFIG);
     if (partitioner != null && !SUPPORTED_PARTITIONERS.contains(partitioner)) {
-      errors.add("partitioner.class=" + partitioner + " is not supported in "
+      errors.add(new Entry(PARTITIONER_CLASS_CONFIG,
+          "partitioner.class=" + partitioner + " is not supported in "
           + "BACKUP_FULL_RECORD mode. The sink task passes a "
           + "KafkaRecordEnvelope Struct to the partitioner, not the original "
           + "payload, so partitioners that read user-data fields (e.g. "
           + "FieldPartitioner) fail. Use DefaultPartitioner, "
-          + "TimeBasedPartitioner, DailyPartitioner, or HourlyPartitioner.");
+          + "TimeBasedPartitioner, DailyPartitioner, or HourlyPartitioner."));
     }
     String extractor = configs.get(TIMESTAMP_EXTRACTOR_CONFIG);
     if (extractor != null && UNSUPPORTED_TIMESTAMP_EXTRACTORS.contains(extractor)) {
-      errors.add("timestamp.extractor=" + extractor + " is not supported in "
+      errors.add(new Entry(TIMESTAMP_EXTRACTOR_CONFIG,
+          "timestamp.extractor=" + extractor + " is not supported in "
           + "BACKUP_FULL_RECORD mode. It reads a field from the record value, "
           + "which is now the envelope Struct. Use Wallclock or Record "
-          + "extractor instead.");
+          + "extractor instead."));
     }
   }
 
   private static void validateConverterExplicitlySet(
       Map<String, String> configs, String converterPrefix,
-      List<String> errors) {
+      List<Entry> errors) {
     if (configs.get(converterPrefix) == null) {
-      errors.add(converterPrefix + " must be set explicitly at the connector "
+      errors.add(new Entry(converterPrefix,
+          converterPrefix + " must be set explicitly at the connector "
           + "level in backup and restore modes. Relying on worker.properties "
           + "defaults hides the converter class from connector validation, so "
           + "schema type detection falls through to UNKNOWN. On backup this "
           + "skips writing schema files; on restore this skips converter-"
           + "specific validations. Set "
-          + converterPrefix + " on the connector.");
+          + converterPrefix + " on the connector."));
     }
   }
 
   private static void validateSchemaBackupEnabled(
       Map<String, String> configs, String converterPrefix,
-      List<String> errors) {
+      List<Entry> errors) {
     String converterClass = configs.get(converterPrefix);
     String schemaType = ConverterTypeDetector.detectSchemaType(
         converterClass, configs, converterPrefix);
@@ -330,16 +386,17 @@ public final class BackupModeValidator {
     String configKey = converterPrefix + "."
         + BackupEnvelope.SCHEMA_BACKUP_ENABLED_CONFIG;
     if (!TRUE.equalsIgnoreCase(configs.get(configKey))) {
-      errors.add(converterPrefix + " uses SR-backed converter ("
+      errors.add(new Entry(toAttachKey(configKey),
+          converterPrefix + " uses SR-backed converter ("
           + converterClass + ") but " + configKey + " is not set to true. "
           + "Without this config, backup will NOT preserve schema metadata "
           + "and restore will produce corrupted data. "
-          + "Set " + configKey + "=true.");
+          + "Set " + configKey + "=true."));
     }
   }
 
   private static void validateTransformsRejected(
-      Map<String, String> configs, List<String> errors, String modeName) {
+      Map<String, String> configs, List<Entry> errors, String modeName) {
     String transforms = configs.get(TRANSFORMS_CONFIG);
     if (transforms == null || transforms.trim().isEmpty()) {
       return;
@@ -357,31 +414,34 @@ public final class BackupModeValidator {
       }
     }
     if (!disallowed.isEmpty()) {
-      errors.add("Single Message Transforms (SMTs) cannot be used with "
+      errors.add(new Entry(TRANSFORMS_CONFIG,
+          "Single Message Transforms (SMTs) cannot be used with "
           + modeName + " mode. SMTs alter records around the envelope "
           + "wrap/unwrap boundary, which corrupts backup and restore "
           + "fidelity. Rejected transforms: " + String.join(", ", disallowed)
           + ". Remove them from the 'transforms' config to use "
-          + modeName + " mode.");
+          + modeName + " mode."));
     }
   }
 
   private static void validateStoreKafkaKeysHeadersRejected(
-      Map<String, String> configs, List<String> errors) {
+      Map<String, String> configs, List<Entry> errors) {
     if (TRUE.equalsIgnoreCase(configs.get(STORE_KAFKA_KEYS_CONFIG))) {
-      errors.add("store.kafka.keys=true cannot be used with "
+      errors.add(new Entry(STORE_KAFKA_KEYS_CONFIG,
+          "store.kafka.keys=true cannot be used with "
           + "BACKUP_FULL_RECORD mode. Envelope mode already captures the "
           + "Kafka key inside each backup record. Setting this flag would "
           + "write duplicate key-only files alongside the envelope files. "
-          + "Remove store.kafka.keys (or set to false) to use backup mode.");
+          + "Remove store.kafka.keys (or set to false) to use backup mode."));
     }
     if (TRUE.equalsIgnoreCase(configs.get(STORE_KAFKA_HEADERS_CONFIG))) {
-      errors.add("store.kafka.headers=true cannot be used with "
+      errors.add(new Entry(STORE_KAFKA_HEADERS_CONFIG,
+          "store.kafka.headers=true cannot be used with "
           + "BACKUP_FULL_RECORD mode. Envelope mode already captures the "
           + "Kafka headers inside each backup record. Setting this flag "
           + "would write duplicate header-only files alongside the envelope "
           + "files. Remove store.kafka.headers (or set to false) to use "
-          + "backup mode.");
+          + "backup mode."));
     }
   }
 
