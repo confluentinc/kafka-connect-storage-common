@@ -25,7 +25,6 @@ import static org.junit.Assert.assertTrue;
 
 public class BackupEnvelopeTest {
 
-  // ── isSrBackedType — delegates to SchemaBackupConfig ─────────────────
 
   @Test
   public void testIsSrBackedTypeReturnsTrueForAvro() {
@@ -81,7 +80,6 @@ public class BackupEnvelopeTest {
         BackupEnvelope.isSrBackedType(null));
   }
 
-  // ── extensionForType — 4 branches (Avro / Protobuf / Json family / default)
 
   @Test
   public void testExtensionForTypeAvroReturnsAvsc() {

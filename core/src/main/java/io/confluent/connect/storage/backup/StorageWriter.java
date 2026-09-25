@@ -19,7 +19,7 @@ package io.confluent.connect.storage.backup;
  * Abstraction for writing backup metadata (schema files, entry files)
  * to object storage. Each storage backend provides its own implementation.
  *
- * <p>All writes are idempotent — same schemaId always produces same content.
+ * <p>All writes are idempotent: same schemaId always produces same content.
  * No CAS or versioning needed.
  */
 public interface StorageWriter {

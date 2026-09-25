@@ -58,10 +58,10 @@ public final class BackupWrapperExtractor {
 
   private static Unwrapped unwrapFromWrapper(Struct wrapper, Schema schema) {
     if (schema == null) {
-      throw new DataException("Wrapper schema is null — cannot unwrap backup metadata");
+      throw new DataException("Wrapper schema is null: cannot unwrap backup metadata");
     }
     if (schema.field(BackupWrapper.FIELD_DATA) == null) {
-      throw new DataException("Wrapper schema missing 'data' field — corrupt Wrapper struct");
+      throw new DataException("Wrapper schema missing 'data' field: corrupt Wrapper struct");
     }
     Integer schemaId = optionalInt32(wrapper, schema, BackupWrapper.FIELD_SCHEMA_ID);
     Integer schemaVersion = optionalInt32(wrapper, schema, BackupWrapper.FIELD_SCHEMA_VERSION);

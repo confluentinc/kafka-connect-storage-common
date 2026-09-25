@@ -79,7 +79,7 @@ public final class BackupEnvelope {
   public static final String KEY_CONVERTER_CONFIG = "key.converter";
   public static final String VALUE_CONVERTER_CONFIG = "value.converter";
 
-  // Delegated to SchemaBackupConfig (single source of truth) — no duplication
+  // Delegated to SchemaBackupConfig (single source of truth).
   public static final String SCHEMA_BACKUP_ENABLED_CONFIG =
       SchemaBackupConfig.SCHEMA_BACKUP_ENABLED_CONFIG;
 

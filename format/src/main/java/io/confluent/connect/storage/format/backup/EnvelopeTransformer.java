@@ -38,7 +38,7 @@ import java.util.List;
  * to {@link SchemaBackupOrchestrator}.
  *
  * <p>The resulting envelope SinkRecord has a consistent, non-null schema
- * that changes only when the key or value schema changes — including
+ * that changes only when the key or value schema changes, including
  * tombstone transitions. This allows {@code TopicPartitionWriter} to
  * handle file rotation naturally via its existing schema change detection.
  *

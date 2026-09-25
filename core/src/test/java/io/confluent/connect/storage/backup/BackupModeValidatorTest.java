@@ -295,7 +295,7 @@ public class BackupModeValidatorTest {
   public void testTransformsNamedButNoTypeSetIsRejected() {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(TRANSFORMS, "someTransform");
-    // no transforms.someTransform.type — cannot be whitelisted
+    // no transforms.someTransform.type: cannot be whitelisted
 
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, ERR_TRANSFORMS));
