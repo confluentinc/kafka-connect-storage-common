@@ -62,6 +62,13 @@ public class BackupModeValidatorTest {
       "value.converter.wrapper.for.raw.primitives";
   private static final String KEY_WRAPPER_FOR_RAW =
       "key.converter.wrapper.for.raw.primitives";
+  private static final String TRANSFORMS_REQUIRE_TS_TYPE_KEY =
+      "transforms.requireTimestampTransform.type";
+  private static final String TRANSFORMS_ROUTE_TYPE_KEY = "transforms.route.type";
+  private static final String REGEX_ROUTER_CLASS =
+      "org.apache.kafka.connect.transforms.RegexRouter";
+  private static final String ROUTE_REJECTED_MSG =
+      "route (class=" + REGEX_ROUTER_CLASS + ")";
   private static final String VALUE_WRAPPER_FOR_NULLABLES =
       "value.converter.wrapper.for.nullables";
   private static final String JSON_TYPE_ALLOWED_PACKAGES =
@@ -299,8 +306,8 @@ public class BackupModeValidatorTest {
   public void testTransformsCcSystemRequireTimestampIsAccepted() {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(TRANSFORMS, "requireTimestampTransform");
-    configs.put("transforms.requireTimestampTransform.type",
-        "io.confluent.cctransforms.RequireTimestampTransform");
+    configs.put(TRANSFORMS_REQUIRE_TS_TYPE_KEY,
+        BackupModeValidator.REQUIRE_TIMESTAMP_TRANSFORM_CLASS);
 
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, ERR_TRANSFORMS));
@@ -311,7 +318,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(TRANSFORMS, "myRenamed");
     configs.put("transforms.myRenamed.type",
-        "io.confluent.cctransforms.RequireTimestampTransform");
+        BackupModeValidator.REQUIRE_TIMESTAMP_TRANSFORM_CLASS);
 
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, ERR_TRANSFORMS));
@@ -321,24 +328,24 @@ public class BackupModeValidatorTest {
   public void testTransformsNonWhitelistedClassIsRejected() {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(TRANSFORMS, "route");
-    configs.put("transforms.route.type", "org.apache.kafka.connect.transforms.RegexRouter");
+    configs.put(TRANSFORMS_ROUTE_TYPE_KEY, REGEX_ROUTER_CLASS);
 
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, ERR_TRANSFORMS));
-    assertTrue(containsError(errors, "route (class=org.apache.kafka.connect.transforms.RegexRouter)"));
+    assertTrue(containsError(errors, ROUTE_REJECTED_MSG));
   }
 
   @Test
   public void testTransformsMixedRejectsOnlyNonWhitelisted() {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(TRANSFORMS, "requireTimestampTransform,route");
-    configs.put("transforms.requireTimestampTransform.type",
-        "io.confluent.cctransforms.RequireTimestampTransform");
-    configs.put("transforms.route.type", "org.apache.kafka.connect.transforms.RegexRouter");
+    configs.put(TRANSFORMS_REQUIRE_TS_TYPE_KEY,
+        BackupModeValidator.REQUIRE_TIMESTAMP_TRANSFORM_CLASS);
+    configs.put(TRANSFORMS_ROUTE_TYPE_KEY, REGEX_ROUTER_CLASS);
 
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(containsError(errors, ERR_TRANSFORMS));
-    assertTrue(containsError(errors, "route (class=org.apache.kafka.connect.transforms.RegexRouter)"));
+    assertTrue(containsError(errors, ROUTE_REJECTED_MSG));
     // whitelisted transform must NOT appear in the rejected list
     List<String> transformErrors = errors.stream()
         .map(e -> e.message)
@@ -351,8 +358,8 @@ public class BackupModeValidatorTest {
   public void testTransformsCommaWhitespaceAllWhitelistedIsAccepted() {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(TRANSFORMS, "  requireTimestampTransform  ,   ");
-    configs.put("transforms.requireTimestampTransform.type",
-        "io.confluent.cctransforms.RequireTimestampTransform");
+    configs.put(TRANSFORMS_REQUIRE_TS_TYPE_KEY,
+        BackupModeValidator.REQUIRE_TIMESTAMP_TRANSFORM_CLASS);
 
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertFalse(containsError(errors, ERR_TRANSFORMS));
@@ -970,8 +977,7 @@ public class BackupModeValidatorTest {
   public void testEntriesTransformsAttachedToTransformsKey() {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(TRANSFORMS, "route");
-    configs.put("transforms.route.type",
-        "org.apache.kafka.connect.transforms.RegexRouter");
+    configs.put(TRANSFORMS_ROUTE_TYPE_KEY, REGEX_ROUTER_CLASS);
 
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(
         configs, AVRO_FORMAT, true, SINK_MODE);
@@ -1048,7 +1054,7 @@ public class BackupModeValidatorTest {
         configs, AVRO_FORMAT, true, SINK_MODE);
 
     assertTrue(containsEntry(errors, VALUE_CONVERTER, VALUE_ENHANCED_PROTOBUF));
-    assertTrue(containsEntry(errors, VALUE_CONVERTER, "value.converter.wrapper.for.raw.primitives"));
+    assertTrue(containsEntry(errors, VALUE_CONVERTER, VALUE_WRAPPER_FOR_RAW));
     assertTrue(containsEntry(errors, VALUE_CONVERTER, VALUE_WRAPPER_FOR_NULLABLES));
   }
 

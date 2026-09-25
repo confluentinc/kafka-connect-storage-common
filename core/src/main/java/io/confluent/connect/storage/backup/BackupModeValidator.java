@@ -107,17 +107,23 @@ public final class BackupModeValidator {
   private static final String BYTE_ARRAY_CONVERTER =
       "org.apache.kafka.connect.converters.ByteArrayConverter";
 
-  // Transform classes that are safe to run alongside backup/restore because
-  // they do not mutate record contents around the envelope wrap/unwrap
-  // boundary. Extend cautiously: any class added here must be verified to be
-  // fidelity-preserving on both the sink (backup) and source (restore) paths.
-  //
-  //   RequireTimestampTransform - Confluent Cloud system SMT auto-injected on
-  //     every sink template. Validates the presence of a Kafka timestamp;
-  //     does not mutate record key, value or headers.
+  /**
+   * Confluent Cloud system SMT auto-injected on every sink template. Validates
+   * the presence of a Kafka timestamp; does not mutate record key, value or
+   * headers, so it is safe to run alongside backup/restore.
+   */
+  public static final String REQUIRE_TIMESTAMP_TRANSFORM_CLASS =
+      "io.confluent.cctransforms.RequireTimestampTransform";
+
+  /**
+   * Transform classes that are safe to run alongside backup/restore because
+   * they do not mutate record contents around the envelope wrap/unwrap
+   * boundary. Extend cautiously: any class added here must be verified to be
+   * fidelity-preserving on both the sink (backup) and source (restore) paths.
+   */
   private static final Set<String> ALLOWED_SMT_CLASSES =
       Collections.unmodifiableSet(new HashSet<>(Collections.singletonList(
-          "io.confluent.cctransforms.RequireTimestampTransform")));
+          REQUIRE_TIMESTAMP_TRANSFORM_CLASS)));
 
   private BackupModeValidator() {
   }
