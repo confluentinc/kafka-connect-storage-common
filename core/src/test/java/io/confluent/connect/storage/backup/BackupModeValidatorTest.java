@@ -982,7 +982,7 @@ public class BackupModeValidatorTest {
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(
         configs, AVRO_FORMAT, true, SINK_MODE);
 
-    assertTrue(containsEntry(errors, TRANSFORMS, "Single Message Transforms"));
+    assertTrue(containsEntry(errors, TRANSFORMS, ERR_TRANSFORMS));
   }
 
   @Test
@@ -993,7 +993,7 @@ public class BackupModeValidatorTest {
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(
         configs, AVRO_FORMAT, true, SINK_MODE);
 
-    assertTrue(containsEntry(errors, STORE_KAFKA_KEYS, "store.kafka.keys=true"));
+    assertTrue(containsEntry(errors, STORE_KAFKA_KEYS, ERR_STORE_KAFKA_KEYS_TRUE));
   }
 
   @Test
@@ -1004,7 +1004,7 @@ public class BackupModeValidatorTest {
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(
         configs, AVRO_FORMAT, true, SINK_MODE);
 
-    assertTrue(containsEntry(errors, STORE_KAFKA_HEADERS, "store.kafka.headers=true"));
+    assertTrue(containsEntry(errors, STORE_KAFKA_HEADERS, ERR_STORE_KAFKA_HEADERS_TRUE));
   }
 
   @Test
@@ -1045,9 +1045,6 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
     configs.put(VALUE_SCHEMA_BACKUP_ENABLED, TRUE);
-    // value.converter.enhanced.protobuf.schema.support unset → requireTrue
-    // value.converter.wrapper.for.raw.primitives unset → requireFalse (missing = fail)
-    // value.converter.wrapper.for.nullables=true → rejectIfTrue
     configs.put(VALUE_WRAPPER_FOR_NULLABLES, TRUE);
 
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(
