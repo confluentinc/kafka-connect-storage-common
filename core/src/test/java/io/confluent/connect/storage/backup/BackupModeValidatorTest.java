@@ -41,8 +41,9 @@ public class BackupModeValidatorTest {
 
   private static final String KEY_CONVERTER = "key.converter";
   private static final String VALUE_CONVERTER = "value.converter";
-  private static final String KEY_SCHEMA_BACKUP_ENABLED = "key.converter.schema.backup.enabled";
-  private static final String VALUE_SCHEMA_BACKUP_ENABLED = "value.converter.schema.backup.enabled";
+  private static final String SCHEMA_BACKUP_ENABLED = "schema.backup.enabled";
+  private static final String KEY_SCHEMA_BACKUP_ENABLED = "key.converter." + SCHEMA_BACKUP_ENABLED;
+  private static final String VALUE_SCHEMA_BACKUP_ENABLED = "value.converter." + SCHEMA_BACKUP_ENABLED;
   private static final String STORE_KAFKA_KEYS = "store.kafka.keys";
   private static final String STORE_KAFKA_HEADERS = "store.kafka.headers";
   private static final String TRANSFORMS = "transforms";
@@ -77,8 +78,9 @@ public class BackupModeValidatorTest {
       "io.confluent.connect.storage.partitioner.DefaultPartitioner";
   private static final String TIME_BASED_PARTITIONER =
       "io.confluent.connect.storage.partitioner.TimeBasedPartitioner";
+  private static final String FIELD_PARTITIONER_SIMPLE = "FieldPartitioner";
   private static final String FIELD_PARTITIONER =
-      "io.confluent.connect.storage.partitioner.FieldPartitioner";
+      "io.confluent.connect.storage.partitioner." + FIELD_PARTITIONER_SIMPLE;
   private static final String RECORD_FIELD_EXTRACTOR =
       "io.confluent.connect.storage.partitioner.TimeBasedPartitioner$RecordFieldTimestampExtractor";
   private static final String WALLCLOCK_EXTRACTOR =
@@ -204,7 +206,7 @@ public class BackupModeValidatorTest {
     configs.remove(VALUE_SCHEMA_BACKUP_ENABLED);
 
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
-    assertFalse(containsError(errors, "schema.backup.enabled"));
+    assertFalse(containsError(errors, SCHEMA_BACKUP_ENABLED));
   }
 
   @Test
@@ -234,7 +236,7 @@ public class BackupModeValidatorTest {
     configs.put(KEY_ENHANCED_AVRO, TRUE);
 
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
-    assertFalse(containsError(errors, "schema.backup.enabled"));
+    assertFalse(containsError(errors, SCHEMA_BACKUP_ENABLED));
   }
 
   @Test
@@ -527,6 +529,7 @@ public class BackupModeValidatorTest {
     configs.put(KEY_CONVERTER, STRING_CONVERTER);
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
     configs.put(VALUE_ENHANCED_AVRO, TRUE);
+    configs.put(VALUE_SCHEMA_BACKUP_ENABLED, TRUE);
 
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
     assertEquals(0, errors.size());
@@ -596,6 +599,77 @@ public class BackupModeValidatorTest {
 
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
     assertFalse(containsError(errors, "enhanced.avro.schema.support"));
+  }
+
+  @Test
+  public void testSourceAvroValueConverterWithoutSchemaBackupEnabledIsRejected() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
+    configs.put(VALUE_ENHANCED_AVRO, TRUE);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
+    assertTrue(containsError(errors, ERR_SR_BACKED_VALUE));
+  }
+
+  @Test
+  public void testSourceAvroKeyConverterWithoutSchemaBackupEnabledIsRejected() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, AVRO_CONVERTER);
+    configs.put(KEY_ENHANCED_AVRO, TRUE);
+    configs.put(VALUE_CONVERTER, STRING_CONVERTER);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
+    assertTrue(containsError(errors, ERR_SR_BACKED_KEY));
+  }
+
+  @Test
+  public void testSourceStringValueConverterSkipsSchemaBackupCheck() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, STRING_CONVERTER);
+    configs.put(VALUE_CONVERTER, STRING_CONVERTER);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
+    assertFalse(containsError(errors, SCHEMA_BACKUP_ENABLED));
+  }
+
+  @Test
+  public void testSourceBothSrBackedBothHaveFlagPasses() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, AVRO_CONVERTER);
+    configs.put(KEY_ENHANCED_AVRO, TRUE);
+    configs.put(KEY_SCHEMA_BACKUP_ENABLED, TRUE);
+    configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
+    configs.put(VALUE_ENHANCED_AVRO, TRUE);
+    configs.put(VALUE_SCHEMA_BACKUP_ENABLED, TRUE);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
+    assertFalse(containsError(errors, SCHEMA_BACKUP_ENABLED));
+  }
+
+  @Test
+  public void testSourceDefaultPartitionerPasses() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, STRING_CONVERTER);
+    configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
+    configs.put(VALUE_ENHANCED_AVRO, TRUE);
+    configs.put(VALUE_SCHEMA_BACKUP_ENABLED, TRUE);
+    configs.put(PARTITIONER_CLASS, DEFAULT_PARTITIONER);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
+    assertFalse(containsError(errors, PARTITIONER_CLASS));
+  }
+
+  @Test
+  public void testSourceFieldPartitionerIsRejected() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, STRING_CONVERTER);
+    configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
+    configs.put(VALUE_ENHANCED_AVRO, TRUE);
+    configs.put(VALUE_SCHEMA_BACKUP_ENABLED, TRUE);
+    configs.put(PARTITIONER_CLASS, FIELD_PARTITIONER);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
+    assertTrue(containsError(errors, FIELD_PARTITIONER_SIMPLE));
   }
 
   @Test
@@ -675,6 +749,7 @@ public class BackupModeValidatorTest {
     configs.put(KEY_CONVERTER, STRING_CONVERTER);
     configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
     configs.put(VALUE_ENHANCED_AVRO, TRUE);
+    configs.put(VALUE_SCHEMA_BACKUP_ENABLED, TRUE);
     configs.put("file.metadata.headers.enable", TRUE);
 
     List<BackupModeValidator.Entry> errors =
@@ -717,7 +792,7 @@ public class BackupModeValidatorTest {
     configs.put(PARTITIONER_CLASS, FIELD_PARTITIONER);
 
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
-    assertTrue(containsError(errors, "FieldPartitioner"));
+    assertTrue(containsError(errors, FIELD_PARTITIONER_SIMPLE));
   }
 
   @Test
