@@ -363,17 +363,6 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           ALLOW_OPTIONAL_MAP_KEYS_DISPLAY
       );
 
-      configDef.define(
-          FORMAT_JSON_SCHEMA_ENABLE_CONFIG,
-          Type.BOOLEAN,
-          FORMAT_JSON_SCHEMA_ENABLE_DEFAULT,
-          Importance.MEDIUM,
-          FORMAT_JSON_SCHEMA_ENABLE_DOC,
-          group,
-          ++orderInGroup,
-          Width.SHORT,
-          FORMAT_JSON_SCHEMA_ENABLE_DISPLAY
-      );
     }
     {
       final String group = "Schema";
@@ -393,13 +382,26 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           schemaCompatibilityRecommender
       );
     }
-    addModeGroup(configDef);
     return configDef;
   }
 
-  private static void addModeGroup(ConfigDef configDef) {
-    final String group = "Mode";
-    int orderInGroup = 0;
+  /**
+   * Opt-in for connectors that implement BACKUP_FULL_RECORD wiring (S3, GCS,
+   * Azure Blob). Adds mode and format.json.schema.enable. Do not call from
+   * connectors without backup implementation (HDFS, SFTP, ADLS Gen1/Gen2).
+   */
+  public static void addBackupModeConfigs(ConfigDef configDef) {
+    configDef.define(
+        FORMAT_JSON_SCHEMA_ENABLE_CONFIG,
+        Type.BOOLEAN,
+        FORMAT_JSON_SCHEMA_ENABLE_DEFAULT,
+        Importance.MEDIUM,
+        FORMAT_JSON_SCHEMA_ENABLE_DOC,
+        "Connector",
+        999,
+        Width.SHORT,
+        FORMAT_JSON_SCHEMA_ENABLE_DISPLAY
+    );
     configDef.define(
         MODE_CONFIG,
         Type.STRING,
@@ -407,8 +409,8 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
         ConfigDef.ValidString.in(Mode.GENERIC.name(), Mode.BACKUP_FULL_RECORD.name()),
         Importance.MEDIUM,
         MODE_DOC,
-        group,
-        ++orderInGroup,
+        "Mode",
+        1,
         Width.SHORT,
         "Mode",
         MODE_RECOMMENDER
@@ -511,7 +513,9 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   }
 
   public Mode mode() {
-    return Mode.of(getString(MODE_CONFIG));
+    return values().containsKey(MODE_CONFIG)
+        ? Mode.of(getString(MODE_CONFIG))
+        : Mode.GENERIC;
   }
 
   public boolean isBackupMode() {
@@ -519,7 +523,8 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   }
 
   public boolean isJsonSchemaEmbedded() {
-    return getBoolean(FORMAT_JSON_SCHEMA_ENABLE_CONFIG);
+    return values().containsKey(FORMAT_JSON_SCHEMA_ENABLE_CONFIG)
+        && getBoolean(FORMAT_JSON_SCHEMA_ENABLE_CONFIG);
   }
 
   public String getEffectiveSchemaCompatibility() {

@@ -210,6 +210,7 @@ public final class BackupModeValidator {
     validateSourceConverter(configs, BackupEnvelope.KEY_CONVERTER_CONFIG, errors);
     validateSourceConverter(configs, BackupEnvelope.VALUE_CONVERTER_CONFIG, errors);
     validateTransformsRejected(configs, errors, modeName);
+    validatePartitionerSupported(configs, errors);
     warnSourceSuboptimalConfigs(configs, formatClassName);
 
     return errors;
@@ -256,6 +257,7 @@ public final class BackupModeValidator {
     if (converterClass == null) {
       return;
     }
+    validateSchemaBackupEnabled(configs, prefix, errors);
     if (AVRO_CONVERTER.equals(converterClass)) {
       requireTrue(configs, prefix + ".enhanced.avro.schema.support",
           AVRO_ENUM_FAILURE_REASON, errors);
