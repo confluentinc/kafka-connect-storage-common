@@ -21,6 +21,7 @@ import io.confluent.connect.storage.format.backup.BackupWrapperExtractor.Unwrapp
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.errors.DataException;
+import org.apache.kafka.connect.header.ConnectHeaders;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,12 +125,14 @@ public class EnvelopeTransformer {
                 value.getSchemaId(), value.getSchemaType(),
                 value.getSubject(), value.getSchemaGuid()));
 
-    return new SinkRecord(
-        sinkRecord.topic(), sinkRecord.kafkaPartition(),
-        null, null,
-        envelopeSchema, envelope,
-        sinkRecord.kafkaOffset(),
+    return sinkRecord.newRecord(
+        sinkRecord.topic(),
+        sinkRecord.kafkaPartition(),
+        null,
+        null,
+        envelopeSchema,
+        envelope,
         sinkRecord.timestamp(),
-        sinkRecord.timestampType());
+        new ConnectHeaders());
   }
 }

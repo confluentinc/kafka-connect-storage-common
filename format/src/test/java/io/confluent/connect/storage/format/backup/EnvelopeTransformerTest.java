@@ -23,6 +23,8 @@ import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.errors.DataException;
+import org.apache.kafka.connect.header.ConnectHeaders;
+import org.apache.kafka.connect.header.Header;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.junit.Before;
 import org.junit.Test;
@@ -209,6 +211,25 @@ public class EnvelopeTransformerTest {
   }
 
   @Test
+  public void wrapPreservesFrameworkSubclassChain() {
+    Iterable<Header> headers = new ConnectHeaders()
+        .add("h1", "v1", Schema.STRING_SCHEMA);
+    SinkRecord marker = new MarkerSinkRecord(
+        TOPIC, PARTITION,
+        Schema.STRING_SCHEMA, HEADER_KEY_1,
+        Schema.STRING_SCHEMA, TEST_VALUE,
+        OFFSET, TIMESTAMP, TimestampType.CREATE_TIME,
+        headers);
+
+    SinkRecord wrapped = transformer.wrap(marker);
+
+    assertTrue("wrap() must preserve framework subclass chain (InternalSinkRecord "
+            + "semantics) so the DLQ reporter can recover original ConsumerRecord bytes. "
+            + "Got: " + wrapped.getClass().getName(),
+        wrapped instanceof MarkerSinkRecord);
+  }
+
+  @Test
   public void backupStoreCalledForSchema() {
     Schema dataSchema = SchemaBuilder.struct()
         .field(FIELD_NAME, Schema.STRING_SCHEMA).build();
@@ -227,5 +248,33 @@ public class EnvelopeTransformerTest {
     verify(backupStore).backupIfNeeded(
         anyString(), anyString(), anyInt(), anyString(),
         anyString(), anyString(), anyList());
+  }
+
+  /**
+   * Test-only stand-in for the Kafka Connect runtime's InternalSinkRecord.
+   * Overrides newRecord() to return an instance of itself, mirroring how
+   * InternalSinkRecord preserves the original ConsumerRecord reference
+   * across the SMT chain. If a transformer discards the subclass by calling
+   * {@code new SinkRecord(...)}, wrapped records lose that reference and the
+   * DLQ reporter receives re-serialized bytes instead of the originals.
+   */
+  static class MarkerSinkRecord extends SinkRecord {
+    MarkerSinkRecord(String topic, int partition,
+                     Schema keySchema, Object key,
+                     Schema valueSchema, Object value,
+                     long kafkaOffset, Long timestamp, TimestampType timestampType,
+                     Iterable<Header> headers) {
+      super(topic, partition, keySchema, key, valueSchema, value,
+          kafkaOffset, timestamp, timestampType, headers);
+    }
+
+    @Override
+    public SinkRecord newRecord(String topic, Integer kafkaPartition,
+                                 Schema keySchema, Object key,
+                                 Schema valueSchema, Object value,
+                                 Long timestamp, Iterable<Header> headers) {
+      return new MarkerSinkRecord(topic, kafkaPartition, keySchema, key,
+          valueSchema, value, kafkaOffset(), timestamp, timestampType(), headers);
+    }
   }
 }
