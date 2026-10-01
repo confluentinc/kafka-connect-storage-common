@@ -62,56 +62,89 @@ public class StorageSinkConnectorConfigTest {
     };
   }
 
-  // Regression tests for the FORMAT_JSON_SCHEMA_ENABLE_CONFIG define location.
-  // Originally added to enableParquetConfig() by mistake, which meant any
-  // connector consuming just newConfigDef() would ConfigException on
-  // isJsonSchemaEmbedded(). The define now lives in newConfigDef()'s "Mode"
-  // group. These tests lock that in.
-
   @Test
-  public void testNewConfigDefDefinesFormatJsonSchemaEnableConfig() {
+  public void newConfigDefWithoutBackupOptInOmitsBackupKeys() {
     ConfigDef configDef = StorageSinkConnectorConfig.newConfigDef(
         noOpRecommender(), noOpRecommender());
 
-    assertTrue("newConfigDef() must define FORMAT_JSON_SCHEMA_ENABLE_CONFIG "
-        + "so that isJsonSchemaEmbedded() can read it without ConfigException",
-        configDef.configKeys().containsKey(
-            StorageSinkConnectorConfig.FORMAT_JSON_SCHEMA_ENABLE_CONFIG));
+    assertFalse(configDef.configKeys().containsKey(
+        StorageSinkConnectorConfig.MODE_CONFIG));
+    assertFalse(configDef.configKeys().containsKey(
+        StorageSinkConnectorConfig.FORMAT_JSON_SCHEMA_ENABLE_CONFIG));
   }
 
   @Test
-  public void testFormatJsonSchemaEnableDefaultsToFalse() {
+  public void addBackupModeConfigsDefinesBackupKeys() {
     ConfigDef configDef = StorageSinkConnectorConfig.newConfigDef(
         noOpRecommender(), noOpRecommender());
+    StorageSinkConnectorConfig.addBackupModeConfigs(configDef);
 
-    Object defaultValue = configDef.configKeys()
+    assertTrue(configDef.configKeys().containsKey(
+        StorageSinkConnectorConfig.MODE_CONFIG));
+    assertTrue(configDef.configKeys().containsKey(
+        StorageSinkConnectorConfig.FORMAT_JSON_SCHEMA_ENABLE_CONFIG));
+    assertEquals(Boolean.FALSE, configDef.configKeys()
         .get(StorageSinkConnectorConfig.FORMAT_JSON_SCHEMA_ENABLE_CONFIG)
-        .defaultValue;
-    assertEquals("default must be false to preserve prior behavior",
-        Boolean.FALSE, defaultValue);
+        .defaultValue);
   }
 
   @Test
-  public void testIsJsonSchemaEmbeddedReturnsDefaultFalseWhenUnset() {
+  public void modeReturnsGenericWhenConfigKeyAbsent() {
     ConfigDef configDef = StorageSinkConnectorConfig.newConfigDef(
         noOpRecommender(), noOpRecommender());
     StorageSinkConnectorConfig config = new StorageSinkConnectorConfig(
         configDef, minimalProps());
 
-    assertFalse("unset property must resolve to default false, not throw",
-        config.isJsonSchemaEmbedded());
+    assertEquals(StorageSinkConnectorConfig.Mode.GENERIC, config.mode());
+    assertFalse(config.isBackupMode());
   }
 
   @Test
-  public void testIsJsonSchemaEmbeddedReturnsTrueWhenSet() {
+  public void isJsonSchemaEmbeddedReturnsFalseWhenConfigKeyAbsent() {
     ConfigDef configDef = StorageSinkConnectorConfig.newConfigDef(
         noOpRecommender(), noOpRecommender());
+    StorageSinkConnectorConfig config = new StorageSinkConnectorConfig(
+        configDef, minimalProps());
+
+    assertFalse(config.isJsonSchemaEmbedded());
+  }
+
+  @Test
+  public void isJsonSchemaEmbeddedReturnsDefaultFalseWithOptInAndUnsetProp() {
+    ConfigDef configDef = StorageSinkConnectorConfig.newConfigDef(
+        noOpRecommender(), noOpRecommender());
+    StorageSinkConnectorConfig.addBackupModeConfigs(configDef);
+    StorageSinkConnectorConfig config = new StorageSinkConnectorConfig(
+        configDef, minimalProps());
+
+    assertFalse(config.isJsonSchemaEmbedded());
+  }
+
+  @Test
+  public void isJsonSchemaEmbeddedReturnsTrueWhenSet() {
+    ConfigDef configDef = StorageSinkConnectorConfig.newConfigDef(
+        noOpRecommender(), noOpRecommender());
+    StorageSinkConnectorConfig.addBackupModeConfigs(configDef);
     Map<String, String> props = minimalProps();
     props.put(StorageSinkConnectorConfig.FORMAT_JSON_SCHEMA_ENABLE_CONFIG, "true");
     StorageSinkConnectorConfig config = new StorageSinkConnectorConfig(
         configDef, props);
 
-    assertTrue("explicit true must be surfaced via isJsonSchemaEmbedded()",
-        config.isJsonSchemaEmbedded());
+    assertTrue(config.isJsonSchemaEmbedded());
+  }
+
+  @Test
+  public void modeReturnsBackupWhenOptInAndSet() {
+    ConfigDef configDef = StorageSinkConnectorConfig.newConfigDef(
+        noOpRecommender(), noOpRecommender());
+    StorageSinkConnectorConfig.addBackupModeConfigs(configDef);
+    Map<String, String> props = minimalProps();
+    props.put(StorageSinkConnectorConfig.MODE_CONFIG,
+        StorageSinkConnectorConfig.Mode.BACKUP_FULL_RECORD.name());
+    StorageSinkConnectorConfig config = new StorageSinkConnectorConfig(
+        configDef, props);
+
+    assertEquals(StorageSinkConnectorConfig.Mode.BACKUP_FULL_RECORD, config.mode());
+    assertTrue(config.isBackupMode());
   }
 }
