@@ -54,6 +54,10 @@ public class EnvelopeTransformerTest {
   private static final String NAME_ALICE = "Alice";
   private static final String HEADER_KEY_1 = "key1";
   private static final String TEST_VALUE = "test-value";
+  private static final String HDR_NAME_1 = "h1";
+  private static final String HDR_NAME_2 = "h2";
+  private static final String HDR_VAL_1 = "v1";
+  private static final String HDR_VAL_2 = "v2";
   private static final String RAW_SCHEMA = "{\"type\":\"record\",\"name\":\"User\","
       + "\"fields\":[{\"name\":\"name\",\"type\":\"string\"}]}";
 
@@ -213,7 +217,7 @@ public class EnvelopeTransformerTest {
   @Test
   public void wrapPreservesFrameworkSubclassChain() {
     Iterable<Header> headers = new ConnectHeaders()
-        .add("h1", "v1", Schema.STRING_SCHEMA);
+        .add(HDR_NAME_1, HDR_VAL_1, Schema.STRING_SCHEMA);
     SinkRecord marker = new MarkerSinkRecord(
         TOPIC, PARTITION,
         Schema.STRING_SCHEMA, HEADER_KEY_1,
@@ -227,6 +231,45 @@ public class EnvelopeTransformerTest {
             + "semantics) so the DLQ reporter can recover original ConsumerRecord bytes. "
             + "Got: " + wrapped.getClass().getName(),
         wrapped instanceof MarkerSinkRecord);
+  }
+
+  @Test
+  public void wrapRetainsOriginalRecordHeaders() {
+    Iterable<Header> original = new ConnectHeaders()
+        .add(HDR_NAME_1, HDR_VAL_1, Schema.STRING_SCHEMA)
+        .add(HDR_NAME_2, HDR_VAL_2, Schema.STRING_SCHEMA);
+    SinkRecord record = new SinkRecord(
+        TOPIC, PARTITION,
+        Schema.STRING_SCHEMA, HEADER_KEY_1,
+        Schema.STRING_SCHEMA, TEST_VALUE,
+        OFFSET, TIMESTAMP, TimestampType.CREATE_TIME,
+        original);
+
+    SinkRecord wrapped = transformer.wrap(record);
+
+    List<Header> wrappedHeaders = new ArrayList<>();
+    wrapped.headers().forEach(wrappedHeaders::add);
+    assertEquals(2, wrappedHeaders.size());
+    assertEquals(HDR_NAME_1, wrappedHeaders.get(0).key());
+    assertEquals(HDR_VAL_1, wrappedHeaders.get(0).value());
+    assertEquals(HDR_NAME_2, wrappedHeaders.get(1).key());
+    assertEquals(HDR_VAL_2, wrappedHeaders.get(1).value());
+  }
+
+  @Test
+  public void wrapWithEmptyHeadersYieldsEmptyHeaders() {
+    Iterable<Header> empty = new ConnectHeaders();
+    SinkRecord record = new SinkRecord(
+        TOPIC, PARTITION,
+        Schema.STRING_SCHEMA, HEADER_KEY_1,
+        Schema.STRING_SCHEMA, TEST_VALUE,
+        OFFSET, TIMESTAMP, TimestampType.CREATE_TIME,
+        empty);
+
+    SinkRecord wrapped = transformer.wrap(record);
+
+    assertNotNull(wrapped.headers());
+    assertEquals(0, wrapped.headers().size());
   }
 
   @Test
