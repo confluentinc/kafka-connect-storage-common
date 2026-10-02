@@ -65,6 +65,8 @@
         <module>hadoop-shaded-protobuf</module>
         <module>parquet-shaded-jackson</module>
         <module>package-kafka-connect-storage-common</module>
+        <module>hive-exec-shaded</module>
+        <module>hive-exec-slim</module>
     </modules>
 
     <properties>
