@@ -60,4 +60,27 @@ public class DailyPartitionerTest extends StorageSinkTestBase {
     assertThat(encodedPartition, is(generateEncodedPartitionFromMap(m)));
   }
 
+  @Test
+  public void testDailyPartitionerEdmontonPermanentUtcMinus6() {
+    Map<String, Object> config = new HashMap<>();
+    config.put(StorageCommonConfig.DIRECTORY_DELIM_CONFIG, StorageCommonConfig.DIRECTORY_DELIM_DEFAULT);
+    config.put(PartitionerConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG, "Record");
+    config.put(PartitionerConfig.LOCALE_CONFIG, Locale.US.toString());
+    config.put(PartitionerConfig.TIMEZONE_CONFIG, "America/Edmonton");
+
+    DailyPartitioner<String> partitioner = new DailyPartitioner<>();
+    partitioner.configure(config);
+
+    // 06:30Z is 00:30 on Nov 2 at UTC-6 (tz 2026c+), but 23:30 on Nov 1 at the older UTC-7
+    long timestamp = new DateTime(2026, 11, 2, 6, 30, 0, 0, DateTimeZone.UTC).getMillis();
+    String encodedPartition = partitioner.encodePartition(createSinkRecord(timestamp));
+
+    Map<String, Object> m = new LinkedHashMap<>();
+    m.put("year", 2026);
+    m.put("month", "11");
+    m.put("day", "02");
+
+    assertThat(encodedPartition, is(generateEncodedPartitionFromMap(m)));
+  }
+
 }
