@@ -10,16 +10,23 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.confluent.connect.protobuf.ProtobufData;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.errors.ConnectException;
+import org.apache.kafka.connect.errors.SchemaProjectorException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.junit.Test;
+import io.confluent.connect.avro.AvroData;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 
 public class StorageSchemaCompatibilityTest {
 
@@ -38,6 +45,30 @@ public class StorageSchemaCompatibilityTest {
     return SchemaBuilder.int32()
                         .version(version)
                         .name(name);
+  }
+
+  private static SchemaBuilder buildAvroEnumSchema(String name, int version, String... values) {
+    // Enum schema is unwrapped as strings; symbols are represented as parameters
+    SchemaBuilder enumSchema = SchemaBuilder.string()
+            .version(version)
+            .name(name);
+    enumSchema.parameter(AvroData.AVRO_TYPE_ENUM, name);
+    for (String value: values) {
+      enumSchema.parameter(AvroData.AVRO_TYPE_ENUM + "." + value, value);
+    }
+    return enumSchema;
+  }
+
+  private static SchemaBuilder buildProtobufEnumSchema(String name, int version, String... values) {
+    // Enum schema is unwrapped as strings or integers; symbols are represented as parameters
+    SchemaBuilder enumSchema = SchemaBuilder.string()
+        .version(version)
+        .name(name);
+    enumSchema.parameter(ProtobufData.PROTOBUF_TYPE_ENUM, name);
+    for (String value: values) {
+      enumSchema.parameter(ProtobufData.PROTOBUF_TYPE_ENUM + "."  + value, value);
+    }
+    return enumSchema;
   }
 
   private static final Schema SCHEMA_A =
@@ -97,7 +128,157 @@ public class StorageSchemaCompatibilityTest {
       buildStructSchema("b", 2).field("extra", Schema.STRING_SCHEMA).build();
   private static final Schema SCHEMA_B_EXTRA_OPTIONAL_FIELD =
       buildStructSchema("b", 2).field("extra", Schema.OPTIONAL_STRING_SCHEMA).build();
+  private static final Schema ENUM_SCHEMA_A =
+      buildAvroEnumSchema("e1", 1, "RED", "GREEN", "BLUE").build();
+  private static final Schema ENUM_SCHEMA_B =
+      buildAvroEnumSchema("e1", 1, "RED", "GREEN").build();
+  private static final Schema ENUM_SCHEMA_C =
+      buildProtobufEnumSchema("e1", 1, "RED", "GREEN", "BLUE").build();
+  private static final Schema ENUM_SCHEMA_D =
+      buildProtobufEnumSchema("e1", 1, "RED", "GREEN").build();
 
+  @Test
+  public void testShouldChangeSchemaWithEnumAdditionAndBackwardCompatibility() {
+    String value = "BLUE";
+
+    // Avro schema test
+    SinkRecord sinkRecordAvro = new SinkRecord(
+            "test-topic",
+            0,
+            null,
+            null,
+            ENUM_SCHEMA_A,
+            value,
+            0
+    );
+
+    boolean result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecordAvro, null, ENUM_SCHEMA_B);
+    assertTrue(result);
+
+    // Protobuf schema test
+    SinkRecord sinkRecordProtobuf = new SinkRecord(
+        "test-topic",
+        0,
+        null,
+        null,
+        ENUM_SCHEMA_C,
+        value,
+        0
+    );
+
+    result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecordProtobuf, null, ENUM_SCHEMA_D);
+    assertTrue(result);
+  }
+
+  @Test
+  public void testShouldChangeSchemaWithEnumDeletionAndBackwardCompatibility() {
+    String value = "RED";
+
+    // Avro schema test
+    SinkRecord sinkRecordAvro = new SinkRecord(
+            "test-topic",
+            0,
+            null,
+            null,
+            ENUM_SCHEMA_B,
+            value,
+            0
+    );
+
+    boolean result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecordAvro, null, ENUM_SCHEMA_A);
+    assertFalse(result);
+
+    // Protobuf schema test
+    SinkRecord sinkRecordProtobuf = new SinkRecord(
+        "test-topic",
+        0,
+        null,
+        null,
+        ENUM_SCHEMA_D,
+        value,
+        0
+    );
+
+    result = StorageSchemaCompatibility.BACKWARD.shouldChangeSchema(sinkRecordProtobuf, null, ENUM_SCHEMA_C);
+    assertFalse(result);
+  }
+
+  @Test
+  public void testShouldChangeSchemaWithEnumAdditionAndForwardCompatibility() {
+    String value = "BLUE";
+
+    // Avro schema test
+    SinkRecord sinkRecordAvro = new SinkRecord(
+        "test-topic",
+        0,
+        null,
+        null,
+        ENUM_SCHEMA_A,
+        value,
+        0
+    );
+
+    boolean result = StorageSchemaCompatibility.FORWARD.shouldChangeSchema(sinkRecordAvro, null, ENUM_SCHEMA_B);
+    assertTrue(result);
+
+    // Protobuf schema test
+    SinkRecord sinkRecordProtobuf = new SinkRecord(
+        "test-topic",
+        0,
+        null,
+        null,
+        ENUM_SCHEMA_C,
+        value,
+        0
+    );
+
+    result = StorageSchemaCompatibility.FORWARD.shouldChangeSchema(sinkRecordProtobuf, null, ENUM_SCHEMA_D);
+    assertTrue(result);
+  }
+
+  @Test
+  public void testShouldChangeSchemaWithEnumDeletionAndForwardCompatibility() {
+    String value = "RED";
+
+    // Avro schema test
+    SinkRecord sinkRecordAvro = new SinkRecord(
+        "test-topic",
+        0,
+        null,
+        null,
+        ENUM_SCHEMA_B,
+        value,
+        0
+    );
+
+    boolean result = StorageSchemaCompatibility.FORWARD.shouldChangeSchema(sinkRecordAvro, null, ENUM_SCHEMA_A);
+    assertFalse(result);
+
+    // Protobuf schema test
+    SinkRecord sinkRecordProtobuf = new SinkRecord(
+        "test-topic",
+        0,
+        null,
+        null,
+        ENUM_SCHEMA_D,
+        value,
+        0
+    );
+
+    result = StorageSchemaCompatibility.FORWARD.shouldChangeSchema(sinkRecordProtobuf, null, ENUM_SCHEMA_C);
+    assertFalse(result);
+  }
+
+  @Test
+  public void testProjectSchemaAfterAddingEnumSymbol() {
+    String value = "GREEN";
+
+    // Avro schema test
+    assertThrows(SchemaProjectorException.class, () -> SchemaProjector.project(ENUM_SCHEMA_A, value, ENUM_SCHEMA_B));
+
+    // Protobuf schema test
+    assertThrows(SchemaProjectorException.class, () -> SchemaProjector.project(ENUM_SCHEMA_C, value, ENUM_SCHEMA_D));
+  }
 
   @Test
   public void noneCompatibilityShouldConsiderSameVersionsAsUnchanged() {
