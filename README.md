@@ -13,6 +13,7 @@ To build a development version you'll need a recent version of Kafka. You can bu
 
 - Source Code: https://github.com/confluentinc/kafka-connect-storage-common
 - Issue Tracker: https://github.com/confluentinc/kafka-connect-storage-common/issues
+- Learn how to work with the connector's source code by reading our [Development and Contribution guidelines](CONTRIBUTING.md).
 
 
 # License
