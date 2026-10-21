@@ -19,6 +19,7 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
+import org.apache.kafka.connect.data.Date;
 import org.apache.kafka.connect.data.Decimal;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.kafka.connect.data.Timestamp;
 import org.apache.kafka.connect.errors.ConnectException;
 
 public class HiveSchemaConverter {
@@ -77,51 +79,58 @@ public class HiveSchemaConverter {
     return columns;
   }
 
-  public static TypeInfo convert(Schema schema) {
+  public static TypeInfo convert(Schema schema, boolean convertLogical) {
     // TODO: throw an error on recursive types
     switch (schema.type()) {
       case STRUCT:
-        return convertStruct(schema);
+        return convertStruct(schema, convertLogical);
       case ARRAY:
-        return convertArray(schema);
+        return convertArray(schema, convertLogical);
       case MAP:
-        return convertMap(schema);
+        return convertMap(schema, convertLogical);
       default:
-        return convertPrimitive(schema);
+        return convertLogical ? convertPrimitiveMaybeLogical(schema) : convertPrimitive(schema);
     }
+  }
+
+  public static TypeInfo convert(Schema schema) {
+    return convert(schema, false);
   }
 
   public static TypeInfo convertMaybeLogical(Schema schema) {
-    switch (schema.type()) {
-      case STRUCT:
-        return convertStruct(schema);
-      case ARRAY:
-        return convertArray(schema);
-      case MAP:
-        return convertMap(schema);
-      default:
-        return convertPrimitiveMaybeLogical(schema);
-    }
+    return convert(schema, true);
   }
 
-  public static TypeInfo convertStruct(Schema schema) {
+  public static TypeInfo convertStruct(Schema schema, boolean convertLogical) {
     final List<Field> fields = schema.fields();
     final List<String> names = new ArrayList<>(fields.size());
     final List<TypeInfo> types = new ArrayList<>(fields.size());
     for (Field field : fields) {
       names.add(field.name());
-      types.add(convert(field.schema()));
+      types.add(convert(field.schema(), convertLogical));
     }
     return TypeInfoFactory.getStructTypeInfo(names, types);
   }
 
+  public static TypeInfo convertStruct(Schema schema) {
+    return convertStruct(schema, false);
+  }
+
+  public static TypeInfo convertArray(Schema schema, boolean convertLogical) {
+    return TypeInfoFactory.getListTypeInfo(convert(schema.valueSchema(), convertLogical));
+  }
+
   public static TypeInfo convertArray(Schema schema) {
-    return TypeInfoFactory.getListTypeInfo(convert(schema.valueSchema()));
+    return convertArray(schema, false);
+  }
+
+  public static TypeInfo convertMap(Schema schema, boolean convertLogical) {
+    return TypeInfoFactory.getMapTypeInfo(
+        convert(schema.keySchema(), convertLogical), convert(schema.valueSchema(), convertLogical));
   }
 
   public static TypeInfo convertMap(Schema schema) {
-    return TypeInfoFactory.getMapTypeInfo(
-        convert(schema.keySchema()), convert(schema.valueSchema()));
+    return convertMap(schema, false);
   }
 
   public static TypeInfo convertPrimitive(Schema schema) {
@@ -133,22 +142,27 @@ public class HiveSchemaConverter {
       return convertPrimitive(schema);
     }
 
-    if (Decimal.LOGICAL_NAME.equals(schema.name())) {
-      String scale = schema.parameters().get(Decimal.SCALE_FIELD);
-      String precision = schema.parameters().get(CONNECT_AVRO_DECIMAL_PRECISION_PROP);
-      if (precision != null && Integer.parseInt(precision) > HIVE_DECIMAL_PRECISION_MAX) {
-        throw new ConnectException(
-            String.format("Illegal precision %s : Hive allows at most %d precision.",
-                precision,
-                HIVE_DECIMAL_PRECISION_MAX)
-        );
-      }
-      // Let precision always be HIVE_DECIMAL_PRECISION_MAX. Hive serde will try the best
-      // to fit decimal data into decimal schema. If the data is too long even for
-      // the maximum precision, hive will throw serde exception. No data loss risk.
-      return new DecimalTypeInfo(HIVE_DECIMAL_PRECISION_MAX, Integer.parseInt(scale));
-    } else {
-      return convertPrimitive(schema);
+    switch (schema.name()) {
+      case Decimal.LOGICAL_NAME:
+        String scale = schema.parameters().get(Decimal.SCALE_FIELD);
+        String precision = schema.parameters().get(CONNECT_AVRO_DECIMAL_PRECISION_PROP);
+        if (precision != null && Integer.parseInt(precision) > HIVE_DECIMAL_PRECISION_MAX) {
+          throw new ConnectException(
+              String.format("Illegal precision %s : Hive allows at most %d precision.",
+                  precision,
+                  HIVE_DECIMAL_PRECISION_MAX)
+          );
+        }
+        // Let precision always be HIVE_DECIMAL_PRECISION_MAX. Hive serde will try the best
+        // to fit decimal data into decimal schema. If the data is too long even for
+        // the maximum precision, hive will throw serde exception. No data loss risk.
+        return new DecimalTypeInfo(HIVE_DECIMAL_PRECISION_MAX, Integer.parseInt(scale));
+      case Date.LOGICAL_NAME:
+        return TypeInfoFactory.dateTypeInfo;
+      case Timestamp.LOGICAL_NAME:
+        return TypeInfoFactory.timestampTypeInfo;
+      default:
+        return convertPrimitive(schema);
     }
   }
 }
