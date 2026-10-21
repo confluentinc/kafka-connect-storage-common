@@ -128,6 +128,15 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
   public static final String PARQUET_CODEC_DOC = "The Parquet compression codec to be used for "
       + "output files.";
 
+  private static final String ALLOW_OPTIONAL_MAP_KEYS_DISPLAY = "Allow Optional Map Keys";
+
+  private static final String ALLOW_OPTIONAL_MAP_KEYS = "allow.optional.map.keys";
+
+  private static final boolean ALLOW_OPTIONAL_MAP_KEYS_DEFAULT = false;
+
+  public static final String ALLOW_OPTIONAL_MAP_KEYS_DOC =
+      "Allow optional string map key when converting from Connect Schema to Avro Schema.";
+
   // Schema group
   public static final String SCHEMA_COMPATIBILITY_CONFIG = "schema.compatibility";
   public static final String SCHEMA_COMPATIBILITY_DOC =
@@ -294,6 +303,18 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
           avroRecommender
       );
 
+      configDef.define(
+          ALLOW_OPTIONAL_MAP_KEYS,
+          Type.BOOLEAN,
+          ALLOW_OPTIONAL_MAP_KEYS_DEFAULT,
+          Importance.LOW,
+          ALLOW_OPTIONAL_MAP_KEYS_DOC,
+          group,
+          ++orderInGroup,
+          Width.SHORT,
+          ALLOW_OPTIONAL_MAP_KEYS_DISPLAY
+      );
+
     }
 
     {
@@ -409,6 +430,7 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
     props.put(SCHEMA_CACHE_SIZE_CONFIG, get(SCHEMA_CACHE_SIZE_CONFIG));
     props.put(ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG, get(ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG));
     props.put(CONNECT_META_DATA_CONFIG, get(CONNECT_META_DATA_CONFIG));
+    props.put(ALLOW_OPTIONAL_MAP_KEYS, get(ALLOW_OPTIONAL_MAP_KEYS));
     return new AvroDataConfig(props);
   }
 }
