@@ -8,7 +8,11 @@ codeowners:
 semaphore:
   enable: true
   pipeline_type: cp
-  cve_scan: true
+  trivy_scan: true
   extra_deploy_args: -Dcloud -Pjenkins
   extra_build_args: -Dcloud -Pjenkins
   run_pint_merge: true
+code_artifact:
+  enable: true
+  package_paths:
+    - maven-snapshots/maven/io.confluent/kafka-connect-storage-*

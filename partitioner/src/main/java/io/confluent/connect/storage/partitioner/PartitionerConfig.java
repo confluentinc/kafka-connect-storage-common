@@ -139,6 +139,7 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
       configDef.define(PARTITION_FIELD_NAME_CONFIG,
           Type.LIST,
           PARTITION_FIELD_NAME_DEFAULT,
+          new PartitionFieldNameValidator(),
           Importance.MEDIUM,
           PARTITION_FIELD_NAME_DOC,
           group,
@@ -297,6 +298,50 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
     @Override
     public String toString() {
       return "Any timezone accepted by: " + DateTimeZone.class;
+    }
+  }
+
+  public static class PartitionFieldNameValidator implements ConfigDef.Validator {
+    @Override
+    @SuppressWarnings("unchecked")
+    public void ensureValid(String name, Object value) {
+      if (value == null) {
+        // Skipping validation because partition.class can be something else than FieldPartitioner
+        return;
+      }
+      List<String> fieldNames = (List<String>) value;
+      if (fieldNames.isEmpty()) {
+        return;
+      }
+      for (String fieldName : fieldNames) {
+        validateFieldName(name, fieldName);
+      }
+    }
+
+    private void validateFieldName(String configName, String fieldName) {
+      if (fieldName == null || fieldName.trim().isEmpty()) {
+        throw new ConfigException(
+            configName,
+            fieldName,
+            "Field name cannot be null or empty"
+        );
+      }
+
+      String[] segments = fieldName.split("\\.");
+      for (String segment : segments) {
+        if (segment == null || segment.trim().isEmpty()) {
+          throw new ConfigException(
+              configName,
+              fieldName,
+              "Field name cannot contain an empty or whitespace-only path segment"
+          );
+        }
+      }
+    }
+
+    @Override
+    public String toString() {
+      return "Validate partition field names is not null or empty";
     }
   }
 
