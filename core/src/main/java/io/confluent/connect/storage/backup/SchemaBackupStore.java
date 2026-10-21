@@ -1,0 +1,32 @@
+/*
+ * Copyright 2025 Confluent Inc.
+ *
+ * Licensed under the Confluent Community License (the "License"); you may not use
+ * this file except in compliance with the License.  You may obtain a copy of the
+ * License at
+ *
+ * http://www.confluent.io/confluent-community-license
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OF ANY KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+
+package io.confluent.connect.storage.backup;
+
+import java.util.List;
+
+/**
+ * Contract for backing up schemas to object storage.
+ * Writes per-schema files: {key}.{ext} (pristine schema) + {key}.entry.json (metadata).
+ * The key is either the integer schema ID or the schema GUID.
+ * Three-level dedup: in-memory → exists() → write.
+ */
+public interface SchemaBackupStore {
+
+  void backupIfNeeded(
+      String topic, String schemaKey, int version,
+      String schemaType, String subject, String rawSchema,
+      List<SchemaManifest.SchemaReferenceEntry> references);
+}
