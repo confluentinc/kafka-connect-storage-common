@@ -22,7 +22,7 @@ import org.apache.kafka.connect.source.SourceRecord;
 
 public interface SchemaCompatibility {
 
-  boolean shouldChangeSchema(
+  SchemaCompatibilityResult shouldChangeSchema(
       ConnectRecord<?> record,
       Schema currentkeySchema,
       Schema currentValueSchema
