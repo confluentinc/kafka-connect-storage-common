@@ -88,6 +88,8 @@ public final class BackupModeValidator {
       "Default is true. With the default, ProtobufData strips wrapper "
       + "type info from BackupWrapper.data and restore cannot re-create "
       + "the wrappers from the flattened Struct.";
+  private static final String PROTOBUF_NOT_SUPPORTED_REASON =
+      "is not supported in this release.";
 
   private static final String FORMAT_SIMPLE_NAME_JSON = "JsonFormat";
   private static final String FORMAT_SIMPLE_NAME_BYTE_ARRAY = "ByteArrayFormat";
@@ -237,6 +239,11 @@ public final class BackupModeValidator {
     if (converterClass == null) {
       return;
     }
+    // TEMPORARY: delete once Proto fidelity issues are fixed; the per-flag
+    // Protobuf validations in the else-if below then wake back up.
+    if (rejectProtobufConverter(prefix, converterClass, errors)) {
+      return;
+    }
     validateSchemaBackupEnabled(configs, prefix, errors);
     if (AVRO_CONVERTER.equals(converterClass)) {
       requireTrue(configs, prefix + ".enhanced.avro.schema.support",
@@ -257,6 +264,10 @@ public final class BackupModeValidator {
     if (converterClass == null) {
       return;
     }
+    // TEMPORARY: see validateSinkConverter.
+    if (rejectProtobufConverter(prefix, converterClass, errors)) {
+      return;
+    }
     validateSchemaBackupEnabled(configs, prefix, errors);
     if (AVRO_CONVERTER.equals(converterClass)) {
       requireTrue(configs, prefix + ".enhanced.avro.schema.support",
@@ -267,6 +278,17 @@ public final class BackupModeValidator {
       rejectIfTrue(configs, prefix + ".wrapper.for.nullables",
           PROTOBUF_WRAPPER_NULLABLES_REASON, errors);
     }
+  }
+
+  /** TEMPORARY: rejects ProtobufConverter on both key and value. */
+  private static boolean rejectProtobufConverter(
+      String prefix, String converterClass, List<Entry> errors) {
+    if (!PROTOBUF_CONVERTER.equals(converterClass)) {
+      return false;
+    }
+    errors.add(new Entry(prefix,
+        prefix + "=" + PROTOBUF_CONVERTER + " " + PROTOBUF_NOT_SUPPORTED_REASON));
+    return true;
   }
 
   private static void requireTrue(
