@@ -15,6 +15,8 @@
 
 package io.confluent.connect.storage.backup;
 
+import io.confluent.connect.storage.StorageSinkConnectorConfig;
+import io.confluent.connect.storage.StorageSinkConnectorConfig.Mode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,11 +50,6 @@ public final class BackupModeConfigDefaults {
 
   private static final Logger log = LoggerFactory.getLogger(BackupModeConfigDefaults.class);
 
-  private static final String MODE_CONFIG = "mode";
-  private static final String BACKUP_FULL_RECORD_MODE = "BACKUP_FULL_RECORD";
-
-  private static final String FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG =
-      "filename.offset.zero.pad.width";
   private static final int BACKUP_MODE_PAD_WIDTH = 20;
   private static final String BACKUP_MODE_PAD_WIDTH_STRING =
       Integer.toString(BACKUP_MODE_PAD_WIDTH);
@@ -68,21 +65,24 @@ public final class BackupModeConfigDefaults {
    * when no change is needed (non-backup mode, or value already equals 20).
    */
   public static Map<String, String> applyBackupModeDefaults(Map<String, String> props) {
-    if (!BACKUP_FULL_RECORD_MODE.equalsIgnoreCase(props.get(MODE_CONFIG))) {
+    if (!Mode.BACKUP_FULL_RECORD.name().equalsIgnoreCase(
+        props.get(StorageSinkConnectorConfig.MODE_CONFIG))) {
       return props;
     }
-    String current = props.get(FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG);
+    String current = props.get(
+        StorageSinkConnectorConfig.FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG);
     if (BACKUP_MODE_PAD_WIDTH_STRING.equals(current)) {
       return props;
     }
     Map<String, String> adjusted = new HashMap<>(props);
-    adjusted.put(FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG, BACKUP_MODE_PAD_WIDTH_STRING);
+    adjusted.put(StorageSinkConnectorConfig.FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG,
+        BACKUP_MODE_PAD_WIDTH_STRING);
     log.info("Auto-set {}={} for mode {} (was: {}). The default of 10 limits "
             + "lex-safe range to ~10B offsets per partition; 20 covers the full "
             + "Kafka offset range.",
-        FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG,
+        StorageSinkConnectorConfig.FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG,
         BACKUP_MODE_PAD_WIDTH_STRING,
-        BACKUP_FULL_RECORD_MODE,
+        Mode.BACKUP_FULL_RECORD.name(),
         current == null ? "unset" : current);
     return adjusted;
   }
