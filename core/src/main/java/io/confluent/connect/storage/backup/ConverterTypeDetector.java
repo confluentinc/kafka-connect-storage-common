@@ -52,7 +52,7 @@ public final class ConverterTypeDetector {
         BackupEnvelope.TYPE_FLOAT64);
     m.put("org.apache.kafka.connect.converters.ByteArrayConverter",
         BackupEnvelope.TYPE_BYTES);
-    m.put("io.confluent.connect.schema.backup.core.BackupAwareByteArrayConverter",
+    m.put("io.confluent.connect.schema.backup.bytearray.SchemaBackupAwareByteArrayConverter",
         BackupEnvelope.TYPE_BYTES);
     KNOWN_TYPES = Collections.unmodifiableMap(m);
   }
