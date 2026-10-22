@@ -27,11 +27,22 @@ import java.util.Map;
  * their {@code start(Map&lt;String,String&gt;)} method BEFORE {@code super.start(props)}
  * so the overridden values are visible to the config constructor.
  *
- * <p>Currently handles: {@code filename.offset.zero.pad.width = 20} for
- * {@code BACKUP_FULL_RECORD} mode. The default of 10 only safely covers up to
- * ~10B lifetime offsets per partition before lex sort inverts (restore cursor
- * stops seeing new files). 20 digits covers the full Kafka offset range
- * ({@code Long.MAX_VALUE} = 9.22 x 10^18, 19 digits) with one digit of headroom.
+ * <p>For mode {@code BACKUP_FULL_RECORD}, this helper unconditionally forces
+ * {@code filename.offset.zero.pad.width = 20}, ignoring any value the user supplied.
+ * Rationale:
+ * <ul>
+ *   <li>The default width of 10 only safely covers up to ~10B lifetime offsets per
+ *       partition before lex sort inverts (restore cursor stops seeing new files).</li>
+ *   <li>20 digits covers the full Kafka offset range
+ *       ({@code Long.MAX_VALUE} = 9.22 x 10^18, 19 digits) with one digit of headroom.</li>
+ *   <li>Any width above 20 would also be lex-safe, but adds nothing: Kafka cannot
+ *       produce offsets larger than {@code Long.MAX_VALUE}, so the extra zeros are
+ *       pure overhead and would create a divergent on-disk filename shape with no
+ *       correctness benefit. Backup mode therefore pins the canonical width.</li>
+ * </ul>
+ *
+ * <p>Non-backup modes (e.g. {@code GENERIC}) are not touched; users retain full
+ * control of {@code filename.offset.zero.pad.width} outside of backup mode.
  */
 public final class BackupModeConfigDefaults {
 
@@ -42,38 +53,37 @@ public final class BackupModeConfigDefaults {
 
   private static final String FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG =
       "filename.offset.zero.pad.width";
-  private static final int BACKUP_MODE_MIN_PAD_WIDTH = 20;
+  private static final int BACKUP_MODE_PAD_WIDTH = 20;
+  private static final String BACKUP_MODE_PAD_WIDTH_STRING =
+      Integer.toString(BACKUP_MODE_PAD_WIDTH);
 
   private BackupModeConfigDefaults() {
   }
 
   /**
-   * Returns a props map with backup-mode defaults applied. The input map is never
-   * mutated; a new map is returned only when an override is needed.
+   * Returns a props map with backup-mode defaults applied. In {@code BACKUP_FULL_RECORD}
+   * mode, {@code filename.offset.zero.pad.width} is unconditionally set to 20; any
+   * user-supplied value is overridden. The input map is never mutated; a new map is
+   * returned only when an override is applied, and the input map itself is returned
+   * when no change is needed (non-backup mode, or value already equals 20).
    */
   public static Map<String, String> applyBackupModeDefaults(Map<String, String> props) {
     if (!BACKUP_FULL_RECORD_MODE.equalsIgnoreCase(props.get(MODE_CONFIG))) {
       return props;
     }
     String current = props.get(FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG);
-    if (current != null && parseIntSafe(current) >= BACKUP_MODE_MIN_PAD_WIDTH) {
+    if (BACKUP_MODE_PAD_WIDTH_STRING.equals(current)) {
       return props;
     }
     Map<String, String> adjusted = new HashMap<>(props);
-    adjusted.put(FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG,
-        Integer.toString(BACKUP_MODE_MIN_PAD_WIDTH));
-    log.info("Auto-set {}={} for mode {} (default 10 limits lex-safe range to "
-        + "~10B offsets per partition; 20 covers the full Kafka offset range).",
-        FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG, BACKUP_MODE_MIN_PAD_WIDTH,
-        BACKUP_FULL_RECORD_MODE);
+    adjusted.put(FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG, BACKUP_MODE_PAD_WIDTH_STRING);
+    log.info("Auto-set {}={} for mode {} (was: {}). The default of 10 limits "
+            + "lex-safe range to ~10B offsets per partition; 20 covers the full "
+            + "Kafka offset range.",
+        FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG,
+        BACKUP_MODE_PAD_WIDTH_STRING,
+        BACKUP_FULL_RECORD_MODE,
+        current == null ? "unset" : current);
     return adjusted;
-  }
-
-  private static int parseIntSafe(String s) {
-    try {
-      return Integer.parseInt(s);
-    } catch (NumberFormatException e) {
-      return -1;
-    }
   }
 }

@@ -46,8 +46,16 @@ public class BackupModeConfigDefaultsTest {
   public void genericModeIsUntouched() {
     Map<String, String> in = props(GENERIC_MODE, "10");
     Map<String, String> out = BackupModeConfigDefaults.applyBackupModeDefaults(in);
-    assertSame("same map returned when no override is needed", in, out);
+    assertSame("same map returned for non-backup mode", in, out);
     assertEquals("10", out.get(PAD_WIDTH_CONFIG));
+  }
+
+  @Test
+  public void genericModeWith25IsUntouched() {
+    Map<String, String> in = props(GENERIC_MODE, "25");
+    Map<String, String> out = BackupModeConfigDefaults.applyBackupModeDefaults(in);
+    assertSame("user retains full control of pad width outside backup mode", in, out);
+    assertEquals("25", out.get(PAD_WIDTH_CONFIG));
   }
 
   @Test
@@ -58,7 +66,7 @@ public class BackupModeConfigDefaultsTest {
   }
 
   @Test
-  public void backupModeWithNoPadWidthOverridesTo20() {
+  public void backupModeWithNoPadWidthSetsTo20() {
     Map<String, String> in = props(BACKUP_MODE, null);
     Map<String, String> out = BackupModeConfigDefaults.applyBackupModeDefaults(in);
     assertNotSame("new map returned when override applied", in, out);
@@ -85,21 +93,28 @@ public class BackupModeConfigDefaultsTest {
   public void backupModeWithPadWidth20IsPreserved() {
     Map<String, String> in = props(BACKUP_MODE, "20");
     Map<String, String> out = BackupModeConfigDefaults.applyBackupModeDefaults(in);
-    assertSame("no override needed when already >= 20", in, out);
+    assertSame("no override needed when already equal to 20", in, out);
     assertEquals("20", out.get(PAD_WIDTH_CONFIG));
   }
 
   @Test
-  public void backupModeWithPadWidth25IsPreserved() {
+  public void backupModeWithPadWidth25OverridesTo20() {
     Map<String, String> in = props(BACKUP_MODE, "25");
     Map<String, String> out = BackupModeConfigDefaults.applyBackupModeDefaults(in);
-    assertSame(in, out);
-    assertEquals("25", out.get(PAD_WIDTH_CONFIG));
+    assertNotSame("values above 20 are overridden back down to 20 in backup mode", in, out);
+    assertEquals("20", out.get(PAD_WIDTH_CONFIG));
+  }
+
+  @Test
+  public void backupModeWithPadWidth100OverridesTo20() {
+    Map<String, String> in = props(BACKUP_MODE, "100");
+    Map<String, String> out = BackupModeConfigDefaults.applyBackupModeDefaults(in);
+    assertEquals("20", out.get(PAD_WIDTH_CONFIG));
   }
 
   @Test
   public void backupModeWithNonNumericPadWidthOverridesTo20() {
-    // Defensive: unparseable value is treated as "below minimum" and overridden.
+    // Defensive: any non-"20" value, parseable or not, is replaced.
     Map<String, String> in = props(BACKUP_MODE, "bogus");
     Map<String, String> out = BackupModeConfigDefaults.applyBackupModeDefaults(in);
     assertEquals("20", out.get(PAD_WIDTH_CONFIG));
