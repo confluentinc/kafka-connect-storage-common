@@ -147,4 +147,59 @@ public class StorageSinkConnectorConfigTest {
     assertEquals(StorageSinkConnectorConfig.Mode.BACKUP_FULL_RECORD, config.mode());
     assertTrue(config.isBackupMode());
   }
+
+  @Test
+  public void filenameOffsetZeroPadWidthReturnsDefault10InGenericMode() {
+    ConfigDef configDef = StorageSinkConnectorConfig.newConfigDef(
+        noOpRecommender(), noOpRecommender());
+    StorageSinkConnectorConfig config = new StorageSinkConnectorConfig(
+        configDef, minimalProps());
+
+    assertEquals(10, config.filenameOffsetZeroPadWidth());
+  }
+
+  @Test
+  public void filenameOffsetZeroPadWidthReturnsUserValueInGenericMode() {
+    ConfigDef configDef = StorageSinkConnectorConfig.newConfigDef(
+        noOpRecommender(), noOpRecommender());
+    Map<String, String> props = minimalProps();
+    props.put(StorageSinkConnectorConfig.FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG, "25");
+    StorageSinkConnectorConfig config = new StorageSinkConnectorConfig(
+        configDef, props);
+
+    assertEquals(25, config.filenameOffsetZeroPadWidth());
+  }
+
+  @Test
+  public void filenameOffsetZeroPadWidthReturns20InBackupModeOverridingUser10() {
+    ConfigDef configDef = StorageSinkConnectorConfig.newConfigDef(
+        noOpRecommender(), noOpRecommender());
+    StorageSinkConnectorConfig.addBackupModeConfigs(configDef);
+    Map<String, String> props = minimalProps();
+    props.put(StorageSinkConnectorConfig.MODE_CONFIG,
+        StorageSinkConnectorConfig.Mode.BACKUP_FULL_RECORD.name());
+    props.put(StorageSinkConnectorConfig.FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG, "10");
+    StorageSinkConnectorConfig config = new StorageSinkConnectorConfig(
+        configDef, props);
+
+    assertEquals(20, config.filenameOffsetZeroPadWidth());
+    assertEquals("Trade-off: raw getInt still returns user value, override only in typed getter",
+        10, (int) config.getInt(
+            StorageSinkConnectorConfig.FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG));
+  }
+
+  @Test
+  public void filenameOffsetZeroPadWidthReturns20InBackupModeOverridingUser25() {
+    ConfigDef configDef = StorageSinkConnectorConfig.newConfigDef(
+        noOpRecommender(), noOpRecommender());
+    StorageSinkConnectorConfig.addBackupModeConfigs(configDef);
+    Map<String, String> props = minimalProps();
+    props.put(StorageSinkConnectorConfig.MODE_CONFIG,
+        StorageSinkConnectorConfig.Mode.BACKUP_FULL_RECORD.name());
+    props.put(StorageSinkConnectorConfig.FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG, "25");
+    StorageSinkConnectorConfig config = new StorageSinkConnectorConfig(
+        configDef, props);
+
+    assertEquals(20, config.filenameOffsetZeroPadWidth());
+  }
 }

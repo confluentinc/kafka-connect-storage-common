@@ -61,8 +61,6 @@ public class BackupModeValidatorTest {
       "key.converter.enhanced.protobuf.schema.support";
   private static final String VALUE_WRAPPER_FOR_RAW =
       "value.converter.wrapper.for.raw.primitives";
-  private static final String KEY_WRAPPER_FOR_RAW =
-      "key.converter.wrapper.for.raw.primitives";
   private static final String TRANSFORMS_REQUIRE_TS_TYPE_KEY =
       "transforms.requireTimestampTransform.type";
   private static final String TRANSFORMS_ROUTE_TYPE_KEY = "transforms.route.type";
@@ -183,16 +181,6 @@ public class BackupModeValidatorTest {
   @Test
   public void testAvroValueConverterWithoutSchemaBackupEnabledIsRejected() {
     Map<String, String> configs = baseSinkConfigs();
-    configs.remove(VALUE_SCHEMA_BACKUP_ENABLED);
-
-    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
-    assertTrue(containsError(errors, ERR_SR_BACKED_VALUE));
-  }
-
-  @Test
-  public void testProtobufValueConverterWithoutSchemaBackupEnabledIsRejected() {
-    Map<String, String> configs = baseSinkConfigs();
-    configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
     configs.remove(VALUE_SCHEMA_BACKUP_ENABLED);
 
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
@@ -428,14 +416,6 @@ public class BackupModeValidatorTest {
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
     assertTrue(errors.stream().anyMatch(e ->
         e.message.contains(ERR_STORE_KAFKA_KEYS_TRUE) && e.message.contains("Envelope")));
-  }
-
-  @Test
-  public void testProtobufConverterOptionalForNullablesWarnPath() {
-    Map<String, String> configs = protobufSinkConfigs();
-
-    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
-    assertFalse(containsError(errors, "optional.for.nullables"));
   }
 
   @Test
@@ -841,110 +821,91 @@ public class BackupModeValidatorTest {
     assertTrue(containsError(errors, "timestamp.extractor=RecordField"));
   }
 
-  // ── Protobuf converter validators ────────────────────────────────
+  // ── Protobuf converter rejection (temporary) ─────────────────────
+  // ProtobufConverter is rejected outright on both key and value, sink and
+  // source, until the known fidelity issues are fixed. Delete these when
+  // the short-circuit in BackupModeValidator.rejectProtobufConverter is
+  // removed and restore the per-flag Protobuf tests.
 
-  private Map<String, String> protobufSinkConfigs() {
+  private static final String ERR_PROTO_NOT_SUPPORTED =
+      "is not supported in this release";
+
+  @Test
+  public void testProtobufSinkValueConverterRejected() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(
+        configs, AVRO_FORMAT, true, SINK_MODE);
+    assertTrue(containsEntry(errors, VALUE_CONVERTER, ERR_PROTO_NOT_SUPPORTED));
+  }
+
+  @Test
+  public void testProtobufSinkKeyConverterRejected() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(KEY_CONVERTER, PROTOBUF_CONVERTER);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(
+        configs, AVRO_FORMAT, true, SINK_MODE);
+    assertTrue(containsEntry(errors, KEY_CONVERTER, ERR_PROTO_NOT_SUPPORTED));
+  }
+
+  @Test
+  public void testProtobufSourceValueConverterRejected() {
     Map<String, String> configs = new HashMap<>();
     configs.put(KEY_CONVERTER, STRING_CONVERTER);
     configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
-    configs.put(VALUE_SCHEMA_BACKUP_ENABLED, TRUE);
-    configs.put(VALUE_ENHANCED_PROTOBUF, TRUE);
-    configs.put(VALUE_WRAPPER_FOR_RAW, FALSE);
-    return configs;
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(
+        configs, AVRO_FORMAT, true, SOURCE_MODE);
+    assertTrue(containsEntry(errors, VALUE_CONVERTER, ERR_PROTO_NOT_SUPPORTED));
   }
 
   @Test
-  public void testProtobufSinkAllFlagsSetPasses() {
-    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(
-        protobufSinkConfigs(), AVRO_FORMAT, true, SINK_MODE);
-    assertFalse(containsError(errors, "protobuf"));
-    assertFalse(containsError(errors, "wrapper.for"));
-  }
-
-  @Test
-  public void testProtobufSinkWithoutEnhancedFails() {
-    Map<String, String> configs = protobufSinkConfigs();
-    configs.remove(VALUE_ENHANCED_PROTOBUF);
-
-    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
-    assertTrue(containsError(errors, VALUE_ENHANCED_PROTOBUF));
-  }
-
-  @Test
-  public void testProtobufSinkWrapperForRawPrimitivesUnsetFails() {
-    Map<String, String> configs = protobufSinkConfigs();
-    configs.remove(VALUE_WRAPPER_FOR_RAW);
-
-    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
-    assertTrue(containsError(errors, VALUE_WRAPPER_FOR_RAW));
-  }
-
-  @Test
-  public void testProtobufSinkWrapperForRawPrimitivesTrueFails() {
-    Map<String, String> configs = protobufSinkConfigs();
-    configs.put(VALUE_WRAPPER_FOR_RAW, TRUE);
-
-    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
-    assertTrue(containsError(errors, VALUE_WRAPPER_FOR_RAW));
-  }
-
-  @Test
-  public void testProtobufSinkWrapperForNullablesTrueFails() {
-    Map<String, String> configs = protobufSinkConfigs();
-    configs.put(VALUE_WRAPPER_FOR_NULLABLES, TRUE);
-
-    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
-    assertTrue(containsError(errors, VALUE_WRAPPER_FOR_NULLABLES));
-  }
-
-  @Test
-  public void testProtobufKeyConverterValidatedToo() {
-    Map<String, String> configs = protobufSinkConfigs();
+  public void testProtobufSourceKeyConverterRejected() {
+    Map<String, String> configs = new HashMap<>();
     configs.put(KEY_CONVERTER, PROTOBUF_CONVERTER);
-    configs.put(KEY_SCHEMA_BACKUP_ENABLED, TRUE);
+    configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
 
-    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
-    assertTrue(containsError(errors, KEY_ENHANCED_PROTOBUF));
-    assertTrue(containsError(errors, KEY_WRAPPER_FOR_RAW));
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(
+        configs, AVRO_FORMAT, true, SOURCE_MODE);
+    assertTrue(containsEntry(errors, KEY_CONVERTER, ERR_PROTO_NOT_SUPPORTED));
   }
 
   @Test
-  public void testProtobufSourceWithoutEnhancedFails() {
-    Map<String, String> configs = new HashMap<>();
+  public void testProtobufBothKeyAndValueRejectedIndependently() {
+    Map<String, String> configs = baseSinkConfigs();
+    configs.put(KEY_CONVERTER, PROTOBUF_CONVERTER);
     configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
 
-    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
-    assertTrue(containsError(errors, VALUE_ENHANCED_PROTOBUF));
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(
+        configs, AVRO_FORMAT, true, SINK_MODE);
+    assertTrue(containsEntry(errors, KEY_CONVERTER, ERR_PROTO_NOT_SUPPORTED));
+    assertTrue(containsEntry(errors, VALUE_CONVERTER, ERR_PROTO_NOT_SUPPORTED));
   }
 
   @Test
-  public void testProtobufSourceWrapperForRawPrimitivesNotValidated() {
-    Map<String, String> configs = new HashMap<>();
+  public void testProtobufRejectionShortCircuitsPerFlagChecks() {
+    Map<String, String> configs = baseSinkConfigs();
     configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
-    configs.put(VALUE_ENHANCED_PROTOBUF, TRUE);
-
-    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
-    assertFalse(containsError(errors, "wrapper.for.raw.primitives"));
-  }
-
-  @Test
-  public void testProtobufSourceWrapperForNullablesTrueFails() {
-    Map<String, String> configs = new HashMap<>();
-    configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
-    configs.put(VALUE_ENHANCED_PROTOBUF, TRUE);
+    // Would normally trigger per-flag Protobuf errors; those must stay silent
+    // while the rejection short-circuit is in place.
     configs.put(VALUE_WRAPPER_FOR_NULLABLES, TRUE);
 
-    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(configs, AVRO_FORMAT, true, SOURCE_MODE);
-    assertTrue(containsError(errors, VALUE_WRAPPER_FOR_NULLABLES));
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(
+        configs, AVRO_FORMAT, true, SINK_MODE);
+    assertFalse(containsError(errors, VALUE_ENHANCED_PROTOBUF));
+    assertFalse(containsError(errors, VALUE_WRAPPER_FOR_RAW));
+    assertFalse(containsError(errors, VALUE_WRAPPER_FOR_NULLABLES));
   }
 
   @Test
-  public void testNonProtobufConverterSkipsAllProtobufChecks() {
+  public void testNonProtobufConverterNotRejected() {
     Map<String, String> configs = baseSinkConfigs();
 
-    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(configs, AVRO_FORMAT, true, SINK_MODE);
-    assertFalse(containsError(errors, "protobuf"));
-    assertFalse(containsError(errors, "wrapper.for"));
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(
+        configs, AVRO_FORMAT, true, SINK_MODE);
+    assertFalse(containsError(errors, ERR_PROTO_NOT_SUPPORTED));
   }
 
   // ── JsonSchemaConverter json.type.allowed.packages ─────────────
@@ -1116,18 +1077,14 @@ public class BackupModeValidatorTest {
   }
 
   @Test
-  public void testEntriesProtobufSubKeysAllCollapsedToValueConverterUmbrella() {
+  public void testEntriesProtobufRejectionAttachedToValueConverterUmbrella() {
     Map<String, String> configs = baseSinkConfigs();
     configs.put(VALUE_CONVERTER, PROTOBUF_CONVERTER);
-    configs.put(VALUE_SCHEMA_BACKUP_ENABLED, TRUE);
-    configs.put(VALUE_WRAPPER_FOR_NULLABLES, TRUE);
 
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(
         configs, AVRO_FORMAT, true, SINK_MODE);
 
-    assertTrue(containsEntry(errors, VALUE_CONVERTER, VALUE_ENHANCED_PROTOBUF));
-    assertTrue(containsEntry(errors, VALUE_CONVERTER, VALUE_WRAPPER_FOR_RAW));
-    assertTrue(containsEntry(errors, VALUE_CONVERTER, VALUE_WRAPPER_FOR_NULLABLES));
+    assertTrue(containsEntry(errors, VALUE_CONVERTER, ERR_PROTO_NOT_SUPPORTED));
   }
 
   @Test
