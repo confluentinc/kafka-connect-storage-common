@@ -522,6 +522,13 @@ public class StorageSinkConnectorConfig extends AbstractConfig implements Compos
     return mode() == Mode.BACKUP_FULL_RECORD;
   }
 
+  public int filenameOffsetZeroPadWidth() {
+    if (isBackupMode()) {
+      return 20;
+    }
+    return getInt(FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG);
+  }
+
   public boolean isJsonSchemaEmbedded() {
     return values().containsKey(FORMAT_JSON_SCHEMA_ENABLE_CONFIG)
         && getBoolean(FORMAT_JSON_SCHEMA_ENABLE_CONFIG);
