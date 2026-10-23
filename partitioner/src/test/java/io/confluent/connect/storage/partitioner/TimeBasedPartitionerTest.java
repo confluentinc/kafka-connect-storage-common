@@ -28,6 +28,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.joda.time.ReadableInstant;
+import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.ISODateTimeFormat;
@@ -580,6 +581,27 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     validateEncodedPartition(encodedPartition);
   }
 
+  @Test
+  public void testRecordFieldTimeStringExtractorWithCustomDateTimeFormat() {
+    DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+    long millis = DATE_TIME.getMillis();
+    String timeStr = fmt.print(millis);
+
+    String timeFieldName = "timestamp";
+    TimeBasedPartitioner<String> partitioner = configurePartitioner(
+            new TimeBasedPartitioner<>(), timeFieldName, Collections.singletonMap(PartitionerConfig.TIMESTAMP_FIELD_FORMAT_PATTERN_CONFIG, "yyyy-MM-dd HH:mm:ss"));
+    assertThat(partitioner.getTimestampExtractor(), instanceOf(
+            TimeBasedPartitioner.RecordFieldTimestampExtractor.class));
+
+    // Struct with time as formatted string
+    Schema schema = SchemaBuilder.struct().name("record")
+            .field(timeFieldName, Schema.STRING_SCHEMA);
+    Struct s = new Struct(schema).put(timeFieldName, timeStr);
+    SinkRecord sinkRecord = createValuedSinkRecord(schema, s, millis);
+    String encodedPartition = partitioner.encodePartition(sinkRecord);
+    validateEncodedPartition(encodedPartition);
+  }
+
   private void validateTimestampAsMillisRecordExtracted(long millis) {
     String timeStr = String.valueOf(millis);
     String timeFieldName = "timestamp";
@@ -764,6 +786,7 @@ public class TimeBasedPartitionerTest extends StorageSinkTestBase {
     config.put(StorageCommonConfig.DIRECTORY_DELIM_CONFIG, StorageCommonConfig.DIRECTORY_DELIM_DEFAULT);
     config.put(PartitionerConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG, "Record" +
           (timeFieldName == null ? "" : "Field"));
+    config.put(PartitionerConfig.TIMESTAMP_FIELD_FORMAT_PATTERN_CONFIG, "");
     config.put(PartitionerConfig.PARTITION_DURATION_MS_CONFIG, TimeUnit.HOURS.toMillis(1));
     config.put(PartitionerConfig.PATH_FORMAT_CONFIG, PATH_FORMAT);
     config.put(PartitionerConfig.LOCALE_CONFIG, Locale.US.toString());
