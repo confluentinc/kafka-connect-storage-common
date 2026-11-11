@@ -89,12 +89,13 @@
         <joda.version>2.15.0</joda.version>
         <kafka.connect.storage.common.version>11.1.27-SNAPSHOT</kafka.connect.storage.common.version>
         <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
-        <netty.version>4.1.130.Final</netty.version>
+        <netty.version>4.1.139.Final</netty.version>
         <parquet.version>1.15.2</parquet.version>
         <json.smart.version>2.4.10</json.smart.version>
         <thrift.version>0.13.0</thrift.version>
         <tomcat.version>8.5.65</tomcat.version>
         <slf4j-reload4j.version>1.7.36</slf4j-reload4j.version>
+        <guava.version>33.7.2-jre</guava.version>
         <dependency.check.skip>true</dependency.check.skip>
         <!--
         Note: The following three properties are used to change the version of the
