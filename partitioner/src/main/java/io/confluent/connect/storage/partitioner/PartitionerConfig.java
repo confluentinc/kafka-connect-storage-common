@@ -15,6 +15,7 @@
 
 package io.confluent.connect.storage.partitioner;
 
+import io.confluent.connect.storage.common.GenericRecommender;
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigDef.Importance;
@@ -102,6 +103,21 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
       "The record field to be used as timestamp by the timestamp extractor.";
   public static final String TIMESTAMP_FIELD_NAME_DEFAULT = "timestamp";
   public static final String TIMESTAMP_FIELD_NAME_DISPLAY = "Record Field for Timestamp Extractor";
+
+  public static final String SCHEMA_PARTITION_AFFIX_TYPE_CONFIG =
+          "schema.partition.affix.type";
+  public static final String SCHEMA_PARTITION_AFFIX_TYPE_DEFAULT = AffixType.NONE.name();
+  public static final String SCHEMA_PARTITION_AFFIX_TYPE_DOC = "Append the record schema name "
+          + "to prefix or suffix to the partition path after the topic name."
+          + " None will not append the schema name in the path.";
+  public static final String SCHEMA_PARTITION_AFFIX_TYPE_DISPLAY = "Schema Partition Affix Type";
+  private static final GenericRecommender SCHEMA_PARTITION_AFFIX_TYPE_RECOMMENDER =
+          new GenericRecommender();
+
+  static {
+    SCHEMA_PARTITION_AFFIX_TYPE_RECOMMENDER.addValidValues(
+        Arrays.<Object>asList(AffixType.names()));
+  }
 
   /**
    * Create a new configuration definition.
@@ -212,6 +228,20 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
           ++orderInGroup,
           Width.LONG,
           TIMESTAMP_FIELD_NAME_DISPLAY);
+
+      configDef.define(
+              SCHEMA_PARTITION_AFFIX_TYPE_CONFIG,
+              Type.STRING,
+              SCHEMA_PARTITION_AFFIX_TYPE_DEFAULT,
+              ConfigDef.ValidString.in(AffixType.names()),
+              Importance.LOW,
+              SCHEMA_PARTITION_AFFIX_TYPE_DOC,
+              group,
+              ++orderInGroup,
+              Width.LONG,
+              SCHEMA_PARTITION_AFFIX_TYPE_DISPLAY,
+              SCHEMA_PARTITION_AFFIX_TYPE_RECOMMENDER
+      );
     }
 
     return configDef;
@@ -357,5 +387,15 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
 
   public PartitionerConfig(ConfigDef configDef, Map<String, String> props) {
     super(configDef, props);
+  }
+
+  public enum AffixType {
+    SUFFIX,
+    PREFIX,
+    NONE;
+
+    public static String[] names() {
+      return Arrays.stream(values()).map(AffixType::name).toArray(String[]::new);
+    }
   }
 }
