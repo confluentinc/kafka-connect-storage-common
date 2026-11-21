@@ -103,6 +103,9 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
   public static final String TIMESTAMP_FIELD_NAME_DEFAULT = "timestamp";
   public static final String TIMESTAMP_FIELD_NAME_DISPLAY = "Record Field for Timestamp Extractor";
 
+  public static final String SCHEMA_PARTITION_AFFIX_TYPE_CONFIG =
+      "schema.partition.affix.type";
+
   /**
    * Create a new configuration definition.
    *
@@ -357,5 +360,15 @@ public class PartitionerConfig extends AbstractConfig implements ComposableConfi
 
   public PartitionerConfig(ConfigDef configDef, Map<String, String> props) {
     super(configDef, props);
+  }
+
+  public enum AffixType {
+    SUFFIX,
+    PREFIX,
+    NONE;
+
+    public static String[] names() {
+      return Arrays.stream(values()).map(AffixType::name).toArray(String[]::new);
+    }
   }
 }
