@@ -32,7 +32,7 @@ public abstract class DelegatingPartitioner<T> implements Partitioner<T> {
    *
    * @param delegatePartitioner the partitioner to wrap
    */
-  public DelegatingPartitioner(Partitioner<T> delegatePartitioner) {
+  protected DelegatingPartitioner(Partitioner<T> delegatePartitioner) {
     this.delegatePartitioner = delegatePartitioner;
   }
 

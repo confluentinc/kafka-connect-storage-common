@@ -46,7 +46,7 @@ public class SchemaPartitionerTest {
     return partitioner;
   }
 
-  private static SinkRecord record(Schema schema) {
+  private static SinkRecord newRecord(Schema schema) {
     return new SinkRecord(TOPIC, 12, null, null, schema, null, 0L);
   }
 
@@ -57,21 +57,21 @@ public class SchemaPartitionerTest {
   public void testPrefix() {
     assertEquals(
         "schema_name=com.example.User/partition=12",
-        partitioner(PartitionerConfig.AffixType.PREFIX).encodePartition(record(NAMED_SCHEMA)));
+        partitioner(PartitionerConfig.AffixType.PREFIX).encodePartition(newRecord(NAMED_SCHEMA)));
   }
 
   @Test
   public void testSuffix() {
     assertEquals(
         "partition=12/schema_name=com.example.User",
-        partitioner(PartitionerConfig.AffixType.SUFFIX).encodePartition(record(NAMED_SCHEMA)));
+        partitioner(PartitionerConfig.AffixType.SUFFIX).encodePartition(newRecord(NAMED_SCHEMA)));
   }
 
   @Test
   public void testNoneLeavesPartitionUnchanged() {
     assertEquals(
         "partition=12",
-        partitioner(PartitionerConfig.AffixType.NONE).encodePartition(record(NAMED_SCHEMA)));
+        partitioner(PartitionerConfig.AffixType.NONE).encodePartition(newRecord(NAMED_SCHEMA)));
   }
 
   @Test
@@ -79,14 +79,14 @@ public class SchemaPartitionerTest {
     assertEquals(
         "partition=12/schema_name=com.example.User",
         partitioner(PartitionerConfig.AffixType.SUFFIX)
-            .encodePartition(record(NAMED_SCHEMA), 1000L));
+            .encodePartition(newRecord(NAMED_SCHEMA), 1000L));
   }
 
   @Test
   public void testNullSchema() {
     assertEquals(
         "partition=12/schema_name=null",
-        partitioner(PartitionerConfig.AffixType.SUFFIX).encodePartition(record(null)));
+        partitioner(PartitionerConfig.AffixType.SUFFIX).encodePartition(newRecord(null)));
   }
 
   @Test
@@ -94,10 +94,10 @@ public class SchemaPartitionerTest {
     DefaultPartitioner<String> delegate = new DefaultPartitioner<>();
     SchemaPartitioner<String> partitioner = new SchemaPartitioner<>(delegate);
     assertSame(delegate, partitioner.getDelegatePartitioner());
-    partitioner.configure(new HashMap<String, Object>() {{
-      put(StorageCommonConfig.DIRECTORY_DELIM_CONFIG, DELIM);
-      put(PartitionerConfig.SCHEMA_PARTITION_AFFIX_TYPE_CONFIG, "PREFIX");
-    }});
+    Map<String, Object> config = new HashMap<>();
+    config.put(StorageCommonConfig.DIRECTORY_DELIM_CONFIG, DELIM);
+    config.put(PartitionerConfig.SCHEMA_PARTITION_AFFIX_TYPE_CONFIG, "PREFIX");
+    partitioner.configure(config);
     assertEquals(
         TOPIC + DELIM + "x",
         partitioner.generatePartitionedPath(TOPIC, "x"));
@@ -108,7 +108,7 @@ public class SchemaPartitionerTest {
     assertEquals(
         "partition=12/schema_name=null",
         partitioner(PartitionerConfig.AffixType.SUFFIX)
-            .encodePartition(record(SchemaBuilder.struct().build())));
+            .encodePartition(newRecord(SchemaBuilder.struct().build())));
   }
 
   @Test
@@ -117,7 +117,7 @@ public class SchemaPartitionerTest {
     config.put(StorageCommonConfig.DIRECTORY_DELIM_CONFIG, DELIM);
     SchemaPartitioner<String> partitioner = new SchemaPartitioner<>(new DefaultPartitioner<>());
     partitioner.configure(config);
-    assertEquals("partition=12", partitioner.encodePartition(record(NAMED_SCHEMA)));
+    assertEquals("partition=12", partitioner.encodePartition(newRecord(NAMED_SCHEMA)));
   }
 
   @Test
@@ -149,7 +149,7 @@ public class SchemaPartitionerTest {
     partitioner.configure(config);
     assertEquals(
         "schema_name=com.example.User|partition=12",
-        partitioner.encodePartition(record(NAMED_SCHEMA)));
+        partitioner.encodePartition(newRecord(NAMED_SCHEMA)));
   }
 
   @Test(expected = ConfigException.class)
@@ -175,7 +175,7 @@ public class SchemaPartitionerTest {
     partitioner.configure(config);
     assertEquals(
         "hour=00/schema_name=com.example.User",
-        partitioner.encodePartition(record(NAMED_SCHEMA), 0L));
+        partitioner.encodePartition(newRecord(NAMED_SCHEMA), 0L));
   }
 
   @Test
