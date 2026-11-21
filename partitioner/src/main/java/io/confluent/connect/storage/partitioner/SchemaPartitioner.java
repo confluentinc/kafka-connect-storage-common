@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Confluent Inc.
+ * Copyright 2026 Confluent Inc.
  *
  * Licensed under the Confluent Community License (the "License"); you may not use
  * this file except in compliance with the License.  You may obtain a copy of the
@@ -18,6 +18,7 @@ package io.confluent.connect.storage.partitioner;
 import io.confluent.connect.storage.common.StorageCommonConfig;
 import java.util.List;
 import java.util.Map;
+import org.apache.kafka.common.config.ConfigException;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.sink.SinkRecord;
 
@@ -41,9 +42,26 @@ public class SchemaPartitioner<T> extends DelegatingPartitioner<T> {
 
   @Override
   public void configure(Map<String, Object> config) {
-    this.delim = (String) config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
-    this.schemaAffixType = PartitionerConfig.AffixType.valueOf(
-        (String) config.get(PartitionerConfig.SCHEMA_PARTITION_AFFIX_TYPE_CONFIG));
+    Object delimValue = config.get(StorageCommonConfig.DIRECTORY_DELIM_CONFIG);
+    if (delimValue == null) {
+      throw new ConfigException(
+          StorageCommonConfig.DIRECTORY_DELIM_CONFIG, null, "Directory delimiter must be set.");
+    }
+    this.delim = delimValue.toString();
+
+    Object affix = config.get(PartitionerConfig.SCHEMA_PARTITION_AFFIX_TYPE_CONFIG);
+    if (affix == null) {
+      this.schemaAffixType = PartitionerConfig.AffixType.NONE;
+    } else {
+      try {
+        this.schemaAffixType = PartitionerConfig.AffixType.valueOf(affix.toString());
+      } catch (IllegalArgumentException e) {
+        throw new ConfigException(
+            PartitionerConfig.SCHEMA_PARTITION_AFFIX_TYPE_CONFIG,
+            affix,
+            "Valid values are: " + String.join(", ", PartitionerConfig.AffixType.names()));
+      }
+    }
     delegatePartitioner.configure(config);
   }
 
