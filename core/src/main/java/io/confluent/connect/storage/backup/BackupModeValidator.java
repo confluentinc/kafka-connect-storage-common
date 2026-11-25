@@ -49,6 +49,26 @@ public final class BackupModeValidator {
       "io.confluent.connect.protobuf.ProtobufConverter";
   private static final String JSON_SCHEMA_CONVERTER =
       "io.confluent.connect.json.JsonSchemaConverter";
+  private static final String SCHEMA_BACKUP_BYTE_ARRAY_CONVERTER =
+      "io.confluent.connect.schema.backup.bytearray.SchemaBackupAwareByteArrayConverter";
+
+  /**
+   * Serializer configs that make the target schema ID differ from the writer
+   * schema of the record. SchemaBackupAwareByteArrayConverter restores the
+   * original payload bytes unchanged, so it must label them with the backed-up
+   * writer schema. AvroConverter and friends re-encode the value and are not
+   * affected.
+   */
+  private static final String USE_LATEST_VERSION = "use.latest.version";
+  private static final String LATEST_WITH_METADATA = "latest.with.metadata";
+  private static final String USE_SCHEMA_ID = "use.schema.id";
+  private static final String USE_SCHEMA_GUID = "use.schema.guid";
+  private static final String USE_SCHEMA_ID_UNSET = "-1";
+  private static final String BYTE_ARRAY_WRITER_SCHEMA_REASON =
+      "SchemaBackupAwareByteArrayConverter restores the original payload bytes "
+      + "unchanged, so they must be labelled with the backed-up writer schema. "
+      + "This setting labels them with a different schema, and consumers would "
+      + "decode the bytes with the wrong schema.";
 
   private static final String PARTITIONER_PKG =
       "io.confluent.connect.storage.partitioner.";
@@ -74,6 +94,7 @@ public final class BackupModeValidator {
   private static final String MUST_BE_TRUE_SUFFIX = " must be set to true. ";
   private static final String MUST_BE_FALSE_SUFFIX = " must be set to false. ";
   private static final String MUST_NOT_BE_TRUE_SUFFIX = " must not be set to true. ";
+  private static final String MUST_NOT_BE_SET_SUFFIX = " must not be set. ";
 
   private static final String AVRO_ENUM_FAILURE_REASON =
       "Restore will fail with AvroTypeException on records that contain "
@@ -277,7 +298,39 @@ public final class BackupModeValidator {
           PROTOBUF_PACKAGE_LOSS_REASON, errors);
       rejectIfTrue(configs, prefix + ".wrapper.for.nullables",
           PROTOBUF_WRAPPER_NULLABLES_REASON, errors);
+    } else if (SCHEMA_BACKUP_BYTE_ARRAY_CONVERTER.equals(converterClass)) {
+      rejectWriterSchemaOverrides(configs, prefix, errors);
     }
+  }
+
+  private static void rejectWriterSchemaOverrides(
+      Map<String, String> configs, String prefix, List<Entry> errors) {
+    String keyPrefix = prefix + ".";
+    rejectIfTrue(configs, keyPrefix + USE_LATEST_VERSION,
+        BYTE_ARRAY_WRITER_SCHEMA_REASON, errors);
+    rejectIfSet(configs, keyPrefix + LATEST_WITH_METADATA, null,
+        BYTE_ARRAY_WRITER_SCHEMA_REASON, errors);
+    rejectIfSet(configs, keyPrefix + USE_SCHEMA_ID, USE_SCHEMA_ID_UNSET,
+        BYTE_ARRAY_WRITER_SCHEMA_REASON, errors);
+    rejectIfSet(configs, keyPrefix + USE_SCHEMA_GUID, null,
+        BYTE_ARRAY_WRITER_SCHEMA_REASON, errors);
+  }
+
+  /**
+   * Adds an error when {@code key} has a non-blank value other than
+   * {@code unsetValue} (the config's documented "not set" default, if any).
+   */
+  private static void rejectIfSet(
+      Map<String, String> configs, String key, String unsetValue, String reason,
+      List<Entry> errors) {
+    String value = configs.get(key);
+    if (value == null || value.trim().isEmpty()) {
+      return;
+    }
+    if (unsetValue != null && unsetValue.equals(value.trim())) {
+      return;
+    }
+    errors.add(new Entry(toAttachKey(key), key + MUST_NOT_BE_SET_SUFFIX + reason));
   }
 
   /** TEMPORARY: rejects ProtobufConverter on both key and value. */
@@ -410,7 +463,11 @@ public final class BackupModeValidator {
     String converterClass = configs.get(converterPrefix);
     String schemaType = ConverterTypeDetector.detectSchemaType(
         converterClass, configs, converterPrefix);
-    if (!BackupEnvelope.isSrBackedType(schemaType)) {
+    // SchemaBackupAwareByteArrayConverter is detected as BYTES (its passthrough
+    // shape) but reads SR wire format, so it needs the flag like the SR converters.
+    // Without it the backup silently stores bytes that still carry source schema IDs.
+    if (!BackupEnvelope.isSrBackedType(schemaType)
+        && !SCHEMA_BACKUP_BYTE_ARRAY_CONVERTER.equals(converterClass)) {
       return;
     }
     String configKey = converterPrefix + "."
