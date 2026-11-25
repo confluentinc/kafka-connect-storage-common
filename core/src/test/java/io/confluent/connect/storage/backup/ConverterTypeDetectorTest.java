@@ -36,6 +36,10 @@ public class ConverterTypeDetectorTest {
   private static final String INTEGER_CONVERTER = "org.apache.kafka.connect.converters.IntegerConverter";
   private static final String LONG_CONVERTER = "org.apache.kafka.connect.converters.LongConverter";
   private static final String BYTE_ARRAY_CONVERTER = "org.apache.kafka.connect.converters.ByteArrayConverter";
+  private static final String SCHEMA_BACKUP_BYTE_ARRAY_CONVERTER =
+      "io.confluent.connect.schema.backup.bytearray.SchemaBackupAwareByteArrayConverter";
+  private static final String OLD_WRONG_BYTE_ARRAY_CONVERTER =
+      "io.confluent.connect.schema.backup.core.BackupAwareByteArrayConverter";
 
   @Test
   public void testAvroConverter() {
@@ -102,6 +106,22 @@ public class ConverterTypeDetectorTest {
     assertEquals(BackupEnvelope.TYPE_BYTES,
         ConverterTypeDetector.detectSchemaType(
             BYTE_ARRAY_CONVERTER, Collections.emptyMap(), VALUE_CONVERTER));
+  }
+
+  @Test
+  public void testSchemaBackupAwareByteArrayConverterDetectedAsBytes() {
+    // Passthrough shape: in backup mode the converter emits a wrapper and the
+    // envelope type comes from the wrapper, not from this default.
+    assertEquals(BackupEnvelope.TYPE_BYTES,
+        ConverterTypeDetector.detectSchemaType(
+            SCHEMA_BACKUP_BYTE_ARRAY_CONVERTER, Collections.emptyMap(), VALUE_CONVERTER));
+  }
+
+  @Test
+  public void testOldWrongByteArrayConverterFqcnIsUnknown() {
+    assertEquals(BackupEnvelope.TYPE_UNKNOWN,
+        ConverterTypeDetector.detectSchemaType(
+            OLD_WRONG_BYTE_ARRAY_CONVERTER, Collections.emptyMap(), VALUE_CONVERTER));
   }
 
   @Test
