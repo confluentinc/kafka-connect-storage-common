@@ -70,6 +70,8 @@ public final class EnvelopeSchemaBuilder {
     b.field(BackupEnvelope.FIELD_KEY_SCHEMA_GUID, Schema.OPTIONAL_STRING_SCHEMA);
     b.field(BackupEnvelope.FIELD_VALUE_SCHEMA_GUID, Schema.OPTIONAL_STRING_SCHEMA);
     b.field(BackupEnvelope.FIELD_FORMAT_VERSION, Schema.INT32_SCHEMA);
+    b.field(BackupEnvelope.FIELD_KEY_DATA_ENCODING, Schema.OPTIONAL_STRING_SCHEMA);
+    b.field(BackupEnvelope.FIELD_VALUE_DATA_ENCODING, Schema.OPTIONAL_STRING_SCHEMA);
     return b.build();
   }
 
@@ -97,6 +99,8 @@ public final class EnvelopeSchemaBuilder {
     e.put(BackupEnvelope.FIELD_KEY_SCHEMA_GUID, key.getSchemaGuid());
     e.put(BackupEnvelope.FIELD_VALUE_SCHEMA_GUID, value.getSchemaGuid());
     e.put(BackupEnvelope.FIELD_FORMAT_VERSION, BackupEnvelope.FORMAT_VERSION);
+    e.put(BackupEnvelope.FIELD_KEY_DATA_ENCODING, key.getDataEncoding());
+    e.put(BackupEnvelope.FIELD_VALUE_DATA_ENCODING, value.getDataEncoding());
     return e;
   }
 
@@ -105,10 +109,18 @@ public final class EnvelopeSchemaBuilder {
     private final String schemaType;
     private final String subject;
     private final String schemaGuid;
+    private final String dataEncoding;
 
     public SchemaDescriptor(
         Integer schemaId, String schemaType,
         String subject, String schemaGuid) {
+      this(schemaId, schemaType, subject, schemaGuid, null);
+    }
+
+    public SchemaDescriptor(
+        Integer schemaId, String schemaType,
+        String subject, String schemaGuid, String dataEncoding) {
+      this.dataEncoding = dataEncoding;
       this.schemaId = schemaId;
       this.schemaType = schemaType;
       this.subject = subject;
@@ -129,6 +141,10 @@ public final class EnvelopeSchemaBuilder {
 
     public String getSchemaGuid() {
       return schemaGuid;
+    }
+
+    public String getDataEncoding() {
+      return dataEncoding;
     }
   }
 
