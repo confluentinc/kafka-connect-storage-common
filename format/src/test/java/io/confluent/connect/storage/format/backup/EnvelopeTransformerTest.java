@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -319,5 +320,29 @@ public class EnvelopeTransformerTest {
       return new MarkerSinkRecord(topic, kafkaPartition, keySchema, key,
           valueSchema, value, kafkaOffset(), timestamp, timestampType(), headers);
     }
+  }
+
+  // ---------------- dataEncoding ----------------
+
+  private static final int ENCODING_SCHEMA_ID = 7;
+
+  @Test
+  public void wrapCopiesDataEncodingIntoEnvelope() {
+    Schema wrapperSchema = BackupWrapper.buildSchema(Schema.OPTIONAL_BYTES_SCHEMA);
+    BackupWrapper.WrapperFields fields = new BackupWrapper.WrapperFields(
+        ENCODING_SCHEMA_ID, 1, BackupEnvelope.TYPE_AVRO, TEST_VALUE, RAW_SCHEMA,
+        null, null, null, BackupWrapper.DATA_ENCODING_WIRE_BYTES);
+    Struct wrapper = BackupWrapper.buildWrapper(wrapperSchema, NAME_ALICE.getBytes(), fields);
+    SinkRecord record = new SinkRecord(
+        TOPIC, PARTITION,
+        Schema.STRING_SCHEMA, HEADER_KEY_1,
+        wrapperSchema, wrapper,
+        OFFSET, TIMESTAMP, TimestampType.CREATE_TIME);
+
+    Struct envelope = (Struct) transformer.wrap(record).value();
+
+    assertEquals(BackupWrapper.DATA_ENCODING_WIRE_BYTES,
+        envelope.getString(BackupEnvelope.FIELD_VALUE_DATA_ENCODING));
+    assertNull(envelope.getString(BackupEnvelope.FIELD_KEY_DATA_ENCODING));
   }
 }

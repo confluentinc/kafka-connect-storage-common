@@ -32,6 +32,14 @@ public class BackupModeValidatorTest {
   private static final String JSON_SCHEMA_CONVERTER = "io.confluent.connect.json.JsonSchemaConverter";
   private static final String STRING_CONVERTER = "org.apache.kafka.connect.storage.StringConverter";
   private static final String BYTE_ARRAY_CONVERTER = "org.apache.kafka.connect.converters.ByteArrayConverter";
+  private static final String SCHEMA_BACKUP_BYTE_ARRAY_CONVERTER =
+      "io.confluent.connect.schema.backup.bytearray.SchemaBackupAwareByteArrayConverter";
+  private static final String SAMPLE_SCHEMA_ID = "42";
+  private static final String UNSET_SCHEMA_ID = "-1";
+  private static final String SAMPLE_SCHEMA_GUID = "6c8b3c3e-1f0e-4c8e-9c4c-2b1a0f6e9d11";
+  private static final String SAMPLE_METADATA = "app=orders";
+  private static final String EMPTY = "";
+  private static final String BLANK = " ";
   private static final String SIMPLE_HEADER_CONVERTER = "org.apache.kafka.connect.storage.SimpleHeaderConverter";
 
   private static final String AVRO_FORMAT = "AvroFormat";
@@ -44,6 +52,16 @@ public class BackupModeValidatorTest {
   private static final String SCHEMA_BACKUP_ENABLED = "schema.backup.enabled";
   private static final String KEY_SCHEMA_BACKUP_ENABLED = "key.converter." + SCHEMA_BACKUP_ENABLED;
   private static final String VALUE_SCHEMA_BACKUP_ENABLED = "value.converter." + SCHEMA_BACKUP_ENABLED;
+  private static final String DOT = ".";
+  private static final String USE_LATEST_VERSION = "use.latest.version";
+  private static final String USE_LATEST_WITH_METADATA = "use.latest.with.metadata";
+  private static final String USE_SCHEMA_ID = "use.schema.id";
+  private static final String USE_SCHEMA_GUID = "use.schema.guid";
+  private static final String VALUE_USE_LATEST_VERSION = VALUE_CONVERTER + DOT + USE_LATEST_VERSION;
+  private static final String VALUE_USE_LATEST_WITH_METADATA = VALUE_CONVERTER + DOT + USE_LATEST_WITH_METADATA;
+  private static final String VALUE_USE_SCHEMA_ID = VALUE_CONVERTER + DOT + USE_SCHEMA_ID;
+  private static final String VALUE_USE_SCHEMA_GUID = VALUE_CONVERTER + DOT + USE_SCHEMA_GUID;
+  private static final String KEY_USE_SCHEMA_ID = KEY_CONVERTER + DOT + USE_SCHEMA_ID;
   private static final String STORE_KAFKA_KEYS = "store.kafka.keys";
   private static final String STORE_KAFKA_HEADERS = "store.kafka.headers";
   private static final String TRANSFORMS = "transforms";
@@ -98,6 +116,10 @@ public class BackupModeValidatorTest {
   private static final String ERR_TRANSFORMS = "Single Message Transforms";
   private static final String ERR_JSON_SCHEMA_ENABLE = "format.json.schema.enable=true is required";
   private static final String ERR_KEY_CONVERTER_UNSET = "key.converter must be set explicitly";
+  private static final String ERR_BYTE_ARRAY_WRITER_SCHEMA =
+      "must be labelled with the backed-up writer schema";
+  private static final String MUST_NOT_BE_SET = " must not be set. ";
+  private static final String MUST_NOT_BE_TRUE = " must not be set to true";
   private static final String ERR_VALUE_CONVERTER_UNSET = "value.converter must be set explicitly";
 
   private Map<String, String> baseSinkConfigs() {
@@ -1096,5 +1118,203 @@ public class BackupModeValidatorTest {
         configs, AVRO_FORMAT, true, SOURCE_MODE);
 
     assertTrue(containsEntry(errors, KEY_CONVERTER, KEY_ENHANCED_AVRO));
+  }
+
+  // ---------------------------------------------------------------------------
+  // SchemaBackupAwareByteArrayConverter
+  // ---------------------------------------------------------------------------
+
+  private Map<String, String> byteArraySinkConfigs() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, SCHEMA_BACKUP_BYTE_ARRAY_CONVERTER);
+    configs.put(KEY_SCHEMA_BACKUP_ENABLED, TRUE);
+    configs.put(VALUE_CONVERTER, SCHEMA_BACKUP_BYTE_ARRAY_CONVERTER);
+    configs.put(VALUE_SCHEMA_BACKUP_ENABLED, TRUE);
+    configs.put(HEADER_CONVERTER, BYTE_ARRAY_CONVERTER);
+    return configs;
+  }
+
+  private Map<String, String> byteArraySourceConfigs() {
+    return byteArraySinkConfigs();
+  }
+
+  @Test
+  public void testByteArrayConverterValidSinkConfigProducesZeroErrors() {
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(
+        byteArraySinkConfigs(), AVRO_FORMAT, true, SINK_MODE);
+    assertEquals(errors.toString(), 0, errors.size());
+  }
+
+  @Test
+  public void testByteArrayConverterValidSourceConfigProducesZeroErrors() {
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(
+        byteArraySourceConfigs(), AVRO_FORMAT, true, SOURCE_MODE);
+    assertEquals(errors.toString(), 0, errors.size());
+  }
+
+  @Test
+  public void testByteArrayConverterValueWithoutSchemaBackupEnabledRejectedOnSink() {
+    Map<String, String> configs = byteArraySinkConfigs();
+    configs.remove(VALUE_SCHEMA_BACKUP_ENABLED);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(
+        configs, AVRO_FORMAT, true, SINK_MODE);
+    assertTrue(containsEntry(errors, VALUE_CONVERTER, ERR_SR_BACKED_VALUE));
+    assertFalse(containsError(errors, ERR_SR_BACKED_KEY));
+  }
+
+  @Test
+  public void testByteArrayConverterKeyWithoutSchemaBackupEnabledRejectedOnSink() {
+    Map<String, String> configs = byteArraySinkConfigs();
+    configs.remove(KEY_SCHEMA_BACKUP_ENABLED);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(
+        configs, AVRO_FORMAT, true, SINK_MODE);
+    assertTrue(containsEntry(errors, KEY_CONVERTER, ERR_SR_BACKED_KEY));
+    assertFalse(containsError(errors, ERR_SR_BACKED_VALUE));
+  }
+
+  @Test
+  public void testByteArrayConverterSchemaBackupEnabledFalseRejectedOnSink() {
+    Map<String, String> configs = byteArraySinkConfigs();
+    configs.put(VALUE_SCHEMA_BACKUP_ENABLED, FALSE);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(
+        configs, AVRO_FORMAT, true, SINK_MODE);
+    assertTrue(containsError(errors, ERR_SR_BACKED_VALUE));
+  }
+
+  @Test
+  public void testByteArrayConverterWithoutSchemaBackupEnabledRejectedOnSource() {
+    Map<String, String> configs = byteArraySourceConfigs();
+    configs.remove(KEY_SCHEMA_BACKUP_ENABLED);
+    configs.remove(VALUE_SCHEMA_BACKUP_ENABLED);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(
+        configs, AVRO_FORMAT, true, SOURCE_MODE);
+    assertTrue(containsEntry(errors, KEY_CONVERTER, ERR_SR_BACKED_KEY));
+    assertTrue(containsEntry(errors, VALUE_CONVERTER, ERR_SR_BACKED_VALUE));
+  }
+
+  @Test
+  public void testPlainByteArrayConverterStillSkipsSchemaBackupCheck() {
+    Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, BYTE_ARRAY_CONVERTER);
+    configs.put(VALUE_CONVERTER, BYTE_ARRAY_CONVERTER);
+
+    List<BackupModeValidator.Entry> sinkErrors = BackupModeValidator.validateSinkConfigs(
+        configs, AVRO_FORMAT, true, SINK_MODE);
+    List<BackupModeValidator.Entry> sourceErrors = BackupModeValidator.validateSourceConfigs(
+        configs, AVRO_FORMAT, true, SOURCE_MODE);
+    assertFalse(containsError(sinkErrors, SCHEMA_BACKUP_ENABLED));
+    assertFalse(containsError(sourceErrors, SCHEMA_BACKUP_ENABLED));
+  }
+
+  @Test
+  public void testByteArrayConverterUseLatestVersionRejectedOnSource() {
+    Map<String, String> configs = byteArraySourceConfigs();
+    configs.put(VALUE_USE_LATEST_VERSION, TRUE);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(
+        configs, AVRO_FORMAT, true, SOURCE_MODE);
+    assertTrue(containsEntry(errors, VALUE_CONVERTER,
+        VALUE_USE_LATEST_VERSION + MUST_NOT_BE_TRUE));
+    assertTrue(containsError(errors, ERR_BYTE_ARRAY_WRITER_SCHEMA));
+  }
+
+  @Test
+  public void testByteArrayConverterUseLatestVersionFalseAllowedOnSource() {
+    Map<String, String> configs = byteArraySourceConfigs();
+    configs.put(VALUE_USE_LATEST_VERSION, FALSE);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(
+        configs, AVRO_FORMAT, true, SOURCE_MODE);
+    assertEquals(errors.toString(), 0, errors.size());
+  }
+
+  @Test
+  public void testByteArrayConverterUseLatestWithMetadataRejectedOnSource() {
+    Map<String, String> configs = byteArraySourceConfigs();
+    configs.put(VALUE_USE_LATEST_WITH_METADATA, SAMPLE_METADATA);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(
+        configs, AVRO_FORMAT, true, SOURCE_MODE);
+    assertTrue(containsEntry(errors, VALUE_CONVERTER,
+        VALUE_USE_LATEST_WITH_METADATA + MUST_NOT_BE_SET));
+  }
+
+  @Test
+  public void testByteArrayConverterUseSchemaIdRejectedOnSource() {
+    Map<String, String> configs = byteArraySourceConfigs();
+    configs.put(KEY_USE_SCHEMA_ID, SAMPLE_SCHEMA_ID);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(
+        configs, AVRO_FORMAT, true, SOURCE_MODE);
+    assertTrue(containsEntry(errors, KEY_CONVERTER,
+        KEY_USE_SCHEMA_ID + MUST_NOT_BE_SET));
+  }
+
+  @Test
+  public void testByteArrayConverterUseSchemaIdDefaultAllowedOnSource() {
+    Map<String, String> configs = byteArraySourceConfigs();
+    configs.put(VALUE_USE_SCHEMA_ID, UNSET_SCHEMA_ID);
+    configs.put(VALUE_USE_SCHEMA_GUID, EMPTY);
+    configs.put(VALUE_USE_LATEST_WITH_METADATA, BLANK);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(
+        configs, AVRO_FORMAT, true, SOURCE_MODE);
+    assertEquals(errors.toString(), 0, errors.size());
+  }
+
+  @Test
+  public void testByteArrayConverterUseSchemaGuidRejectedOnSource() {
+    Map<String, String> configs = byteArraySourceConfigs();
+    configs.put(VALUE_USE_SCHEMA_GUID, SAMPLE_SCHEMA_GUID);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(
+        configs, AVRO_FORMAT, true, SOURCE_MODE);
+    assertTrue(containsEntry(errors, VALUE_CONVERTER,
+        VALUE_USE_SCHEMA_GUID + MUST_NOT_BE_SET));
+  }
+
+  @Test
+  public void testByteArrayConverterAllWriterSchemaOverridesReportedTogether() {
+    Map<String, String> configs = byteArraySourceConfigs();
+    configs.put(VALUE_USE_LATEST_VERSION, TRUE);
+    configs.put(VALUE_USE_LATEST_WITH_METADATA, SAMPLE_METADATA);
+    configs.put(VALUE_USE_SCHEMA_ID, SAMPLE_SCHEMA_ID);
+    configs.put(VALUE_USE_SCHEMA_GUID, SAMPLE_SCHEMA_GUID);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(
+        configs, AVRO_FORMAT, true, SOURCE_MODE);
+    assertEquals(errors.toString(), 4,
+        errors.stream().filter(e -> e.message.contains(ERR_BYTE_ARRAY_WRITER_SCHEMA)).count());
+  }
+
+  @Test
+  public void testByteArrayConverterWriterSchemaOverridesNotCheckedOnSink() {
+    // Sink only deserializes; these serializer settings have no effect there.
+    Map<String, String> configs = byteArraySinkConfigs();
+    configs.put(VALUE_USE_LATEST_VERSION, TRUE);
+    configs.put(VALUE_USE_SCHEMA_ID, SAMPLE_SCHEMA_ID);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSinkConfigs(
+        configs, AVRO_FORMAT, true, SINK_MODE);
+    assertFalse(containsError(errors, ERR_BYTE_ARRAY_WRITER_SCHEMA));
+  }
+
+  @Test
+  public void testAvroConverterUseLatestVersionNotRejectedByByteArrayRule() {
+    // AvroConverter re-encodes the value, so the byte-array-specific rule does not apply.
+    Map<String, String> configs = new HashMap<>();
+    configs.put(KEY_CONVERTER, STRING_CONVERTER);
+    configs.put(VALUE_CONVERTER, AVRO_CONVERTER);
+    configs.put(VALUE_SCHEMA_BACKUP_ENABLED, TRUE);
+    configs.put(VALUE_ENHANCED_AVRO, TRUE);
+    configs.put(VALUE_USE_LATEST_VERSION, TRUE);
+
+    List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(
+        configs, AVRO_FORMAT, true, SOURCE_MODE);
+    assertFalse(containsError(errors, ERR_BYTE_ARRAY_WRITER_SCHEMA));
   }
 }

@@ -306,4 +306,52 @@ public class BackupWrapperExtractorTest {
     assertEquals(BackupEnvelope.TYPE_BYTES, result.getSchemaType());
   }
 
+  // ---------------- dataEncoding ----------------
+
+  private static final String ENCODING_SUBJECT = "encoding-value";
+  private static final int ENCODING_SCHEMA_ID = 7;
+
+  private static Struct wrapperWith(Schema wrapperSchema, String dataEncoding) {
+    BackupWrapper.WrapperFields fields = new BackupWrapper.WrapperFields(
+        ENCODING_SCHEMA_ID, null, BackupEnvelope.TYPE_AVRO, ENCODING_SUBJECT,
+        null, null, null, null, dataEncoding);
+    return BackupWrapper.buildWrapper(wrapperSchema, HELLO.getBytes(), fields);
+  }
+
+  @Test
+  public void testUnwrapCarriesDataEncoding() {
+    Schema wrapperSchema = BackupWrapper.buildSchema(Schema.OPTIONAL_BYTES_SCHEMA);
+    Unwrapped result = BackupWrapperExtractor.unwrap(
+        wrapperWith(wrapperSchema, BackupWrapper.DATA_ENCODING_WIRE_BYTES),
+        wrapperSchema, false, BackupEnvelope.TYPE_BYTES);
+    assertEquals(BackupWrapper.DATA_ENCODING_WIRE_BYTES, result.getDataEncoding());
+  }
+
+  @Test
+  public void testUnwrapWrapperWithoutDataEncodingFieldGivesNull() {
+    Schema olderShape = SchemaBuilder.struct()
+        .name(BackupWrapper.NAME)
+        .field(BackupWrapper.FIELD_DATA, Schema.OPTIONAL_BYTES_SCHEMA)
+        .field(BackupWrapper.FIELD_SCHEMA_ID, Schema.OPTIONAL_INT32_SCHEMA)
+        .field(BackupWrapper.FIELD_SCHEMA_TYPE, Schema.STRING_SCHEMA)
+        .field(BackupWrapper.FIELD_SCHEMA_SUBJECT, Schema.STRING_SCHEMA)
+        .build();
+    Struct wrapper = new Struct(olderShape)
+        .put(BackupWrapper.FIELD_DATA, HELLO.getBytes())
+        .put(BackupWrapper.FIELD_SCHEMA_ID, ENCODING_SCHEMA_ID)
+        .put(BackupWrapper.FIELD_SCHEMA_TYPE, BackupEnvelope.TYPE_AVRO)
+        .put(BackupWrapper.FIELD_SCHEMA_SUBJECT, ENCODING_SUBJECT);
+
+    Unwrapped result = BackupWrapperExtractor.unwrap(
+        wrapper, olderShape, false, BackupEnvelope.TYPE_BYTES);
+    assertNull(result.getDataEncoding());
+    assertEquals(ENCODING_SCHEMA_ID, (int) result.getSchemaId());
+  }
+
+  @Test
+  public void testUnwrapNonWrapperGivesNullDataEncoding() {
+    Unwrapped result = BackupWrapperExtractor.unwrap(
+        HELLO, Schema.STRING_SCHEMA, false, BackupEnvelope.TYPE_STRING);
+    assertNull(result.getDataEncoding());
+  }
 }
