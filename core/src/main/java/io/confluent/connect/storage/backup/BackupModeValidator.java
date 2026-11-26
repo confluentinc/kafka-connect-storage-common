@@ -53,11 +53,8 @@ public final class BackupModeValidator {
       "io.confluent.connect.schema.backup.bytearray.SchemaBackupAwareByteArrayConverter";
 
   /**
-   * Serializer configs that make the target schema ID differ from the writer
-   * schema of the record. SchemaBackupAwareByteArrayConverter restores the
-   * original payload bytes unchanged, so it must label them with the backed-up
-   * writer schema. AvroConverter and friends re-encode the value and are not
-   * affected.
+   * Serializer configs that replace the writer schema on restore. Rejected for
+   * SchemaBackupAwareByteArrayConverter, which restores the payload bytes unchanged.
    */
   private static final String USE_LATEST_VERSION = "use.latest.version";
   private static final String USE_LATEST_WITH_METADATA = "use.latest.with.metadata";
@@ -463,9 +460,8 @@ public final class BackupModeValidator {
     String converterClass = configs.get(converterPrefix);
     String schemaType = ConverterTypeDetector.detectSchemaType(
         converterClass, configs, converterPrefix);
-    // SchemaBackupAwareByteArrayConverter is detected as BYTES (its passthrough
-    // shape) but reads SR wire format, so it needs the flag like the SR converters.
-    // Without it the backup silently stores bytes that still carry source schema IDs.
+    // SchemaBackupAwareByteArrayConverter is detected as BYTES but reads Schema Registry
+    // wire format, so it needs schema.backup.enabled like the SR converters.
     if (!BackupEnvelope.isSrBackedType(schemaType)
         && !SCHEMA_BACKUP_BYTE_ARRAY_CONVERTER.equals(converterClass)) {
       return;

@@ -110,8 +110,7 @@ public class ConverterTypeDetectorTest {
 
   @Test
   public void testSchemaBackupAwareByteArrayConverterDetectedAsBytes() {
-    // Passthrough shape: in backup mode the converter emits a wrapper and the
-    // envelope type comes from the wrapper, not from this default.
+    // Passthrough type; in backup mode the envelope type comes from the wrapper.
     assertEquals(BackupEnvelope.TYPE_BYTES,
         ConverterTypeDetector.detectSchemaType(
             SCHEMA_BACKUP_BYTE_ARRAY_CONVERTER, Collections.emptyMap(), VALUE_CONVERTER));
