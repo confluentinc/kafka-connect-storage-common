@@ -54,11 +54,11 @@ public class BackupModeValidatorTest {
   private static final String VALUE_SCHEMA_BACKUP_ENABLED = "value.converter." + SCHEMA_BACKUP_ENABLED;
   private static final String DOT = ".";
   private static final String USE_LATEST_VERSION = "use.latest.version";
-  private static final String LATEST_WITH_METADATA = "latest.with.metadata";
+  private static final String USE_LATEST_WITH_METADATA = "use.latest.with.metadata";
   private static final String USE_SCHEMA_ID = "use.schema.id";
   private static final String USE_SCHEMA_GUID = "use.schema.guid";
   private static final String VALUE_USE_LATEST_VERSION = VALUE_CONVERTER + DOT + USE_LATEST_VERSION;
-  private static final String VALUE_LATEST_WITH_METADATA = VALUE_CONVERTER + DOT + LATEST_WITH_METADATA;
+  private static final String VALUE_USE_LATEST_WITH_METADATA = VALUE_CONVERTER + DOT + USE_LATEST_WITH_METADATA;
   private static final String VALUE_USE_SCHEMA_ID = VALUE_CONVERTER + DOT + USE_SCHEMA_ID;
   private static final String VALUE_USE_SCHEMA_GUID = VALUE_CONVERTER + DOT + USE_SCHEMA_GUID;
   private static final String KEY_USE_SCHEMA_ID = KEY_CONVERTER + DOT + USE_SCHEMA_ID;
@@ -1233,14 +1233,14 @@ public class BackupModeValidatorTest {
   }
 
   @Test
-  public void testByteArrayConverterLatestWithMetadataRejectedOnSource() {
+  public void testByteArrayConverterUseLatestWithMetadataRejectedOnSource() {
     Map<String, String> configs = byteArraySourceConfigs();
-    configs.put(VALUE_LATEST_WITH_METADATA, SAMPLE_METADATA);
+    configs.put(VALUE_USE_LATEST_WITH_METADATA, SAMPLE_METADATA);
 
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(
         configs, AVRO_FORMAT, true, SOURCE_MODE);
     assertTrue(containsEntry(errors, VALUE_CONVERTER,
-        VALUE_LATEST_WITH_METADATA + MUST_NOT_BE_SET));
+        VALUE_USE_LATEST_WITH_METADATA + MUST_NOT_BE_SET));
   }
 
   @Test
@@ -1259,7 +1259,7 @@ public class BackupModeValidatorTest {
     Map<String, String> configs = byteArraySourceConfigs();
     configs.put(VALUE_USE_SCHEMA_ID, UNSET_SCHEMA_ID);
     configs.put(VALUE_USE_SCHEMA_GUID, EMPTY);
-    configs.put(VALUE_LATEST_WITH_METADATA, BLANK);
+    configs.put(VALUE_USE_LATEST_WITH_METADATA, BLANK);
 
     List<BackupModeValidator.Entry> errors = BackupModeValidator.validateSourceConfigs(
         configs, AVRO_FORMAT, true, SOURCE_MODE);
@@ -1281,7 +1281,7 @@ public class BackupModeValidatorTest {
   public void testByteArrayConverterAllWriterSchemaOverridesReportedTogether() {
     Map<String, String> configs = byteArraySourceConfigs();
     configs.put(VALUE_USE_LATEST_VERSION, TRUE);
-    configs.put(VALUE_LATEST_WITH_METADATA, SAMPLE_METADATA);
+    configs.put(VALUE_USE_LATEST_WITH_METADATA, SAMPLE_METADATA);
     configs.put(VALUE_USE_SCHEMA_ID, SAMPLE_SCHEMA_ID);
     configs.put(VALUE_USE_SCHEMA_GUID, SAMPLE_SCHEMA_GUID);
 

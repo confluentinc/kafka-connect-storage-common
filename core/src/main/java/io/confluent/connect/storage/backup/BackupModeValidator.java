@@ -60,7 +60,7 @@ public final class BackupModeValidator {
    * affected.
    */
   private static final String USE_LATEST_VERSION = "use.latest.version";
-  private static final String LATEST_WITH_METADATA = "latest.with.metadata";
+  private static final String USE_LATEST_WITH_METADATA = "use.latest.with.metadata";
   private static final String USE_SCHEMA_ID = "use.schema.id";
   private static final String USE_SCHEMA_GUID = "use.schema.guid";
   private static final String USE_SCHEMA_ID_UNSET = "-1";
@@ -308,7 +308,7 @@ public final class BackupModeValidator {
     String keyPrefix = prefix + ".";
     rejectIfTrue(configs, keyPrefix + USE_LATEST_VERSION,
         BYTE_ARRAY_WRITER_SCHEMA_REASON, errors);
-    rejectIfSet(configs, keyPrefix + LATEST_WITH_METADATA, null,
+    rejectIfSet(configs, keyPrefix + USE_LATEST_WITH_METADATA, null,
         BYTE_ARRAY_WRITER_SCHEMA_REASON, errors);
     rejectIfSet(configs, keyPrefix + USE_SCHEMA_ID, USE_SCHEMA_ID_UNSET,
         BYTE_ARRAY_WRITER_SCHEMA_REASON, errors);
