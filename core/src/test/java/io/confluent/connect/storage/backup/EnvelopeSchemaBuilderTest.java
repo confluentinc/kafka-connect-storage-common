@@ -297,4 +297,61 @@ public class EnvelopeSchemaBuilderTest {
     assertEquals("BOOLEAN", hdrs.get(2).getString(
         BackupEnvelope.FIELD_HEADER_SCHEMA_TYPE));
   }
+
+  // ---------------- dataEncoding ----------------
+
+  private static final String ENCODING_TOPIC = "encoding-topic";
+  private static final String WIRE_BYTES = "WIRE_BYTES";
+  private static final String CONNECT = "CONNECT";
+  private static final int ENCODING_SCHEMA_ID = 7;
+
+  private static SinkRecord encodingRecord(Schema valueSchema, Object value) {
+    return new SinkRecord(ENCODING_TOPIC, 0, Schema.OPTIONAL_STRING_SCHEMA, KEY1,
+        valueSchema, value, 0L, 0L, TimestampType.CREATE_TIME);
+  }
+
+  @Test
+  public void testEnvelopeSchemaHasOptionalDataEncodingFields() {
+    Schema envelope = EnvelopeSchemaBuilder.buildEnvelopeSchema(null, null);
+    assertEquals(Schema.OPTIONAL_STRING_SCHEMA,
+        envelope.field(BackupEnvelope.FIELD_KEY_DATA_ENCODING).schema());
+    assertEquals(Schema.OPTIONAL_STRING_SCHEMA,
+        envelope.field(BackupEnvelope.FIELD_VALUE_DATA_ENCODING).schema());
+  }
+
+  @Test
+  public void testEnvelopeStructCarriesDataEncoding() {
+    Schema envSchema = EnvelopeSchemaBuilder.buildEnvelopeSchema(
+        Schema.OPTIONAL_STRING_SCHEMA, Schema.OPTIONAL_BYTES_SCHEMA);
+    Struct envelope = EnvelopeSchemaBuilder.buildEnvelopeStruct(
+        envSchema, encodingRecord(Schema.OPTIONAL_BYTES_SCHEMA, null), KEY1, null,
+        new EnvelopeSchemaBuilder.SchemaDescriptor(
+            null, BackupEnvelope.TYPE_AVRO, null, null, CONNECT),
+        new EnvelopeSchemaBuilder.SchemaDescriptor(
+            ENCODING_SCHEMA_ID, BackupEnvelope.TYPE_AVRO, null, null, WIRE_BYTES));
+
+    assertEquals(CONNECT, envelope.getString(BackupEnvelope.FIELD_KEY_DATA_ENCODING));
+    assertEquals(WIRE_BYTES, envelope.getString(BackupEnvelope.FIELD_VALUE_DATA_ENCODING));
+  }
+
+  @Test
+  public void testExistingDescriptorConstructorLeavesDataEncodingNull() {
+    Schema envSchema = EnvelopeSchemaBuilder.buildEnvelopeSchema(
+        Schema.OPTIONAL_STRING_SCHEMA, Schema.OPTIONAL_BYTES_SCHEMA);
+    Struct envelope = EnvelopeSchemaBuilder.buildEnvelopeStruct(
+        envSchema, encodingRecord(Schema.OPTIONAL_BYTES_SCHEMA, null), KEY1, null,
+        new EnvelopeSchemaBuilder.SchemaDescriptor(
+            null, BackupEnvelope.TYPE_STRING, null, null),
+        new EnvelopeSchemaBuilder.SchemaDescriptor(
+            ENCODING_SCHEMA_ID, BackupEnvelope.TYPE_AVRO, null, null));
+
+    assertNull(envelope.getString(BackupEnvelope.FIELD_KEY_DATA_ENCODING));
+    assertNull(envelope.getString(BackupEnvelope.FIELD_VALUE_DATA_ENCODING));
+  }
+
+  @Test
+  public void testDataEncodingFieldNames() {
+    assertEquals("keyDataEncoding", BackupEnvelope.FIELD_KEY_DATA_ENCODING);
+    assertEquals("valueDataEncoding", BackupEnvelope.FIELD_VALUE_DATA_ENCODING);
+  }
 }

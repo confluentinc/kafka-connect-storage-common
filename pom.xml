@@ -86,7 +86,8 @@
         <jline.version>2.12.1</jline.version>
         <joda.version>2.15.0</joda.version>
         <kafka.connect.storage.common.version>13.2.0-SNAPSHOT</kafka.connect.storage.common.version>
-        <schema.backup.api.version>8.3.2</schema.backup.api.version>
+        <!-- TEMPORARY: unreleased SR build carrying BackupWrapper.dataEncoding; switch to the released version before merge. -->
+        <schema.backup.api.version>8.5.0-0</schema.backup.api.version>
         <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
         <netty.version>4.1.139.Final</netty.version>
         <parquet.version>1.15.2</parquet.version>

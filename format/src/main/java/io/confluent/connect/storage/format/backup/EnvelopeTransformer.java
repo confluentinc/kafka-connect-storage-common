@@ -119,10 +119,10 @@ public class EnvelopeTransformer {
             key.getData(), value.getData(),
             new EnvelopeSchemaBuilder.SchemaDescriptor(
                 key.getSchemaId(), key.getSchemaType(),
-                key.getSubject(), key.getSchemaGuid()),
+                key.getSubject(), key.getSchemaGuid(), key.getDataEncoding()),
             new EnvelopeSchemaBuilder.SchemaDescriptor(
                 value.getSchemaId(), value.getSchemaType(),
-                value.getSubject(), value.getSchemaGuid()));
+                value.getSubject(), value.getSchemaGuid(), value.getDataEncoding()));
 
     return sinkRecord.newRecord(
         sinkRecord.topic(),
