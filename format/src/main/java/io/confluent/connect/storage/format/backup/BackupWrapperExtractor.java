@@ -70,6 +70,7 @@ public final class BackupWrapperExtractor {
     String referenceTreeJson = optionalString(wrapper, schema, BackupWrapper.FIELD_REFERENCE_TREE);
     String directRefsJson = optionalString(wrapper, schema, BackupWrapper.FIELD_DIRECT_REFS);
     String schemaGuid = optionalString(wrapper, schema, BackupWrapper.FIELD_SCHEMA_GUID);
+    String dataEncoding = optionalString(wrapper, schema, BackupWrapper.FIELD_DATA_ENCODING);
     log.debug("Unwrapped Wrapper: schemaType={}, schemaId={}, subject={}, hasReferences={}",
         schemaType, schemaId, subject, referenceTreeJson != null);
     return Unwrapped.builder()
@@ -83,6 +84,7 @@ public final class BackupWrapperExtractor {
         .referenceTreeJson(referenceTreeJson)
         .directRefsJson(directRefsJson)
         .schemaGuid(schemaGuid)
+        .dataEncoding(dataEncoding)
         .build();
   }
 
@@ -125,6 +127,7 @@ public final class BackupWrapperExtractor {
     private final String referenceTreeJson;
     private final String directRefsJson;
     private final String schemaGuid;
+    private final String dataEncoding;
 
     private Unwrapped(Builder b) {
       this.data = b.data;
@@ -137,6 +140,7 @@ public final class BackupWrapperExtractor {
       this.referenceTreeJson = b.referenceTreeJson;
       this.directRefsJson = b.directRefsJson;
       this.schemaGuid = b.schemaGuid;
+      this.dataEncoding = b.dataEncoding;
     }
 
     static Builder builder() {
@@ -162,6 +166,7 @@ public final class BackupWrapperExtractor {
       private String referenceTreeJson;
       private String directRefsJson;
       private String schemaGuid;
+      private String dataEncoding;
 
       Builder data(Object v) {
         this.data = v;
@@ -213,6 +218,11 @@ public final class BackupWrapperExtractor {
         return this;
       }
 
+      Builder dataEncoding(String v) {
+        this.dataEncoding = v;
+        return this;
+      }
+
       Unwrapped build() {
         return new Unwrapped(this);
       }
@@ -256,6 +266,10 @@ public final class BackupWrapperExtractor {
 
     public String getSchemaGuid() {
       return schemaGuid;
+    }
+
+    public String getDataEncoding() {
+      return dataEncoding;
     }
   }
 }

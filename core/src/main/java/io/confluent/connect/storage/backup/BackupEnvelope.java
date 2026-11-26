@@ -57,6 +57,12 @@ public final class BackupEnvelope {
   public static final String FIELD_KEY_SCHEMA_GUID = "keySchemaGuid";
   public static final String FIELD_VALUE_SCHEMA_GUID = "valueSchemaGuid";
   public static final String FIELD_FORMAT_VERSION = "formatVersion";
+  /**
+   * Optional: how the key/value data was encoded by the backup converter
+   * (BackupWrapper.DATA_ENCODING_*). Null for non-wrapper records and older backups.
+   */
+  public static final String FIELD_KEY_DATA_ENCODING = "keyDataEncoding";
+  public static final String FIELD_VALUE_DATA_ENCODING = "valueDataEncoding";
 
   public static final int FORMAT_VERSION = 1;
 
